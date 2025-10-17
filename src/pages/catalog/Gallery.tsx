@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { galleryService, contentInfoService } from "@/services/catalogServices";
+import { galleryService, contentCategoryService, contentTagService } from "@/services/catalogServices";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Pagination,
@@ -44,10 +44,11 @@ import {
 interface GalleryData {
   id?: number;
   documentId?: string;
-  name: string;
+  title: string;
   description?: string;
-  images?: any[];
-  content_info?: any;
+  media?: any[];
+  category_content?: any;
+  tags_content?: any[];
 }
 
 const Gallery = () => {
@@ -61,33 +62,43 @@ const Gallery = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [contentInfos, setContentInfos] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [tags, setTags] = useState<any[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [existingImages, setExistingImages] = useState<any[]>([]);
+  const [existingMedia, setExistingMedia] = useState<any[]>([]);
   const [selectedGallery, setSelectedGallery] = useState<GalleryData | null>(null);
   const pageSize = 12;
 
   const [formData, setFormData] = useState<GalleryData>({
-    name: "",
+    title: "",
     description: "",
-    content_info: "",
+    category_content: "",
+    tags_content: [],
   });
 
   const { toast } = useToast();
 
   useEffect(() => {
     loadData();
-    loadContentInfos();
+    loadCategories();
+    loadTags();
   }, [currentPage]);
 
   useEffect(() => {
     handleSearch();
   }, [searchQuery, data]);
 
-  const loadContentInfos = async () => {
-    const result = await contentInfoService.getAll({ pageSize: 100 });
+  const loadCategories = async () => {
+    const result = await contentCategoryService.getAll({ pageSize: 100 });
     if (result.success) {
-      setContentInfos(result.data);
+      setCategories(result.data);
+    }
+  };
+
+  const loadTags = async () => {
+    const result = await contentTagService.getAll({ pageSize: 100 });
+    if (result.success) {
+      setTags(result.data);
     }
   };
 
@@ -97,8 +108,8 @@ const Gallery = () => {
       const result = await galleryService.getAll({
         page: currentPage,
         pageSize: pageSize,
-        populate: "content_info,images",
-        searchFields: ["name", "description"],
+        populate: "category_content,tags_content,media",
+        searchFields: ["title", "description"],
         search: searchQuery,
       });
 
@@ -128,7 +139,7 @@ const Gallery = () => {
     }
 
     const filtered = data.filter((item) =>
-      item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.description?.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredData(filtered);
@@ -137,27 +148,30 @@ const Gallery = () => {
   const handleCreate = () => {
     setEditingItem(null);
     setFormData({
-      name: "",
+      title: "",
       description: "",
-      content_info: "",
+      category_content: "",
+      tags_content: [],
     });
     setUploadedFiles([]);
-    setExistingImages([]);
+    setExistingMedia([]);
     setIsDialogOpen(true);
   };
 
   const handleEdit = (item: GalleryData) => {
     setEditingItem(item);
     
-    const contentInfoId = item.content_info?.documentId || item.content_info?.id || "";
+    const categoryId = item.category_content?.documentId || item.category_content?.id || "";
+    const tagIds = (item.tags_content || []).map(tag => tag.documentId || tag.id);
     
     setFormData({
-      name: item.name || "",
+      title: item.title || "",
       description: item.description || "",
-      content_info: contentInfoId,
+      category_content: categoryId,
+      tags_content: tagIds,
     });
     setUploadedFiles([]);
-    setExistingImages(item.images || []);
+    setExistingMedia(item.media || []);
     setIsDialogOpen(true);
   };
 
@@ -199,34 +213,38 @@ const Gallery = () => {
     }
   };
 
-  const handleRemoveExistingImage = (imageId: number) => {
-    setExistingImages(prev => prev.filter(img => img.id !== imageId));
+  const handleRemoveExistingMedia = (mediaId: number) => {
+    setExistingMedia(prev => prev.filter(img => img.id !== mediaId));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name?.trim()) {
+    if (!formData.title?.trim()) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "El nombre es requerido",
+        description: "El título es requerido",
       });
       return;
     }
 
     try {
       const payload: any = {
-        name: formData.name,
+        title: formData.title,
         description: formData.description,
       };
 
-      if (formData.content_info) {
-        payload.content_info = formData.content_info;
+      if (formData.category_content) {
+        payload.category_content = formData.category_content;
       }
 
-      if (existingImages.length > 0) {
-        payload.images = existingImages.map(img => img.id);
+      if (formData.tags_content && formData.tags_content.length > 0) {
+        payload.tags_content = formData.tags_content;
+      }
+
+      if (existingMedia.length > 0) {
+        payload.media = existingMedia.map(img => img.id);
       }
 
       let result = editingItem
@@ -240,7 +258,7 @@ const Gallery = () => {
         });
         formDataUpload.append('ref', 'api::gallery.gallery');
         formDataUpload.append('refId', result.data.id || result.data.documentId);
-        formDataUpload.append('field', 'images');
+        formDataUpload.append('field', 'media');
 
         try {
           await fetch(`${import.meta.env.VITE_API_URL || 'https://tec-adm.server-softplus.plus'}/api/upload`, {
@@ -331,10 +349,10 @@ const Gallery = () => {
                 onClick={() => handleViewGallery(item)}
               >
                 <div className="aspect-square overflow-hidden bg-muted">
-                  {item.images && item.images.length > 0 ? (
+                  {item.media && item.media.length > 0 ? (
                     <img
-                      src={`${import.meta.env.VITE_API_URL || 'https://tec-adm.server-softplus.plus'}${item.images[0].url}`}
-                      alt={item.name}
+                      src={`${import.meta.env.VITE_API_URL || 'https://tec-adm.server-softplus.plus'}${item.media[0].url}`}
+                      alt={item.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     />
                   ) : (
@@ -345,15 +363,15 @@ const Gallery = () => {
                 </div>
                 
                 <div className="p-4">
-                  <h3 className="font-semibold truncate">{item.name}</h3>
+                  <h3 className="font-semibold truncate">{item.title}</h3>
                   {item.description && (
                     <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
                       {item.description}
                     </p>
                   )}
-                  {item.images && item.images.length > 0 && (
+                  {item.media && item.media.length > 0 && (
                     <p className="text-xs text-muted-foreground mt-2">
-                      {item.images.length} {item.images.length === 1 ? 'imagen' : 'imágenes'}
+                      {item.media.length} {item.media.length === 1 ? 'imagen' : 'imágenes'}
                     </p>
                   )}
                 </div>
@@ -431,12 +449,12 @@ const Gallery = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nombre *</Label>
+              <Label htmlFor="title">Título *</Label>
               <Input
-                id="name"
-                value={formData.name}
+                id="title"
+                value={formData.title}
                 onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
+                  setFormData({ ...formData, title: e.target.value })
                 }
                 required
               />
@@ -455,20 +473,20 @@ const Gallery = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="content_info">Contenido Relacionado</Label>
+              <Label htmlFor="category_content">Categoría</Label>
               <Select
-                value={formData.content_info || ""}
+                value={formData.category_content || ""}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, content_info: value })
+                  setFormData({ ...formData, category_content: value })
                 }
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar contenido" />
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="Seleccionar categoría" />
                 </SelectTrigger>
-                <SelectContent>
-                  {contentInfos.map((info) => (
-                    <SelectItem key={info.documentId} value={info.documentId}>
-                      {info.title}
+                <SelectContent className="bg-background z-50">
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.documentId} value={cat.documentId}>
+                      {cat.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -476,9 +494,64 @@ const Gallery = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="images">Imágenes</Label>
+              <Label htmlFor="tags_content">Tags</Label>
+              <Select
+                value={formData.tags_content?.join(",") || ""}
+                onValueChange={(value) => {
+                  const currentTags = formData.tags_content || [];
+                  if (currentTags.includes(value)) {
+                    setFormData({
+                      ...formData,
+                      tags_content: currentTags.filter(t => t !== value)
+                    });
+                  } else {
+                    setFormData({
+                      ...formData,
+                      tags_content: [...currentTags, value]
+                    });
+                  }
+                }}
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="Seleccionar tags">
+                    {formData.tags_content && formData.tags_content.length > 0 ? (
+                      <div className="flex gap-1 flex-wrap">
+                        {formData.tags_content.map((tagId) => {
+                          const tag = tags.find(t => t.documentId === tagId || t.id === tagId);
+                          return tag ? (
+                            <span key={tagId} className="bg-primary/10 text-primary px-2 py-0.5 rounded text-xs">
+                              {tag.title}
+                            </span>
+                          ) : null;
+                        })}
+                      </div>
+                    ) : (
+                      "Seleccionar tags"
+                    )}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  {tags.map((tag) => (
+                    <SelectItem key={tag.documentId} value={tag.documentId}>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={formData.tags_content?.includes(tag.documentId)}
+                          readOnly
+                          className="mr-2"
+                        />
+                        {tag.title}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="media">Imágenes</Label>
               <Input
-                id="images"
+                id="media"
                 type="file"
                 accept="image/*"
                 multiple
@@ -490,11 +563,11 @@ const Gallery = () => {
                 </div>
               )}
               
-              {existingImages.length > 0 && (
+              {existingMedia.length > 0 && (
                 <div className="space-y-2">
                   <Label>Imágenes actuales:</Label>
                   <div className="grid grid-cols-4 gap-2">
-                    {existingImages.map((img) => (
+                    {existingMedia.map((img) => (
                       <div key={img.id} className="relative group">
                         <img
                           src={`${import.meta.env.VITE_API_URL || 'https://tec-adm.server-softplus.plus'}${img.url}`}
@@ -503,7 +576,7 @@ const Gallery = () => {
                         />
                         <button
                           type="button"
-                          onClick={() => handleRemoveExistingImage(img.id)}
+                          onClick={() => handleRemoveExistingMedia(img.id)}
                           className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           ✕
@@ -534,15 +607,15 @@ const Gallery = () => {
       <Dialog open={!!selectedGallery} onOpenChange={() => setSelectedGallery(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{selectedGallery?.name}</DialogTitle>
+            <DialogTitle>{selectedGallery?.title}</DialogTitle>
             {selectedGallery?.description && (
               <DialogDescription>{selectedGallery.description}</DialogDescription>
             )}
           </DialogHeader>
           
-          {selectedGallery?.images && selectedGallery.images.length > 0 ? (
+          {selectedGallery?.media && selectedGallery.media.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {selectedGallery.images.map((img) => (
+              {selectedGallery.media.map((img) => (
                 <div key={img.id} className="aspect-square overflow-hidden rounded-lg">
                   <img
                     src={`${import.meta.env.VITE_API_URL || 'https://tec-adm.server-softplus.plus'}${img.url}`}
@@ -567,7 +640,7 @@ const Gallery = () => {
             <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
             <AlertDialogDescription>
               Esta acción no se puede deshacer. Se eliminará permanentemente la
-              galería "{deletingItem?.name}".
+              galería "{deletingItem?.title}".
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
