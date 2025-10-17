@@ -8,11 +8,9 @@ import {
   getCoreRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  getFilteredRowModel,
   flexRender,
   ColumnDef,
   SortingState,
-  ColumnFiltersState,
 } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -88,7 +86,6 @@ export const CatalogTable: React.FC<CatalogTableProps> = ({
   const { user } = useAuth();
   const [searchValue, setSearchValue] = useState('');
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   // Agregar columna de acciones si hay permisos
   const columns = useMemo(() => {
@@ -132,12 +129,9 @@ export const CatalogTable: React.FC<CatalogTableProps> = ({
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
     state: {
       sorting,
-      columnFilters,
     },
     manualPagination: true,
     pageCount: pagination?.pageCount || 1,
@@ -215,24 +209,12 @@ export const CatalogTable: React.FC<CatalogTableProps> = ({
                 <TableRow>
                   {headerGroup.headers.map((header) => (
                     <TableHead key={header.id}>
-                      <div className="flex flex-col gap-2">
-                        <div>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                        </div>
-                        {header.column.getCanFilter() && header.id !== 'actions' && (
-                          <Input
-                            placeholder="Filtrar..."
-                            value={(header.column.getFilterValue() ?? '') as string}
-                            onChange={(e) => header.column.setFilterValue(e.target.value)}
-                            className="h-8 text-xs"
-                          />
-                        )}
-                      </div>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                     </TableHead>
                   ))}
                 </TableRow>
