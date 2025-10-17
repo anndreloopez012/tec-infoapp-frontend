@@ -5,9 +5,8 @@ import {
   FolderOpen, 
   TrendingUp, 
   Home, 
-  User,
-  Calendar,
-  Newspaper
+  Users, 
+  User
 } from 'lucide-react';
 import { useAuthPermissions } from '@/hooks/useAuthPermissions';
 
@@ -42,25 +41,18 @@ const menuItems: MenuItem[] = [
     color: 'accent'
   },
   {
-    id: 'calendar',
-    title: 'Calendario',
-    icon: Calendar,
-    href: '/event-calendar',
+    id: 'clients',
+    title: 'Clientes',
+    icon: Users,
+    href: '/customer',
     color: 'primary'
-  },
-  {
-    id: 'content',
-    title: 'Contenido',
-    icon: Newspaper,
-    href: '/content-global',
-    color: 'secondary'
   },
   {
     id: 'profile',
     title: 'Perfil',
     icon: User,
     href: '/profile',
-    color: 'accent'
+    color: 'secondary'
   }
 ];
 
@@ -74,14 +66,15 @@ const MobileFloatingMenu: React.FC<MobileFloatingMenuProps> = ({ sidebarOpen = f
 
   const isActive = (path: string) => location.pathname === path;
 
-  // Filter menu items based on permissions (except home, profile, calendar, and content)
+  // Filter menu items based on permissions (except home and profile)
   const filteredMenuItems = menuItems.filter(item => {
-    if (item.id === 'home' || item.id === 'profile' || item.id === 'calendar' || item.id === 'content') return true;
+    if (item.id === 'home' || item.id === 'profile') return true;
     
     // Map menu items to module permissions
     const moduleMap = {
       'projects': 'api::project',
-      'sales': 'api::sale'
+      'sales': 'api::sale',
+      'clients': 'api::customer'
     };
     
     const moduleId = moduleMap[item.id as keyof typeof moduleMap];
