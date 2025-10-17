@@ -48,6 +48,8 @@ export const ContentCategory: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
+      console.log('📋 [ContentCategory] Cargando datos desde API: content-category');
+      
       const params: any = {
         page: pagination.page,
         pageSize: pagination.pageSize,
@@ -59,7 +61,9 @@ export const ContentCategory: React.FC = () => {
         params.createdBy = user.id;
       }
 
+      console.log('📋 [ContentCategory] Parámetros de consulta:', params);
       const response = await contentCategoryService.getAll(params);
+      console.log('📋 [ContentCategory] Respuesta de API:', response);
       
       if (response.success) {
         setData(response.data);
@@ -75,7 +79,7 @@ export const ContentCategory: React.FC = () => {
         toast.error(response.error || 'Error al cargar datos');
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('❌ [ContentCategory] Error:', error);
       toast.error('Error al cargar datos');
     } finally {
       setLoading(false);

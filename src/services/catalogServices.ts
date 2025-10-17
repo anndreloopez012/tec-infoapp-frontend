@@ -278,11 +278,11 @@ class CatalogService {
 // ===============================================
 // INSTANCIAS DE SERVICIOS PARA CADA CATÁLOGO
 // ===============================================
-export const eventAttendanceService = new CatalogService('event-attendances', 'Asistencia de Eventos');
-export const contentCategoryService = new CatalogService('content-categories', 'Categorías de Contenido');
-export const companyService = new CatalogService('companies', 'Empresas');
-export const eventLocationService = new CatalogService('event-locations', 'Lugares de Eventos');
-export const contentTagService = new CatalogService('content-tags', 'Tags de Contenido');
-export const eventTypeService = new CatalogService('event-types', 'Tipos de Evento');
+export const eventAttendanceService = new CatalogService('event-attendance', 'Asistencia de Eventos');
+export const contentCategoryService = new CatalogService('content-category', 'Categorías de Contenido');
+export const companyService = new CatalogService('company', 'Empresas');
+export const eventLocationService = new CatalogService('event-location', 'Lugares de Eventos');
+export const contentTagService = new CatalogService('content-tag', 'Tags de Contenido');
+export const eventTypeService = new CatalogService('event-type', 'Tipos de Evento');
 
 export default CatalogService;

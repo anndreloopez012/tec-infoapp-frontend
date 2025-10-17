@@ -48,6 +48,8 @@ export const EventAttendance: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
+      console.log('📋 [EventAttendance] Cargando datos desde API: event-attendance');
+      
       const params: any = {
         page: pagination.page,
         pageSize: pagination.pageSize,
@@ -59,7 +61,9 @@ export const EventAttendance: React.FC = () => {
         params.createdBy = user.id;
       }
 
+      console.log('📋 [EventAttendance] Parámetros de consulta:', params);
       const response = await eventAttendanceService.getAll(params);
+      console.log('📋 [EventAttendance] Respuesta de API:', response);
       
       if (response.success) {
         setData(response.data);
@@ -75,7 +79,7 @@ export const EventAttendance: React.FC = () => {
         toast.error(response.error || 'Error al cargar datos');
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('❌ [EventAttendance] Error:', error);
       toast.error('Error al cargar datos');
     } finally {
       setLoading(false);

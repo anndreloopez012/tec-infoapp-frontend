@@ -49,6 +49,8 @@ export const ContentTag: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
+      console.log('📋 [ContentTag] Cargando datos desde API: content-tag');
+      
       const params: any = {
         page: pagination.page,
         pageSize: pagination.pageSize,
@@ -60,7 +62,9 @@ export const ContentTag: React.FC = () => {
         params.createdBy = user.id;
       }
 
+      console.log('📋 [ContentTag] Parámetros de consulta:', params);
       const response = await contentTagService.getAll(params);
+      console.log('📋 [ContentTag] Respuesta de API:', response);
       
       if (response.success) {
         setData(response.data);
@@ -76,7 +80,7 @@ export const ContentTag: React.FC = () => {
         toast.error(response.error || 'Error al cargar datos');
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('❌ [ContentTag] Error:', error);
       toast.error('Error al cargar datos');
     } finally {
       setLoading(false);
