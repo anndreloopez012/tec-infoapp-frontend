@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2, Search, Calendar, MapPin, Users, Clock } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Plus, Pencil, Trash2, Search, Calendar, MapPin, Users, Clock, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,6 +32,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { eventService, eventTypeService, eventLocationService, companyService } from "@/services/catalogServices";
 import { Skeleton } from "@/components/ui/skeleton";
+import { API_CONFIG } from "@/config/api";
+import axios from "axios";
 import {
   Pagination,
   PaginationContent,
@@ -90,6 +92,10 @@ const Event = () => {
     location: "",
     organizers_company: "",
   });
+
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { toast } = useToast();
 
@@ -173,6 +179,8 @@ const Event = () => {
       location: "",
       organizers_company: "",
     });
+    setImageFile(null);
+    setImagePreview("");
     setIsDialogOpen(true);
   };
 
@@ -189,6 +197,18 @@ const Event = () => {
       location: item.location?.documentId || "",
       organizers_company: item.organizers_company?.documentId || "",
     });
+
+    // Set image preview if exists
+    if (item.main_image?.url) {
+      const imageUrl = item.main_image.url.startsWith('http') 
+        ? item.main_image.url 
+        : `${API_CONFIG.BASE_URL}${item.main_image.url}`;
+      setImagePreview(imageUrl);
+    } else {
+      setImagePreview("");
+    }
+    setImageFile(null);
+    
     setIsDialogOpen(true);
   };
 
@@ -237,6 +257,31 @@ const Event = () => {
     }
 
     try {
+      let uploadedImageId = editingItem?.main_image?.id || null;
+
+      // Upload new image if selected
+      if (imageFile) {
+        const imageFormData = new FormData();
+        imageFormData.append("files", imageFile);
+
+        const token = localStorage.getItem(API_CONFIG.STORAGE_KEYS.AUTH_TOKEN) || API_CONFIG.AUTH_TOKEN;
+
+        const uploadResponse = await axios.post(
+          `${API_CONFIG.BASE_URL}/${API_CONFIG.API_PREFIX}/upload`,
+          imageFormData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (uploadResponse.data && uploadResponse.data[0]) {
+          uploadedImageId = uploadResponse.data[0].id;
+        }
+      }
+
       const payload: any = {
         title: formData.title,
         description: formData.description,
@@ -246,6 +291,7 @@ const Event = () => {
         type_event: formData.type_event || null,
         location: formData.location || null,
         organizers_company: formData.organizers_company || null,
+        main_image: uploadedImageId,
       };
 
       const result = editingItem
@@ -260,6 +306,8 @@ const Event = () => {
             : "Evento creado correctamente",
         });
         setIsDialogOpen(false);
+        setImageFile(null);
+        setImagePreview("");
         loadData();
       } else {
         throw new Error(result.error);
@@ -270,6 +318,26 @@ const Event = () => {
         title: "Error",
         description: error.message || "No se pudo guardar el evento",
       });
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
@@ -332,6 +400,18 @@ const Event = () => {
                       </CardDescription>
                     </div>
                   </div>
+                  {item.main_image && (
+                    <div className="mt-4 rounded-lg overflow-hidden">
+                      <img 
+                        src={item.main_image.url.startsWith('http') 
+                          ? item.main_image.url 
+                          : `${API_CONFIG.BASE_URL}${item.main_image.url}`
+                        } 
+                        alt={item.title || "Imagen del evento"}
+                        className="w-full h-48 object-cover"
+                      />
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -549,6 +629,37 @@ const Event = () => {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="main_image">Imagen Principal</Label>
+              <div className="space-y-2">
+                <Input
+                  ref={fileInputRef}
+                  id="main_image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                />
+                {imagePreview && (
+                  <div className="relative">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-full h-48 object-cover rounded-lg"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleRemoveImage}
+                      className="absolute top-2 right-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
 
