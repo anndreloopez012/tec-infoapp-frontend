@@ -37,6 +37,14 @@ import NotificationSettings from '@/pages/admin/NotificationSettings';
 import AdminNotifications from '@/pages/admin/AdminNotifications';
 import Bitacora from '@/pages/admin/Bitacora';
 
+// Catalog Pages
+import EventAttendance from '@/pages/catalog/EventAttendance';
+import ContentCategory from '@/pages/catalog/ContentCategory';
+import Company from '@/pages/catalog/Company';
+import EventLocation from '@/pages/catalog/EventLocation';
+import ContentTag from '@/pages/catalog/ContentTag';
+import EventType from '@/pages/catalog/EventType';
+
 // Layout
 import ModernLayout from '@/components/layout/ModernLayout';
 import NotificationIntegration from '@/components/NotificationIntegration';
@@ -128,6 +136,14 @@ const App = () => {
                 </ProtectedRoute>
               } />
               <Route path="/profile" element={<Profile />} />
+              
+              {/* Catalog Routes */}
+              <Route path="/catalog/event-attendance" element={<EventAttendance />} />
+              <Route path="/catalog/content-category" element={<ContentCategory />} />
+              <Route path="/catalog/company" element={<Company />} />
+              <Route path="/catalog/event-location" element={<EventLocation />} />
+              <Route path="/catalog/content-tag" element={<ContentTag />} />
+              <Route path="/catalog/event-type" element={<EventType />} />
               
               {/* Rutas dinámicas para módulos */}
               <Route path="/:module" element={<ModulePage />} />
