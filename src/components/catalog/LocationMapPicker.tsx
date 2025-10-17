@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { MapPin } from 'lucide-react';
 import { useCapacitorGeolocation } from '@/hooks/useCapacitorGeolocation';
+import { MAPBOX_CONFIG } from '@/config/mapbox';
 
 interface LocationMapPickerProps {
   value?: string;
@@ -37,15 +38,6 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    // Check if Mapbox token is available
-    const mapboxToken = localStorage.getItem('mapbox_token') || '';
-    
-    if (!mapboxToken) {
-      console.warn('No Mapbox token found. Please add your token.');
-      return;
-    }
-
-    // Initialize map with a default token message
     const initialCoords = parseCoordinates(value) || [-99.1332, 19.4326]; // Default to Mexico City
     
     try {
@@ -54,7 +46,7 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
         style: 'mapbox://styles/mapbox/streets-v12',
         center: initialCoords,
         zoom: 12,
-        accessToken: mapboxToken
+        accessToken: MAPBOX_CONFIG.accessToken
       });
 
     // Add navigation controls
@@ -135,49 +127,10 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
     }
   };
 
-  const [showTokenInput, setShowTokenInput] = useState(!localStorage.getItem('mapbox_token'));
-  const [tokenInput, setTokenInput] = useState('');
-
-  const handleSaveToken = () => {
-    if (tokenInput.trim()) {
-      localStorage.setItem('mapbox_token', tokenInput.trim());
-      setShowTokenInput(false);
-      window.location.reload(); // Reload to initialize map with token
-    }
-  };
-
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
       
-      {showTokenInput && (
-        <div className="p-4 border rounded-md bg-muted/50 space-y-2">
-          <p className="text-sm font-medium">Token de Mapbox requerido</p>
-          <p className="text-xs text-muted-foreground">
-            Para usar el mapa, necesitas un token de Mapbox. Obtén uno gratis en{' '}
-            <a 
-              href="https://account.mapbox.com/access-tokens/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-primary underline"
-            >
-              mapbox.com
-            </a>
-          </p>
-          <div className="flex gap-2">
-            <Input
-              value={tokenInput}
-              onChange={(e) => setTokenInput(e.target.value)}
-              placeholder="pk.eyJ1..."
-              className="flex-1"
-            />
-            <Button type="button" onClick={handleSaveToken} size="sm">
-              Guardar
-            </Button>
-          </div>
-        </div>
-      )}
-
       <div className="flex gap-2">
         <Input
           value={coordinates}
@@ -199,12 +152,8 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
       
       <div 
         ref={mapContainer} 
-        className="w-full h-64 rounded-md border bg-muted/30 flex items-center justify-center"
-      >
-        {!localStorage.getItem('mapbox_token') && (
-          <p className="text-sm text-muted-foreground">Configure el token de Mapbox para ver el mapa</p>
-        )}
-      </div>
+        className="w-full h-64 rounded-md border bg-muted"
+      />
       
       <p className="text-xs text-muted-foreground">
         Haz clic en el mapa o arrastra el marcador para seleccionar una ubicación.
