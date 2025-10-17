@@ -5,7 +5,8 @@ import {
   FolderOpen, 
   TrendingUp, 
   Home, 
-  Users, 
+  Calendar,
+  Newspaper,
   User
 } from 'lucide-react';
 import { useAuthPermissions } from '@/hooks/useAuthPermissions';
@@ -41,10 +42,17 @@ const menuItems: MenuItem[] = [
     color: 'accent'
   },
   {
-    id: 'clients',
-    title: 'Clientes',
-    icon: Users,
-    href: '/customer',
+    id: 'calendar',
+    title: 'Calendario',
+    icon: Calendar,
+    href: '/event-calendar',
+    color: 'secondary'
+  },
+  {
+    id: 'content-global',
+    title: 'Contenido Global',
+    icon: Newspaper,
+    href: '/content-global',
     color: 'primary'
   },
   {
@@ -73,8 +81,8 @@ const MobileFloatingMenu: React.FC<MobileFloatingMenuProps> = ({ sidebarOpen = f
     // Map menu items to module permissions
     const moduleMap = {
       'projects': 'api::project',
-      'sales': 'api::sale',
-      'clients': 'api::customer'
+      'sales': 'api::sale'
+      // 'calendar' y 'content-global' visibles para todos por defecto
     };
     
     const moduleId = moduleMap[item.id as keyof typeof moduleMap];

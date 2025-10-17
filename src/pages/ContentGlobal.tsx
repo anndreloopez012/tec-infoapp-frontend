@@ -127,11 +127,14 @@ const ContentGlobal = () => {
 
   const loadCategories = async () => {
     try {
-      const result = await contentCategoryService.getAll({ 
+      const result = await contentCategoryService.getAll({
         pageSize: 100,
-        filters: { active: true }
+        sort: 'name:asc',
+        additionalFilters: {
+          'filters[active][$eq]': 'true'
+        }
       });
-      
+
       if (result.success && result.data.length > 0) {
         setCategories(result.data);
         setSelectedCategory(result.data[0].id);
@@ -160,14 +163,14 @@ const ContentGlobal = () => {
       console.log('Loading content for category:', selectedCategory);
       const result = await contentInfoService.getAll({
         pageSize: 100,
-        populate: '*',
-        filters: {
-          category_content: { id: selectedCategory },
-          active: true,
-          status_content: 'published'
+        sort: 'publish_date:desc',
+        additionalFilters: {
+          'filters[category_content][id][$eq]': String(selectedCategory ?? ''),
+          'filters[active][$eq]': 'true',
+          'filters[status_content][$eq]': 'published'
         }
       });
-      
+
       console.log('Content loaded:', result.data.length, 'items');
       if (result.success) {
         setContent(result.data);
