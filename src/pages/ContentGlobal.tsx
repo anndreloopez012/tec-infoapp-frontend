@@ -77,6 +77,7 @@ interface Category {
   documentId: string;
   name: string;
   description?: string;
+  color?: string;
 }
 
 type ViewMode = 'grid' | 'list' | 'masonry' | 'compact';
@@ -193,6 +194,28 @@ const ContentGlobal = () => {
     return item.attachments[0];
   };
 
+  const getCategoryColor = (categoryId: number | undefined) => {
+    if (!categoryId) return null;
+    const category = categories.find(c => c.id === categoryId);
+    if (category?.color) return category.color;
+    
+    // Colores predeterminados que sean coherentes con el tema
+    const defaultColors = [
+      '#8B5CF6', // Purple
+      '#3B82F6', // Blue
+      '#10B981', // Green
+      '#F59E0B', // Amber
+      '#EF4444', // Red
+      '#EC4899', // Pink
+      '#6366F1', // Indigo
+      '#14B8A6', // Teal
+    ];
+    
+    // Usar el ID de la categoría para un color consistente
+    const index = categoryId % defaultColors.length;
+    return defaultColors[index];
+  };
+
   const getBestImageFormat = (attachment: Attachment) => {
     if (!attachment) return null;
     // Prefer medium format for cards, fallback to original
@@ -274,7 +297,14 @@ const ContentGlobal = () => {
                 </CardTitle>
                 <CardDescription className="flex flex-wrap gap-2 mt-2">
                   {item.category_content && (
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge 
+                      variant="secondary" 
+                      className="text-xs border-2 transition-all hover:scale-105"
+                      style={{ 
+                        borderColor: getCategoryColor(item.category_content.id) || undefined,
+                        backgroundColor: `${getCategoryColor(item.category_content.id)}15` || undefined
+                      }}
+                    >
                       <Tag className="w-3 h-3 mr-1" />
                       {item.category_content.name}
                     </Badge>
@@ -547,40 +577,46 @@ const ContentGlobal = () => {
           {/* Category Navigation - Main Nav Style */}
           {categories.length > 0 && (
             <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between py-4">
-              {/* Categories as Navigation */}
-              <nav className="flex-1">
-                <div className="flex flex-wrap gap-2 items-center">
-                  {categories.map((category, index) => (
-                    <motion.button
-                      key={category.id}
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      onClick={() => setSelectedCategory(category.id)}
-                      className={`
-                        relative px-6 py-3 rounded-lg font-medium text-sm transition-all duration-300
-                        ${selectedCategory === category.id
-                          ? 'text-primary-foreground shadow-lg'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                        }
-                      `}
-                    >
-                      {/* Animated background for active state */}
-                      {selectedCategory === category.id && (
-                        <motion.div
-                          layoutId="activeCategory"
-                          className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 rounded-lg"
-                          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                        />
-                      )}
-                      
-                      {/* Category icon and name */}
-                      <span className="relative z-10 flex items-center gap-2">
-                        <Tag className="w-4 h-4" />
-                        {category.name}
-                      </span>
-                    </motion.button>
-                  ))}
+              {/* Categories as Navigation - Centered */}
+              <nav className="flex-1 flex justify-center">
+                <div className="flex flex-wrap gap-2 items-center justify-center">
+                  {categories.map((category, index) => {
+                    const categoryColor = getCategoryColor(category.id);
+                    const isActive = selectedCategory === category.id;
+                    
+                    return (
+                      <motion.button
+                        key={category.id}
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        onClick={() => setSelectedCategory(category.id)}
+                        className={`
+                          relative px-6 py-3 rounded-lg font-medium text-sm transition-all duration-300
+                          ${isActive
+                            ? 'text-white shadow-lg scale-105'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                          }
+                        `}
+                      >
+                        {/* Animated background with category color */}
+                        {isActive && (
+                          <motion.div
+                            layoutId="activeCategory"
+                            className="absolute inset-0 rounded-lg"
+                            style={{ backgroundColor: categoryColor || undefined }}
+                            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                          />
+                        )}
+                        
+                        {/* Category icon and name */}
+                        <span className="relative z-10 flex items-center gap-2">
+                          <Tag className="w-4 h-4" />
+                          {category.name}
+                        </span>
+                      </motion.button>
+                    );
+                  })}
                 </div>
               </nav>
 
@@ -740,8 +776,15 @@ const ContentGlobal = () => {
                         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                           Categoría
                         </label>
-                        <Badge variant="secondary" className="transition-transform hover:scale-105">
-                          <Tag className="w-3 h-3 mr-1" />
+                        <Badge 
+                          variant="secondary" 
+                          className="text-sm border-2 transition-all hover:scale-105"
+                          style={{ 
+                            borderColor: getCategoryColor(selectedContent.category_content.id) || undefined,
+                            backgroundColor: `${getCategoryColor(selectedContent.category_content.id)}15` || undefined
+                          }}
+                        >
+                          <Tag className="w-4 h-4 mr-1" />
                           {selectedContent.category_content.name}
                         </Badge>
                       </div>
