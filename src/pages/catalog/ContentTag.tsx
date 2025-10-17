@@ -54,7 +54,7 @@ export const ContentTag: React.FC = () => {
         page: pagination.page,
         pageSize: pagination.pageSize,
         search: searchQuery,
-        searchFields: ['name', 'slug', 'description'],
+        searchFields: ['name', 'slug'],
       };
 
       if (showOnlyOwn && (user?.documentId || user?.id)) {
@@ -112,18 +112,6 @@ export const ContentTag: React.FC = () => {
         cell: ({ row }) => <span className="font-mono text-sm">{row.original.attributes?.slug || 'N/A'}</span>,
       },
       {
-        accessorKey: 'attributes.description',
-        header: 'Descripción',
-        cell: ({ row }) => {
-          const desc = row.original.attributes?.description;
-          return desc ? (
-            <span className="text-sm text-muted-foreground line-clamp-2">{desc}</span>
-          ) : (
-            'N/A'
-          );
-        },
-      },
-      {
         accessorKey: 'attributes.color',
         header: 'Color',
         cell: ({ row }) => {
@@ -131,10 +119,10 @@ export const ContentTag: React.FC = () => {
           return color ? (
             <div className="flex items-center gap-2">
               <div 
-                className="w-4 h-4 rounded-full border" 
+                className="w-6 h-6 rounded border border-border" 
                 style={{ backgroundColor: color }}
               />
-              <span className="text-sm">{color}</span>
+              <span className="font-mono text-sm">{color}</span>
             </div>
           ) : (
             'N/A'
@@ -171,19 +159,12 @@ export const ContentTag: React.FC = () => {
       description: 'Identificador único para URLs',
     },
     {
-      name: 'description',
-      label: 'Descripción',
-      type: 'textarea' as const,
-      required: false,
-      placeholder: 'Descripción del tag',
-    },
-    {
       name: 'color',
       label: 'Color',
-      type: 'text' as const,
+      type: 'color' as const,
       required: false,
       placeholder: '#FF5733',
-      description: 'Código hexadecimal del color',
+      description: 'Selecciona un color para el tag',
     },
   ];
 
