@@ -44,6 +44,14 @@ export const Company: React.FC = () => {
   const canEdit = hasPermission('company.update');
   const canDelete = hasPermission('company.delete');
   const canViewAll = hasPermission('company.find');
+  
+  console.log('🔐 Company permissions:', {
+    canCreate,
+    canEdit,
+    canDelete,
+    canViewAll,
+    userPermissions: hasPermission
+  });
 
   // Cargar datos
   const loadData = async () => {

@@ -265,6 +265,8 @@ export const PermissionsProvider = ({ children }) => {
   // Check if user has specific permission
   const hasPermission = useCallback(
     (permission) => {
+      console.log('🔍 Checking permission:', permission, 'Available:', state.userPermissions);
+      
       // Verificar diferentes formatos de permisos
       if (state.userPermissions[permission]) return true;
 
