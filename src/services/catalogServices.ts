@@ -88,15 +88,6 @@ class CatalogService {
         });
       }
       
-      // Filtro por creador (mis registros vs todos)
-      if (params.createdBy) {
-        // Intentar con varios campos comunes: user, owner, createdBy, author
-        queryParams.append('filters[$or][0][user][id][$eq]', params.createdBy);
-        queryParams.append('filters[$or][1][owner][id][$eq]', params.createdBy);
-        queryParams.append('filters[$or][2][createdBy][id][$eq]', params.createdBy);
-        queryParams.append('filters[$or][3][author][id][$eq]', params.createdBy);
-      }
-      
       // Filtros adicionales personalizados
       if (params.additionalFilters) {
         Object.entries(params.additionalFilters).forEach(([key, value]) => {
