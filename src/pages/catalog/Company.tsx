@@ -57,8 +57,8 @@ export const Company: React.FC = () => {
         searchFields: ['name', 'description', 'email', 'phone'],
       };
 
-      if (showOnlyOwn && user?.id) {
-        params.createdBy = user.id;
+      if (showOnlyOwn && (user?.documentId || user?.id)) {
+        params.createdByDocumentId = user.documentId || user.id;
       }
 
       const response = await companyService.getAll(params);

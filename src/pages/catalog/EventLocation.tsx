@@ -57,8 +57,8 @@ export const EventLocation: React.FC = () => {
         searchFields: ['name', 'address', 'city', 'country'],
       };
 
-      if (showOnlyOwn && user?.id) {
-        params.createdBy = user.id;
+      if (showOnlyOwn && (user?.documentId || user?.id)) {
+        params.createdByDocumentId = user.documentId || user.id;
       }
 
       const response = await eventLocationService.getAll(params);

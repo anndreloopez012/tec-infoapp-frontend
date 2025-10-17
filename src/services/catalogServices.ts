@@ -88,6 +88,13 @@ class CatalogService {
         });
       }
       
+      // Filtro "Mis registros" (createdBy por documentId/id)
+      if (params.createdByDocumentId) {
+        queryParams.append('filters[createdBy][documentId][$eq]', params.createdByDocumentId);
+      } else if (params.createdBy) {
+        queryParams.append('filters[createdBy][id][$eq]', params.createdBy);
+      }
+      
       // Filtros adicionales personalizados
       if (params.additionalFilters) {
         Object.entries(params.additionalFilters).forEach(([key, value]) => {

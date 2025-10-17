@@ -56,8 +56,8 @@ export const ContentCategory: React.FC = () => {
         searchFields: ['name', 'description', 'slug'],
       };
 
-      if (showOnlyOwn && user?.id) {
-        params.createdBy = user.id;
+      if (showOnlyOwn && (user?.documentId || user?.id)) {
+        params.createdByDocumentId = user.documentId || user.id;
       }
 
       const response = await contentCategoryService.getAll(params);

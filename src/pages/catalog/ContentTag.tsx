@@ -57,8 +57,8 @@ export const ContentTag: React.FC = () => {
         searchFields: ['name', 'slug', 'description'],
       };
 
-      if (showOnlyOwn && user?.id) {
-        params.createdBy = user.id;
+      if (showOnlyOwn && (user?.documentId || user?.id)) {
+        params.createdByDocumentId = user.documentId || user.id;
       }
 
       const response = await contentTagService.getAll(params);

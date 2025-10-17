@@ -56,8 +56,8 @@ export const EventAttendance: React.FC = () => {
         searchFields: ['event', 'attendee', 'status'],
       };
 
-      if (showOnlyOwn && user?.id) {
-        params.createdBy = user.id;
+      if (showOnlyOwn && (user?.documentId || user?.id)) {
+        params.createdByDocumentId = user.documentId || user.id;
       }
 
       const response = await eventAttendanceService.getAll(params);
