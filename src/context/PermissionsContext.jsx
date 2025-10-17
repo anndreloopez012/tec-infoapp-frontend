@@ -114,7 +114,11 @@ export const PermissionsProvider = ({ children }) => {
       });
       
       // Generar menús de navegación basados en los permisos
-      const navigationMenus = generateNavigationMenus(result.role?.permissions || {});
+      // Usar directamente result.role.permissions que tiene la estructura correcta de Strapi
+      const permissionsObj = result.role?.permissions || {};
+      console.log('🔍 Estructura de permisos recibida:', permissionsObj);
+      
+      const navigationMenus = generateNavigationMenus(permissionsObj);
       
       dispatch({
         type: ActionTypes.SET_PERMISSIONS,
@@ -130,6 +134,7 @@ export const PermissionsProvider = ({ children }) => {
       });
       
       console.log('📋 Menús de navegación generados:', navigationMenus.length);
+      console.log('📋 Menús:', navigationMenus);
       
       return {
         success: true,
@@ -151,33 +156,50 @@ export const PermissionsProvider = ({ children }) => {
 
   // Generate navigation menus based on permissions
   const generateNavigationMenus = useCallback((permissionsObj) => {
+    console.log('🔍 Generando menús desde permisos:', permissionsObj);
     const menus = [];
     
     // API endpoints que queremos mostrar como menús principales
     // Excluimos endpoints internos que no deben aparecer en el menú de usuarios
-    const apiEndpoints = Object.keys(permissionsObj).filter(key => 
-      key.startsWith('api::') && 
-      key !== 'api::global' && 
-      key !== 'api::type-user' &&
-      key !== 'api::audit-log' &&
-      key !== 'api::global-notification' &&
-      key !== 'api::push-token' &&
-      key !== 'api::user-notification'
-    );
+    const apiEndpoints = Object.keys(permissionsObj).filter(key => {
+      const isApiEndpoint = key.startsWith('api::');
+      const isExcluded = [
+        'api::global',
+        'api::type-user',
+        'api::audit-log',
+        'api::global-notification',
+        'api::push-token',
+        'api::user-notification'
+      ].includes(key);
+      
+      console.log(`🔍 Endpoint ${key}: isApi=${isApiEndpoint}, isExcluded=${isExcluded}`);
+      return isApiEndpoint && !isExcluded;
+    });
+    
+    console.log('🔍 Endpoints de API encontrados:', apiEndpoints);
     
     apiEndpoints.forEach(endpoint => {
-      const controllers = permissionsObj[endpoint]?.controllers || {};
+      const endpointData = permissionsObj[endpoint];
+      console.log(`🔍 Procesando endpoint ${endpoint}:`, endpointData);
+      
+      const controllers = endpointData?.controllers || {};
       const controllerNames = Object.keys(controllers);
+      
+      console.log(`🔍 Controladores en ${endpoint}:`, controllerNames);
       
       if (controllerNames.length > 0) {
         const mainController = controllerNames[0];
         const actions = controllers[mainController];
         
+        console.log(`🔍 Acciones en ${mainController}:`, actions);
+        
         // Solo agregar al menú si tiene permisos habilitados
-        const hasEnabledPermissions = Object.values(actions).some(action => action.enabled);
+        const hasEnabledPermissions = Object.values(actions).some(action => action?.enabled);
+        
+        console.log(`🔍 ${endpoint} tiene permisos habilitados:`, hasEnabledPermissions);
         
         if (hasEnabledPermissions) {
-          menus.push({
+          const menu = {
             id: endpoint,
             title: getDisplayName(endpoint),
             controller: mainController,
@@ -189,13 +211,18 @@ export const PermissionsProvider = ({ children }) => {
               canDelete: actions.delete?.enabled || false
             },
             route: generateRoute(endpoint)
-          });
+          };
+          
+          console.log('✅ Menú agregado:', menu);
+          menus.push(menu);
         }
       }
     });
     
     // Ordenar menús alfabéticamente
     menus.sort((a, b) => a.title.localeCompare(b.title));
+    
+    console.log('✅ Total de menús generados:', menus.length);
     
     return menus;
   }, []);
