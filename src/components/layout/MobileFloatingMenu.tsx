@@ -45,7 +45,7 @@ const menuItems: MenuItem[] = [
     id: 'calendar',
     title: 'Calendario',
     icon: Calendar,
-    href: '/event-calendar',
+    href: '/calendar',
     color: 'secondary'
   },
   {

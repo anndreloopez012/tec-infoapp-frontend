@@ -131,7 +131,7 @@ const ContentGlobal = () => {
         pageSize: 100,
         sort: 'name:asc',
         additionalFilters: {
-          'filters[active][$eq]': 'true'
+          'filters[active][$eq]': true
         }
       });
 
@@ -158,6 +158,8 @@ const ContentGlobal = () => {
   };
 
   const loadContent = async () => {
+    if (!selectedCategory) return;
+    
     setLoading(true);
     try {
       console.log('Loading content for category:', selectedCategory);
@@ -165,8 +167,8 @@ const ContentGlobal = () => {
         pageSize: 100,
         sort: 'publish_date:desc',
         additionalFilters: {
-          'filters[category_content][id][$eq]': String(selectedCategory ?? ''),
-          'filters[active][$eq]': 'true',
+          'filters[category_content][id][$eq]': selectedCategory,
+          'filters[active][$eq]': true,
           'filters[status_content][$eq]': 'published'
         }
       });
