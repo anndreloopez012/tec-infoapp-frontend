@@ -45,7 +45,7 @@ const menuItems: MenuItem[] = [
     id: 'calendar',
     title: 'Calendario',
     icon: Calendar,
-    href: '/calendar',
+    href: 'https://preview--tec-infoapp-frontend.lovable.app/calendar',
     color: 'secondary'
   },
   {

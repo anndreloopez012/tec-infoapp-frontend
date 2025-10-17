@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
-import { contentInfoService, contentCategoryService } from "@/services/catalogServices";
+import { contentInfoService } from "@/services/catalogServices";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -121,32 +121,51 @@ const ContentGlobal = () => {
   };
 
   const loadCategories = async () => {
+    setLoading(true);
     try {
-      const result = await contentCategoryService.getAll({
+      // Cargar contenido publicado y derivar categorías desde content-info
+      const result = await contentInfoService.getAll({
         pageSize: 100,
-        sort: "name:asc",
+        sort: "publish_date:desc",
         additionalFilters: {
+          "filters[status_content][$eq]": "published",
           "filters[active][$eq]": true,
         },
       });
 
-      if (result.success && result.data.length > 0) {
-        setCategories(result.data);
-        setSelectedCategory(result.data[0].id);
-      } else {
-        toast({
-          title: "No hay categorías disponibles",
-          description: "Por favor, crea categorías de contenido primero.",
-          variant: "destructive",
+      if (result.success) {
+        // Derivar categorías únicas presentes en el contenido
+        const uniqueMap = new Map<number, Category>();
+        (result.data || []).forEach((item: any) => {
+          const cat = item.category_content;
+          if (cat?.id && cat?.name) {
+            uniqueMap.set(cat.id, {
+              id: cat.id,
+              documentId: cat.documentId || String(cat.id),
+              name: cat.name,
+              description: cat.description,
+              color: cat.color,
+            });
+          }
         });
+
+        const derivedCategories = Array.from(uniqueMap.values());
+        setCategories(derivedCategories);
+
+        // Establecer contenido inicial
+        setContent(result.data || []);
+        setFilteredContent(result.data || []);
+
+        // Seleccionar la primera categoría si existe
+        if (derivedCategories.length > 0) {
+          setSelectedCategory(derivedCategories[0].id);
+        } else {
+          setSelectedCategory(null);
+        }
       }
     } catch (error) {
-      console.error("Error loading categories:", error);
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar las categorías",
-        variant: "destructive",
-      });
+      console.error("Error loading categories from content-info:", error);
+      // Evitar mostrar toast destructivo aquí para no confundir al usuario
     } finally {
       setLoading(false);
     }
@@ -164,6 +183,7 @@ const ContentGlobal = () => {
         additionalFilters: {
           "filters[category_content][id][$eq]": selectedCategory,
           "filters[status_content][$eq]": "published",
+          "filters[active][$eq]": true,
         },
       });
 
