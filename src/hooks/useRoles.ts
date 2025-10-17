@@ -16,12 +16,14 @@ export function useRoles() {
     return targetUser.type_user.Tipo;
   };
 
-  // Obtiene el tipo de rol para comparaciones
+  // Obtiene el tipo de rol para comparaciones (normalizado)
   const getRoleType = (targetUser: any = user): string => {
-    if (!targetUser?.role?.type) return '';
-    return targetUser.role.type;
+    const rawType = targetUser?.role?.type || targetUser?.role?.name || '';
+    const t = String(rawType).toLowerCase().replace(/-/g, '_');
+    if (t === 'super_admin' || t === 'superadmin' || t === 'super') return 'super';
+    if (t === 'administrator' || t === 'admin') return 'admin';
+    return rawType || '';
   };
-
   return { 
     getRoleLabelForUser, 
     getUserType, 
