@@ -35,18 +35,27 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
   };
 
   useEffect(() => {
-    if (!mapContainer.current) return;
+    if (!mapContainer.current || map.current) return;
+
+    // Check if Mapbox token is available
+    const mapboxToken = localStorage.getItem('mapbox_token') || '';
+    
+    if (!mapboxToken) {
+      console.warn('No Mapbox token found. Please add your token.');
+      return;
+    }
 
     // Initialize map with a default token message
     const initialCoords = parseCoordinates(value) || [-99.1332, 19.4326]; // Default to Mexico City
     
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: initialCoords,
-      zoom: 12,
-      accessToken: 'YOUR_MAPBOX_TOKEN' // User needs to replace this
-    });
+    try {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: initialCoords,
+        zoom: 12,
+        accessToken: mapboxToken
+      });
 
     // Add navigation controls
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -77,8 +86,15 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
       onChange(coordString);
     });
 
+    } catch (error) {
+      console.error('Error initializing map:', error);
+    }
+
     return () => {
-      map.current?.remove();
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
     };
   }, []);
 
@@ -119,9 +135,49 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
     }
   };
 
+  const [showTokenInput, setShowTokenInput] = useState(!localStorage.getItem('mapbox_token'));
+  const [tokenInput, setTokenInput] = useState('');
+
+  const handleSaveToken = () => {
+    if (tokenInput.trim()) {
+      localStorage.setItem('mapbox_token', tokenInput.trim());
+      setShowTokenInput(false);
+      window.location.reload(); // Reload to initialize map with token
+    }
+  };
+
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
+      
+      {showTokenInput && (
+        <div className="p-4 border rounded-md bg-muted/50 space-y-2">
+          <p className="text-sm font-medium">Token de Mapbox requerido</p>
+          <p className="text-xs text-muted-foreground">
+            Para usar el mapa, necesitas un token de Mapbox. Obtén uno gratis en{' '}
+            <a 
+              href="https://account.mapbox.com/access-tokens/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary underline"
+            >
+              mapbox.com
+            </a>
+          </p>
+          <div className="flex gap-2">
+            <Input
+              value={tokenInput}
+              onChange={(e) => setTokenInput(e.target.value)}
+              placeholder="pk.eyJ1..."
+              className="flex-1"
+            />
+            <Button type="button" onClick={handleSaveToken} size="sm">
+              Guardar
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="flex gap-2">
         <Input
           value={coordinates}
@@ -135,17 +191,23 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
           size="icon"
           onClick={handleGetCurrentLocation}
           disabled={isLoading}
+          title="Usar mi ubicación actual"
         >
           <MapPin className="h-4 w-4" />
         </Button>
       </div>
+      
       <div 
         ref={mapContainer} 
-        className="w-full h-64 rounded-md border bg-muted"
-      />
+        className="w-full h-64 rounded-md border bg-muted/30 flex items-center justify-center"
+      >
+        {!localStorage.getItem('mapbox_token') && (
+          <p className="text-sm text-muted-foreground">Configure el token de Mapbox para ver el mapa</p>
+        )}
+      </div>
+      
       <p className="text-xs text-muted-foreground">
-        Haz clic en el mapa o arrastra el marcador para seleccionar una ubicación. 
-        Nota: Necesitas agregar tu token de Mapbox en el código.
+        Haz clic en el mapa o arrastra el marcador para seleccionar una ubicación.
       </p>
     </div>
   );

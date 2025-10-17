@@ -339,19 +339,19 @@ export const EventLocation: React.FC = () => {
 
             <LocationMapPicker
               value={formData.physical_location}
-              onChange={(coords) => setFormData({ ...formData, physical_location: coords })}
+              onChange={(coords) => setFormData(prev => ({ ...prev, physical_location: coords }))}
             />
 
             <GoogleMapsPreview
               value={formData.google_maps}
-              onChange={(iframe) => setFormData({ ...formData, google_maps: iframe })}
+              onChange={(iframe) => setFormData(prev => ({ ...prev, google_maps: iframe }))}
             />
 
             <div className="flex items-center space-x-2">
               <Switch
                 id="available"
                 checked={formData.available}
-                onCheckedChange={(checked) => setFormData({ ...formData, available: checked })}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, available: checked }))}
               />
               <Label htmlFor="available" className="cursor-pointer">
                 Disponible
