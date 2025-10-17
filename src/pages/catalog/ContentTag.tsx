@@ -207,7 +207,7 @@ export const ContentTag: React.FC = () => {
     try {
       let response;
       if (editingItem) {
-        response = await contentTagService.update(editingItem.id, formData);
+        response = await contentTagService.update(editingItem.documentId || editingItem.id, formData);
       } else {
         response = await contentTagService.create(formData);
       }
@@ -229,7 +229,7 @@ export const ContentTag: React.FC = () => {
     if (!itemToDelete) return;
 
     try {
-      const response = await contentTagService.delete(itemToDelete.id);
+      const response = await contentTagService.delete(itemToDelete.documentId || itemToDelete.id);
       
       if (response.success) {
         toast.success(response.message);

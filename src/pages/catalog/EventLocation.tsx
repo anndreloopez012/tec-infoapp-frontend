@@ -232,7 +232,7 @@ export const EventLocation: React.FC = () => {
     try {
       let response;
       if (editingItem) {
-        response = await eventLocationService.update(editingItem.id, formData);
+        response = await eventLocationService.update(editingItem.documentId || editingItem.id, formData);
       } else {
         response = await eventLocationService.create(formData);
       }
@@ -254,7 +254,7 @@ export const EventLocation: React.FC = () => {
     if (!itemToDelete) return;
 
     try {
-      const response = await eventLocationService.delete(itemToDelete.id);
+      const response = await eventLocationService.delete(itemToDelete.documentId || itemToDelete.id);
       
       if (response.success) {
         toast.success(response.message);

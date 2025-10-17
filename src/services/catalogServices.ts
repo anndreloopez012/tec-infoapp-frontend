@@ -113,12 +113,13 @@ class CatalogService {
 
       console.log(`✅ ${this.entityName} obtenidos:`, response.data?.data?.length || 0);
       
-      // Normalizar datos para que siempre tengamos { id, attributes, ...attributes }
+      // Normalizar datos para que siempre tengamos { id, documentId, attributes, ...attributes }
       const rawData = Array.isArray(response.data) ? response.data : response.data.data || [];
       const normalized = (rawData || []).map((item: any) => {
         const attrs = item?.attributes || item || {};
         return {
-          id: item?.id ?? attrs?.id ?? item?.documentId,
+          id: item?.id ?? attrs?.id,
+          documentId: item?.documentId ?? attrs?.documentId ?? item?.id,
           attributes: attrs,
           // también exponemos los atributos a nivel raíz para facilitar rendering
           ...attrs,
@@ -166,7 +167,8 @@ class CatalogService {
       const raw = response.data?.data ?? response.data;
       const attrs = raw?.attributes || raw || {};
       const normalized = {
-        id: raw?.id ?? attrs?.id ?? raw?.documentId,
+        id: raw?.id ?? attrs?.id,
+        documentId: raw?.documentId ?? attrs?.documentId ?? raw?.id,
         attributes: attrs,
         ...attrs,
       };
@@ -205,7 +207,8 @@ class CatalogService {
       const raw = response.data?.data ?? response.data;
       const attrs = raw?.attributes || raw || {};
       const normalized = {
-        id: raw?.id ?? attrs?.id ?? raw?.documentId,
+        id: raw?.id ?? attrs?.id,
+        documentId: raw?.documentId ?? attrs?.documentId ?? raw?.id,
         attributes: attrs,
         ...attrs,
       };
@@ -227,16 +230,16 @@ class CatalogService {
   }
 
   // ===============================================
-  // ACTUALIZAR REGISTRO
+  // ACTUALIZAR REGISTRO (usa documentId)
   // ===============================================
-  async update(id: string | number, data: any) {
+  async update(documentId: string | number, data: any) {
     try {
-      console.log(`✏️ Actualizando ${this.entityName}:`, id);
+      console.log(`✏️ Actualizando ${this.entityName}:`, documentId);
       const payload = this.sanitizeData(data);
       console.log('📦 Payload enviado (update):', payload);
       
       const response = await apiClient.put(
-        `/${API_CONFIG.API_PREFIX}/${this.endpoint}/${id}`, 
+        `/${API_CONFIG.API_PREFIX}/${this.endpoint}/${documentId}`, 
         { data: payload }
       );
       
@@ -245,7 +248,8 @@ class CatalogService {
       const raw = response.data?.data ?? response.data;
       const attrs = raw?.attributes || raw || {};
       const normalized = {
-        id: raw?.id ?? attrs?.id ?? raw?.documentId,
+        id: raw?.id ?? attrs?.id,
+        documentId: raw?.documentId ?? attrs?.documentId ?? raw?.id,
         attributes: attrs,
         ...attrs,
       };
@@ -267,14 +271,14 @@ class CatalogService {
   }
 
   // ===============================================
-  // ELIMINAR REGISTRO
+  // ELIMINAR REGISTRO (usa documentId)
   // ===============================================
-  async delete(id: string | number) {
+  async delete(documentId: string | number) {
     try {
-      console.log(`🗑️ Eliminando ${this.entityName}:`, id);
+      console.log(`🗑️ Eliminando ${this.entityName}:`, documentId);
       
       const response = await apiClient.delete(
-        `/${API_CONFIG.API_PREFIX}/${this.endpoint}/${id}`
+        `/${API_CONFIG.API_PREFIX}/${this.endpoint}/${documentId}`
       );
       
       console.log(`✅ ${this.entityName} eliminado`);

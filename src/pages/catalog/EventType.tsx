@@ -209,7 +209,7 @@ export const EventType: React.FC = () => {
     try {
       let response;
       if (editingItem) {
-        response = await eventTypeService.update(editingItem.id, formData);
+        response = await eventTypeService.update(editingItem.documentId || editingItem.id, formData);
       } else {
         response = await eventTypeService.create(formData);
       }
@@ -231,7 +231,7 @@ export const EventType: React.FC = () => {
     if (!itemToDelete) return;
 
     try {
-      const response = await eventTypeService.delete(itemToDelete.id);
+      const response = await eventTypeService.delete(itemToDelete.documentId || itemToDelete.id);
       
       if (response.success) {
         toast.success(response.message);

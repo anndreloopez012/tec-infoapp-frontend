@@ -206,7 +206,7 @@ export const Company: React.FC = () => {
     try {
       let response;
       if (editingItem) {
-        response = await companyService.update(editingItem.id, formData);
+        response = await companyService.update(editingItem.documentId || editingItem.id, formData);
       } else {
         response = await companyService.create(formData);
       }
@@ -228,7 +228,7 @@ export const Company: React.FC = () => {
     if (!itemToDelete) return;
 
     try {
-      const response = await companyService.delete(itemToDelete.id);
+      const response = await companyService.delete(itemToDelete.documentId || itemToDelete.id);
       
       if (response.success) {
         toast.success(response.message);

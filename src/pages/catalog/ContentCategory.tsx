@@ -175,7 +175,7 @@ export const ContentCategory: React.FC = () => {
     try {
       let response;
       if (editingItem) {
-        response = await contentCategoryService.update(editingItem.id, formData);
+        response = await contentCategoryService.update(editingItem.documentId || editingItem.id, formData);
       } else {
         response = await contentCategoryService.create(formData);
       }
@@ -197,7 +197,7 @@ export const ContentCategory: React.FC = () => {
     if (!itemToDelete) return;
 
     try {
-      const response = await contentCategoryService.delete(itemToDelete.id);
+      const response = await contentCategoryService.delete(itemToDelete.documentId || itemToDelete.id);
       
       if (response.success) {
         toast.success(response.message);

@@ -192,7 +192,7 @@ export const EventAttendance: React.FC = () => {
     try {
       let response;
       if (editingItem) {
-        response = await eventAttendanceService.update(editingItem.id, formData);
+        response = await eventAttendanceService.update(editingItem.documentId || editingItem.id, formData);
       } else {
         response = await eventAttendanceService.create(formData);
       }
@@ -214,7 +214,7 @@ export const EventAttendance: React.FC = () => {
     if (!itemToDelete) return;
 
     try {
-      const response = await eventAttendanceService.delete(itemToDelete.id);
+      const response = await eventAttendanceService.delete(itemToDelete.documentId || itemToDelete.id);
       
       if (response.success) {
         toast.success(response.message);
