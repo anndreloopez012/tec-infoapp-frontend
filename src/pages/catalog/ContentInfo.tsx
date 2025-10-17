@@ -37,6 +37,7 @@ interface ContentInfoData {
   category_content?: any;
   company?: any;
   author?: any;
+  attachments?: any[];
 }
 
 const ContentInfo = () => {
@@ -60,6 +61,8 @@ const ContentInfo = () => {
   });
   const [categories, setCategories] = useState<any[]>([]);
   const [companies, setCompanies] = useState<any[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [existingAttachments, setExistingAttachments] = useState<any[]>([]);
   
   const { toast } = useToast();
   const { user } = useAuth();
@@ -205,6 +208,8 @@ const ContentInfo = () => {
       active: true,
       status_content: 'draft',
     });
+    setUploadedFiles([]);
+    setExistingAttachments([]);
     setIsDialogOpen(true);
   };
 
@@ -223,6 +228,8 @@ const ContentInfo = () => {
       category_content: categoryId,
       company: companyId,
     });
+    setUploadedFiles([]);
+    setExistingAttachments(item.attachments || []);
     setIsDialogOpen(true);
   };
 
@@ -244,6 +251,16 @@ const ContentInfo = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setUploadedFiles(Array.from(e.target.files));
+    }
+  };
+
+  const handleRemoveExistingAttachment = (attachmentId: number) => {
+    setExistingAttachments(prev => prev.filter(att => att.id !== attachmentId));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -278,9 +295,38 @@ const ContentInfo = () => {
         payload.company = formData.company;
       }
 
-      const result = editingItem
+      // Mantener attachments existentes
+      if (existingAttachments.length > 0) {
+        payload.attachments = existingAttachments.map(att => att.id);
+      }
+
+      // Si hay archivos nuevos, primero crear/actualizar el registro
+      let result = editingItem
         ? await contentInfoService.update(editingItem.documentId!, payload)
         : await contentInfoService.create(payload);
+
+      // Luego subir los archivos nuevos si existen
+      if (result.success && uploadedFiles.length > 0) {
+        const formData = new FormData();
+        uploadedFiles.forEach(file => {
+          formData.append('files', file);
+        });
+        formData.append('ref', 'api::content-info.content-info');
+        formData.append('refId', result.data.id || result.data.documentId);
+        formData.append('field', 'attachments');
+
+        try {
+          await fetch(`${import.meta.env.VITE_API_URL || 'https://tec-adm.server-softplus.plus'}/api/upload`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+            body: formData,
+          });
+        } catch (uploadError) {
+          console.error('Error uploading files:', uploadError);
+        }
+      }
 
       if (result.success) {
         toast({
@@ -448,6 +494,46 @@ const ContentInfo = () => {
                 onCheckedChange={(checked) => setFormData(prev => ({ ...prev, active: checked }))}
               />
               <Label htmlFor="active">Activo</Label>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="attachments">Imágenes de Portada</Label>
+              <Input
+                id="attachments"
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFileChange}
+              />
+              {uploadedFiles.length > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  {uploadedFiles.length} archivo(s) seleccionado(s)
+                </div>
+              )}
+              
+              {existingAttachments.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Imágenes actuales:</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {existingAttachments.map((att) => (
+                      <div key={att.id} className="relative group">
+                        <img
+                          src={`${import.meta.env.VITE_API_URL || 'https://tec-adm.server-softplus.plus'}${att.url}`}
+                          alt={att.name}
+                          className="w-full h-24 object-cover rounded"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveExistingAttachment(att.id)}
+                          className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <DialogFooter>
