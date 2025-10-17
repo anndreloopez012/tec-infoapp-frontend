@@ -162,7 +162,9 @@ export const PermissionsProvider = ({ children }) => {
       key !== 'api::audit-log' &&
       key !== 'api::global-notification' &&
       key !== 'api::push-token' &&
-      key !== 'api::user-notification'
+      key !== 'api::user-notification' &&
+      key !== 'api::comment' &&
+      key !== 'api::system'
     );
     
     apiEndpoints.forEach(endpoint => {
