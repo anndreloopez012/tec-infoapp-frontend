@@ -40,10 +40,11 @@ export const EventType: React.FC = () => {
   const [itemToDelete, setItemToDelete] = useState<any>(null);
 
   // Permisos
-  const canCreate = hasPermission('event-type.create');
-  const canEdit = hasPermission('event-type.update');
-  const canDelete = hasPermission('event-type.delete');
-  const canViewAll = hasPermission('event-type.find');
+  // Permisos (temporalmente deshabilitados)
+  const canCreate = true;
+  const canEdit = true;
+  const canDelete = true;
+  const canViewAll = true;
 
   // Cargar datos
   const loadData = async () => {

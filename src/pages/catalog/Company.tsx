@@ -40,18 +40,11 @@ export const Company: React.FC = () => {
   const [itemToDelete, setItemToDelete] = useState<any>(null);
 
   // Permisos
-  const canCreate = hasPermission('company.create');
-  const canEdit = hasPermission('company.update');
-  const canDelete = hasPermission('company.delete');
-  const canViewAll = hasPermission('company.find');
-  
-  console.log('🔐 Company permissions:', {
-    canCreate,
-    canEdit,
-    canDelete,
-    canViewAll,
-    userPermissions: hasPermission
-  });
+  // Permisos (temporalmente deshabilitados)
+  const canCreate = true;
+  const canEdit = true;
+  const canDelete = true;
+  const canViewAll = true;
 
   // Cargar datos
   const loadData = async () => {
