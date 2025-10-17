@@ -49,8 +49,6 @@ export const Company: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      console.log('📋 [Company] Cargando datos desde API: company');
-      
       const params: any = {
         page: pagination.page,
         pageSize: pagination.pageSize,
@@ -62,9 +60,7 @@ export const Company: React.FC = () => {
         params.createdBy = user.id;
       }
 
-      console.log('📋 [Company] Parámetros de consulta:', params);
       const response = await companyService.getAll(params);
-      console.log('📋 [Company] Respuesta de API:', response);
       
       if (response.success) {
         setData(response.data);
@@ -80,7 +76,7 @@ export const Company: React.FC = () => {
         toast.error(response.error || 'Error al cargar datos');
       }
     } catch (error) {
-      console.error('❌ [Company] Error:', error);
+      console.error('Error:', error);
       toast.error('Error al cargar datos');
     } finally {
       setLoading(false);

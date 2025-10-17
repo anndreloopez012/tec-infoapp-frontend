@@ -49,8 +49,6 @@ export const EventLocation: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      console.log('📋 [EventLocation] Cargando datos desde API: event-location');
-      
       const params: any = {
         page: pagination.page,
         pageSize: pagination.pageSize,
@@ -62,9 +60,7 @@ export const EventLocation: React.FC = () => {
         params.createdBy = user.id;
       }
 
-      console.log('📋 [EventLocation] Parámetros de consulta:', params);
       const response = await eventLocationService.getAll(params);
-      console.log('📋 [EventLocation] Respuesta de API:', response);
       
       if (response.success) {
         setData(response.data);
@@ -80,7 +76,7 @@ export const EventLocation: React.FC = () => {
         toast.error(response.error || 'Error al cargar datos');
       }
     } catch (error) {
-      console.error('❌ [EventLocation] Error:', error);
+      console.error('Error:', error);
       toast.error('Error al cargar datos');
     } finally {
       setLoading(false);
