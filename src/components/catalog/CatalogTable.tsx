@@ -211,18 +211,32 @@ export const CatalogTable: React.FC<CatalogTableProps> = ({
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
+              <React.Fragment key={headerGroup.id}>
+                <TableRow>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      <div className="flex flex-col gap-2">
+                        <div>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </div>
+                        {header.column.getCanFilter() && header.id !== 'actions' && (
+                          <Input
+                            placeholder="Filtrar..."
+                            value={(header.column.getFilterValue() ?? '') as string}
+                            onChange={(e) => header.column.setFilterValue(e.target.value)}
+                            className="h-8 text-xs"
+                          />
                         )}
-                  </TableHead>
-                ))}
-              </TableRow>
+                      </div>
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </React.Fragment>
             ))}
           </TableHeader>
           <TableBody>
