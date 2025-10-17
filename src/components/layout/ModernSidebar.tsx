@@ -15,9 +15,7 @@ import {
   ChevronRight,
   FileText,
   ScrollText,
-  Send,
-  Calendar,
-  CalendarDays
+  Send
 } from 'lucide-react';
 
 import { useAuth } from '@/context/AuthContext';
@@ -106,16 +104,6 @@ const ModernSidebar = () => {
           requiredRoles: ['super', 'admin'],
         },
       ],
-    },
-    {
-      title: 'Eventos',
-      href: '/event',
-      icon: Calendar,
-    },
-    {
-      title: 'Calendario',
-      href: '/calendar',
-      icon: CalendarDays,
     },
     {
       title: 'Configuración',

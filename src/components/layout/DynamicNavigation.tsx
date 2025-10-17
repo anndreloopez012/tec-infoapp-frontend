@@ -58,6 +58,9 @@ const DynamicNavigation: React.FC<DynamicNavigationProps> = ({ onNavigate, searc
   // Definir qué módulos van en cada categoría
   // Módulos del Sistema: Los principales módulos de gestión
   const systemModules = ["api::customer", "api::gallery", "api::event", "api::content-info", "api::event-calendar"];
+  
+  // Orden específico para módulos del sistema
+  const systemModulesOrder = ["api::customer", "api::gallery", "api::event", "api::event-calendar", "api::content-info"];
 
   // Módulos Catálogos: Incluye api::project-stage, api::sale-stage y otros catálogos
   // Estos se determinan automáticamente (todos los que NO están en systemModules)
@@ -70,7 +73,13 @@ const DynamicNavigation: React.FC<DynamicNavigationProps> = ({ onNavigate, searc
 
     // Separar módulos por categoría
     const catalogModules = navigationMenus.filter((menu) => !systemModules.includes(menu.id));
-    const systemMenus = navigationMenus.filter((menu) => systemModules.includes(menu.id));
+    const systemMenus = navigationMenus
+      .filter((menu) => systemModules.includes(menu.id))
+      .sort((a, b) => {
+        const indexA = systemModulesOrder.indexOf(a.id);
+        const indexB = systemModulesOrder.indexOf(b.id);
+        return indexA - indexB;
+      });
 
     // Aplicar filtro de búsqueda si existe
     if (searchQuery.trim()) {
