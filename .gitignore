@@ -7,18 +7,49 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Node
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+build/
+.vite/
+
+# Environment
 *.local
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# Capacitor / Native projects
+android/
+ios/
+#capacitor.config.ts
+#capacitor.config.json
+*.xcworkspace
+*.xcuserdata
+*.xcodeproj/project.xcworkspace
+*.xcodeproj/xcuserdata
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Optional for TypeScript
+*.tsbuildinfo
+
+# Coverage
+coverage/
+
+# OS generated
+Thumbs.db
