@@ -48,8 +48,8 @@ import { es } from "date-fns/locale";
 interface EventData {
   id?: number;
   documentId?: string;
-  event?: string;
-  attendee?: string;
+  event?: string | any;
+  attendee?: string | any;
   status?: string;
   attendance_date?: string;
   notes?: string;
@@ -309,11 +309,15 @@ const Event = () => {
                     <div className="flex-1">
                       <CardTitle className="flex items-center gap-2">
                         <Calendar className="h-5 w-5 text-primary" />
-                        {item.event || "Sin evento"}
+                        {typeof item.event === 'object' && item.event !== null
+                          ? (item.event as any).title || (item.event as any).name || "Sin evento"
+                          : item.event || "Sin evento"}
                       </CardTitle>
                       <CardDescription className="flex items-center gap-2 mt-2">
                         <Users className="h-4 w-4" />
-                        {item.attendee || "Sin asistente"}
+                        {typeof item.attendee === 'object' && item.attendee !== null
+                          ? (item.attendee as any).name || (item.attendee as any).username || "Sin asistente"
+                          : item.attendee || "Sin asistente"}
                       </CardDescription>
                     </div>
                     {getStatusBadge(item.status)}
@@ -542,7 +546,11 @@ const Event = () => {
             <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
             <AlertDialogDescription>
               Esta acción no se puede deshacer. Se eliminará permanentemente la
-              asistencia de "{deletingItem?.attendee}" al evento "{deletingItem?.event}".
+              asistencia de "{typeof deletingItem?.attendee === 'object' 
+                ? (deletingItem?.attendee as any)?.name || (deletingItem?.attendee as any)?.username 
+                : deletingItem?.attendee}" al evento "{typeof deletingItem?.event === 'object'
+                ? (deletingItem?.event as any)?.title || (deletingItem?.event as any)?.name
+                : deletingItem?.event}".
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
