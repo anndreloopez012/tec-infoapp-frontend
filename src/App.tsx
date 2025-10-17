@@ -46,6 +46,7 @@ import ContentTag from '@/pages/catalog/ContentTag';
 import EventType from '@/pages/catalog/EventType';
 import ContentInfo from '@/pages/catalog/ContentInfo';
 import Gallery from '@/pages/catalog/Gallery';
+import Event from '@/pages/Event';
 
 // Layout
 import ModernLayout from '@/components/layout/ModernLayout';
@@ -150,6 +151,7 @@ const App = () => {
               {/* System Module Routes */}
               <Route path="/contentinfo" element={<ContentInfo />} />
               <Route path="/gallery" element={<Gallery />} />
+              <Route path="/event" element={<Event />} />
               
               {/* Rutas dinámicas para módulos */}
               <Route path="/:module" element={<ModulePage />} />
