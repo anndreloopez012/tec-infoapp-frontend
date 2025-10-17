@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { CatalogTable } from '@/components/catalog/CatalogTable';
-import { CatalogFormDialog } from '@/components/catalog/CatalogFormDialog';
 import { eventLocationService } from '@/services/catalogServices';
 import { useAuth } from '@/context/AuthContext';
 import { useAuthPermissions } from '@/hooks/useAuthPermissions';
@@ -16,9 +15,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { format } from 'date-fns';
-import { MapPin } from 'lucide-react';
+import { MapPin, Check, X } from 'lucide-react';
+import { LocationMapPicker } from '@/components/catalog/LocationMapPicker';
+import { GoogleMapsPreview } from '@/components/catalog/GoogleMapsPreview';
+import { useForm } from 'react-hook-form';
 
 export const EventLocation: React.FC = () => {
   const { user } = useAuth();
@@ -54,7 +68,7 @@ export const EventLocation: React.FC = () => {
         page: pagination.page,
         pageSize: pagination.pageSize,
         search: searchQuery,
-        searchFields: ['name', 'address', 'city', 'country'],
+        searchFields: ['name'],
       };
 
       if (showOnlyOwn && (user?.documentId || user?.id)) {
@@ -107,26 +121,34 @@ export const EventLocation: React.FC = () => {
         ),
       },
       {
-        accessorKey: 'attributes.address',
-        header: 'Dirección',
+        accessorKey: 'attributes.physical_location',
+        header: 'Coordenadas',
         cell: ({ row }) => {
-          const address = row.original.attributes?.address;
-          return address ? (
-            <span className="text-sm text-muted-foreground line-clamp-1">{address}</span>
+          const location = row.original.attributes?.physical_location;
+          return location ? (
+            <span className="text-xs font-mono text-muted-foreground">{location}</span>
           ) : (
             'N/A'
           );
         },
       },
       {
-        accessorKey: 'attributes.city',
-        header: 'Ciudad',
-        cell: ({ row }) => row.original.attributes?.city || 'N/A',
-      },
-      {
-        accessorKey: 'attributes.country',
-        header: 'País',
-        cell: ({ row }) => row.original.attributes?.country || 'N/A',
+        accessorKey: 'attributes.available',
+        header: 'Disponible',
+        cell: ({ row }) => {
+          const available = row.original.attributes?.available;
+          return available ? (
+            <Badge variant="default" className="gap-1">
+              <Check className="h-3 w-3" />
+              Sí
+            </Badge>
+          ) : (
+            <Badge variant="secondary" className="gap-1">
+              <X className="h-3 w-3" />
+              No
+            </Badge>
+          );
+        },
       },
       {
         accessorKey: 'attributes.capacity',
@@ -152,65 +174,37 @@ export const EventLocation: React.FC = () => {
     []
   );
 
-  // Campos del formulario
-  const formFields = [
-    {
-      name: 'name',
-      label: 'Nombre',
-      type: 'text' as const,
-      required: true,
-      placeholder: 'Nombre del lugar',
-    },
-    {
-      name: 'address',
-      label: 'Dirección',
-      type: 'textarea' as const,
-      required: false,
-      placeholder: 'Dirección completa',
-    },
-    {
-      name: 'city',
-      label: 'Ciudad',
-      type: 'text' as const,
-      required: false,
-      placeholder: 'Ciudad',
-    },
-    {
-      name: 'state',
-      label: 'Estado',
-      type: 'text' as const,
-      required: false,
-      placeholder: 'Estado o provincia',
-    },
-    {
-      name: 'country',
-      label: 'País',
-      type: 'text' as const,
-      required: false,
-      placeholder: 'País',
-    },
-    {
-      name: 'zipCode',
-      label: 'Código Postal',
-      type: 'text' as const,
-      required: false,
-      placeholder: 'CP',
-    },
-    {
-      name: 'capacity',
-      label: 'Capacidad',
-      type: 'number' as const,
-      required: false,
-      placeholder: 'Capacidad en personas',
-    },
-    {
-      name: 'description',
-      label: 'Descripción',
-      type: 'textarea' as const,
-      required: false,
-      placeholder: 'Descripción del lugar',
-    },
-  ];
+  // Form state
+  const [formData, setFormData] = useState({
+    name: '',
+    capacity: '',
+    physical_location: '',
+    google_maps: '',
+    available: true
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Update form data when editing
+  useEffect(() => {
+    if (editingItem && formOpen) {
+      setFormData({
+        name: editingItem.attributes?.name || '',
+        capacity: editingItem.attributes?.capacity?.toString() || '',
+        physical_location: editingItem.attributes?.physical_location || '',
+        google_maps: editingItem.attributes?.google_maps || '',
+        available: editingItem.attributes?.available ?? true
+      });
+    } else if (!formOpen) {
+      // Reset form when dialog closes
+      setFormData({
+        name: '',
+        capacity: '',
+        physical_location: '',
+        google_maps: '',
+        available: true
+      });
+    }
+  }, [editingItem, formOpen]);
 
   // Handlers
   const handleCreate = () => {
@@ -228,13 +222,29 @@ export const EventLocation: React.FC = () => {
     setDeleteDialogOpen(true);
   };
 
-  const handleFormSubmit = async (formData: any) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name.trim()) {
+      toast.error('El nombre es requerido');
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
+      const submitData = {
+        name: formData.name,
+        capacity: formData.capacity ? parseInt(formData.capacity) : null,
+        physical_location: formData.physical_location || null,
+        google_maps: formData.google_maps || null,
+        available: formData.available
+      };
+
       let response;
       if (editingItem) {
-        response = await eventLocationService.update(editingItem.documentId || editingItem.id, formData);
+        response = await eventLocationService.update(editingItem.documentId || editingItem.id, submitData);
       } else {
-        response = await eventLocationService.create(formData);
+        response = await eventLocationService.create(submitData);
       }
 
       if (response.success) {
@@ -247,6 +257,8 @@ export const EventLocation: React.FC = () => {
       }
     } catch (error) {
       toast.error('Error al guardar');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -292,15 +304,71 @@ export const EventLocation: React.FC = () => {
         title="Lugares para Eventos"
       />
 
-      <CatalogFormDialog
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        onSubmit={handleFormSubmit}
-        title={editingItem ? 'Editar Lugar' : 'Nuevo Lugar'}
-        description={editingItem ? 'Modifica los datos del lugar' : 'Completa el formulario para registrar un nuevo lugar'}
-        fields={formFields}
-        defaultValues={editingItem ? editingItem.attributes : {}}
-      />
+      <Dialog open={formOpen} onOpenChange={setFormOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingItem ? 'Editar Lugar' : 'Nuevo Lugar'}</DialogTitle>
+            <DialogDescription>
+              {editingItem ? 'Modifica los datos del lugar' : 'Completa el formulario para registrar un nuevo lugar'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleFormSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nombre *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Nombre del lugar"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="capacity">Capacidad</Label>
+              <Input
+                id="capacity"
+                type="number"
+                value={formData.capacity}
+                onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                placeholder="Número de personas"
+                min="0"
+              />
+            </div>
+
+            <LocationMapPicker
+              value={formData.physical_location}
+              onChange={(coords) => setFormData({ ...formData, physical_location: coords })}
+            />
+
+            <GoogleMapsPreview
+              value={formData.google_maps}
+              onChange={(iframe) => setFormData({ ...formData, google_maps: iframe })}
+            />
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="available"
+                checked={formData.available}
+                onCheckedChange={(checked) => setFormData({ ...formData, available: checked })}
+              />
+              <Label htmlFor="available" className="cursor-pointer">
+                Disponible
+              </Label>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Guardando...' : 'Guardar'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
