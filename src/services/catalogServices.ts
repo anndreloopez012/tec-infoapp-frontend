@@ -38,12 +38,33 @@ apiClient.interceptors.response.use(
 class CatalogService {
   endpoint: string;
   entityName: string;
+  private schemaKeys: string[] = [];
 
   constructor(endpoint: string, entityName: string) {
     this.endpoint = endpoint;
     this.entityName = entityName;
   }
 
+  // Sanitiza los datos basándose en las llaves del esquema detectado
+  private sanitizeData(input: any) {
+    if (!input || typeof input !== 'object') return input;
+    if (!this.schemaKeys || this.schemaKeys.length === 0) return input;
+
+    const clean: any = {};
+    Object.entries(input).forEach(([key, value]) => {
+      if (this.schemaKeys.includes(key)) {
+        // Relaciones: si viene objeto, tomar su id si existe
+        if (value && typeof value === 'object') {
+          const maybeId = (value as any).id || (value as any).documentId || (value as any).data?.id;
+          clean[key] = maybeId ?? value;
+        } else {
+          clean[key] = value;
+        }
+      }
+    });
+
+    return clean;
+  }
   // ===============================================
   // OBTENER TODOS LOS REGISTROS
   // ===============================================
@@ -104,6 +125,11 @@ class CatalogService {
         };
       });
       const meta = response.data.meta || {};
+
+      // Cachear las llaves del esquema para sanitizar envíos (crear/actualizar)
+      if (normalized.length > 0) {
+        this.schemaKeys = Object.keys(normalized[0].attributes || normalized[0] || {});
+      }
       
       return {
         success: true,
@@ -166,10 +192,12 @@ class CatalogService {
   async create(data: any) {
     try {
       console.log(`➕ Creando ${this.entityName}:`, data);
+      const payload = this.sanitizeData(data);
+      console.log('📦 Payload enviado:', payload);
       
       const response = await apiClient.post(
         `/${API_CONFIG.API_PREFIX}/${this.endpoint}`, 
-        { data }
+        { data: payload }
       );
       
       console.log(`✅ ${this.entityName} creado`);
@@ -204,10 +232,12 @@ class CatalogService {
   async update(id: string | number, data: any) {
     try {
       console.log(`✏️ Actualizando ${this.entityName}:`, id);
+      const payload = this.sanitizeData(data);
+      console.log('📦 Payload enviado (update):', payload);
       
       const response = await apiClient.put(
         `/${API_CONFIG.API_PREFIX}/${this.endpoint}/${id}`, 
-        { data }
+        { data: payload }
       );
       
       console.log(`✅ ${this.entityName} actualizado`);
