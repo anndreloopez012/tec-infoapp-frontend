@@ -231,17 +231,17 @@ class GlobalService {
     try {
       // Crear manifest dinámico
       const manifest = {
-        name: config.siteName || "CRM Admin Panel",
-        short_name: config.shortName || config.siteName?.substring(0, 12) || "CRM Admin",
-        description: config.description || "Admin Panel CRUD conectado a Strapi - Gestión de usuarios, roles y permisos",
+        name: config.siteName || "TechOffice Hub - Gestión de Espacios Tech",
+        short_name: config.shortName || config.siteName?.substring(0, 12) || "TechOffice",
+        description: config.description || "Plataforma de gestión integral para edificios de oficinas tech - Administración de espacios, empresas y servicios",
         start_url: "/",
         display: "standalone",
-        background_color: config.colors?.primaryColor || "#2881E7",
-        theme_color: config.colors?.primaryColor || "#2881E7",
+        background_color: config.colors?.primaryColor || "#00D9FF",
+        theme_color: config.colors?.primaryColor || "#00D9FF",
         orientation: "portrait-primary",
         scope: "/",
         lang: "es-ES",
-        categories: ["business", "productivity"],
+        categories: ["business", "productivity", "utilities"],
         icons: [
           {
             src: config.logoMain ? buildImageUrl(config.logoMain.url) : "/icon-192x192.png",
@@ -260,15 +260,15 @@ class GlobalService {
           {
             name: "Dashboard",
             short_name: "Dashboard",
-            description: "Ir al dashboard principal",
+            description: "Panel principal de gestión",
             url: "/dashboard",
             icons: [{ src: config.logoMain ? buildImageUrl(config.logoMain.url) : "/icon-192x192.png", sizes: "192x192" }]
           },
           {
-            name: "Usuarios",
-            short_name: "Usuarios", 
-            description: "Gestionar usuarios",
-            url: "/users",
+            name: "Empresas",
+            short_name: "Empresas", 
+            description: "Gestionar empresas tech",
+            url: "/companies",
             icons: [{ src: config.logoMain ? buildImageUrl(config.logoMain.url) : "/icon-192x192.png", sizes: "192x192" }]
           },
           {

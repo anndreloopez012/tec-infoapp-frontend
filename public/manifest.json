@@ -1,15 +1,15 @@
 {
-  "name": "CRM Admin Panel",
-  "short_name": "CRM Admin",
-  "description": "Admin Panel CRUD conectado a Strapi - Gestión de usuarios, roles y permisos",
+  "name": "TechOffice Hub - Gestión de Espacios Tech",
+  "short_name": "TechOffice",
+  "description": "Plataforma de gestión integral para edificios de oficinas tech - Administración de espacios, empresas y servicios",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#2881E7",
-  "theme_color": "#2881E7",
+  "background_color": "#00D9FF",
+  "theme_color": "#00D9FF",
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "es-ES",
-  "categories": ["business", "productivity"],
+  "categories": ["business", "productivity", "utilities"],
   "icons": [
     {
       "src": "/icon-192x192.png",
@@ -28,7 +28,7 @@
     {
       "name": "Dashboard",
       "short_name": "Dashboard",
-      "description": "Ir al dashboard principal",
+      "description": "Panel principal de gestión",
       "url": "/dashboard",
       "icons": [
         {
@@ -38,10 +38,10 @@
       ]
     },
     {
-      "name": "Usuarios",
-      "short_name": "Usuarios", 
-      "description": "Gestionar usuarios",
-      "url": "/users",
+      "name": "Empresas",
+      "short_name": "Empresas", 
+      "description": "Gestionar empresas tech",
+      "url": "/companies",
       "icons": [
         {
           "src": "/icon-192x192.png",
@@ -68,14 +68,14 @@
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Admin Panel Desktop"
+      "label": "TechOffice Hub Desktop"
     },
     {
       "src": "/screenshot-mobile.png", 
       "sizes": "375x667",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Admin Panel Mobile"
+      "label": "TechOffice Hub Mobile"
     }
   ],
   "prefer_related_applications": false

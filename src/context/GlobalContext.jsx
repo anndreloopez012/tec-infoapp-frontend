@@ -223,8 +223,8 @@ export const GlobalProvider = ({ children }) => {
     if (!state.config) return {};
     
     return {
-      siteName: state.config.siteName || 'CRM Admin',
-      tagline: state.config.tagline || '',
+      siteName: state.config.siteName || 'TechOffice Hub',
+      tagline: state.config.tagline || 'Gestión de Espacios Tech',
       logo: state.config.logoMain ? getImageUrl(state.config.logoMain) : null,
       logoAlt: state.config.logoAlt ? getImageUrl(state.config.logoAlt) : null,
       logoMobile: state.config.logoMobile ? getImageUrl(state.config.logoMobile) : null,
@@ -237,9 +237,9 @@ export const GlobalProvider = ({ children }) => {
     if (!state.config?.colors) return {};
     
     return {
-      primary: state.config.colors.primaryColor || '#2881E7',
-      secondary: state.config.colors.secondaryColor || '#36D2F1',
-      accent: state.config.colors.accentColor || '#2777F6',
+      primary: state.config.colors.primaryColor || '#00D9FF',
+      secondary: state.config.colors.secondaryColor || '#8B5CF6',
+      accent: state.config.colors.accentColor || '#F97316',
       background: state.config.colors.backgroundColor || '#FFFFFF',
       text: state.config.colors.textColor || '#000000'
     };
@@ -250,9 +250,9 @@ export const GlobalProvider = ({ children }) => {
     if (!state.config?.seo) return {};
     
     return {
-      title: state.config.seo.metaTitle || state.config.siteName || 'CRM Admin',
-      description: state.config.seo.metaDescription || '',
-      keywords: state.config.seo.keywords || '',
+      title: state.config.seo.metaTitle || state.config.siteName || 'TechOffice Hub',
+      description: state.config.seo.metaDescription || 'Plataforma de gestión integral para edificios de oficinas tech',
+      keywords: state.config.seo.keywords || 'oficinas tech, coworking, gestión espacios',
       twitterHandle: state.config.seo.twitterHandle || ''
     };
   };
