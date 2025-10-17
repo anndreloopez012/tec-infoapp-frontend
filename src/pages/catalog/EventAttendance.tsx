@@ -97,12 +97,26 @@ export const EventAttendance: React.FC = () => {
       {
         accessorKey: 'attributes.event',
         header: 'Evento',
-        cell: ({ row }) => row.original.attributes?.event || 'N/A',
+        cell: ({ row }) => {
+          const event = row.original.attributes?.event;
+          if (!event) return 'N/A';
+          if (typeof event === 'object') {
+            return event.data?.attributes?.title || event.data?.attributes?.name || event.title || event.name || 'N/A';
+          }
+          return event;
+        },
       },
       {
         accessorKey: 'attributes.attendee',
         header: 'Asistente',
-        cell: ({ row }) => row.original.attributes?.attendee || 'N/A',
+        cell: ({ row }) => {
+          const attendee = row.original.attributes?.attendee;
+          if (!attendee) return 'N/A';
+          if (typeof attendee === 'object') {
+            return attendee.data?.attributes?.name || attendee.data?.attributes?.username || attendee.name || attendee.username || 'N/A';
+          }
+          return attendee;
+        },
       },
       {
         accessorKey: 'attributes.status',
