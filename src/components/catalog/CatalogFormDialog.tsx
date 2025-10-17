@@ -31,7 +31,7 @@ import { Loader2 } from 'lucide-react';
 interface FormFieldConfig {
   name: string;
   label: string;
-  type: 'text' | 'textarea' | 'number' | 'email' | 'date';
+  type: 'text' | 'textarea' | 'number' | 'email' | 'date' | 'color';
   placeholder?: string;
   description?: string;
   required?: boolean;

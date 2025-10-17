@@ -107,11 +107,6 @@ export const EventType: React.FC = () => {
         ),
       },
       {
-        accessorKey: 'attributes.slug',
-        header: 'Slug',
-        cell: ({ row }) => <span className="font-mono text-sm">{row.original.attributes?.slug || 'N/A'}</span>,
-      },
-      {
         accessorKey: 'attributes.description',
         header: 'Descripción',
         cell: ({ row }) => {
@@ -124,12 +119,18 @@ export const EventType: React.FC = () => {
         },
       },
       {
-        accessorKey: 'attributes.icon',
-        header: 'Icono',
+        accessorKey: 'attributes.color',
+        header: 'Color',
         cell: ({ row }) => {
-          const icon = row.original.attributes?.icon;
-          return icon ? (
-            <Badge variant="outline">{icon}</Badge>
+          const color = row.original.attributes?.color;
+          return color ? (
+            <div className="flex items-center gap-2">
+              <div 
+                className="w-6 h-6 rounded border border-border"
+                style={{ backgroundColor: color }}
+              />
+              <span className="font-mono text-sm">{color}</span>
+            </div>
           ) : (
             'N/A'
           );
@@ -157,14 +158,6 @@ export const EventType: React.FC = () => {
       placeholder: 'Nombre del tipo de evento',
     },
     {
-      name: 'slug',
-      label: 'Slug',
-      type: 'text' as const,
-      required: true,
-      placeholder: 'slug-del-tipo-evento',
-      description: 'Identificador único para URLs',
-    },
-    {
       name: 'description',
       label: 'Descripción',
       type: 'textarea' as const,
@@ -172,20 +165,12 @@ export const EventType: React.FC = () => {
       placeholder: 'Descripción del tipo de evento',
     },
     {
-      name: 'icon',
-      label: 'Icono',
-      type: 'text' as const,
-      required: false,
-      placeholder: 'Nombre del icono (ej: calendar, users)',
-      description: 'Nombre del icono de Lucide React',
-    },
-    {
       name: 'color',
       label: 'Color',
-      type: 'text' as const,
+      type: 'color' as const,
       required: false,
       placeholder: '#FF5733',
-      description: 'Código hexadecimal del color',
+      description: 'Selecciona un color para el tipo de evento',
     },
   ];
 
