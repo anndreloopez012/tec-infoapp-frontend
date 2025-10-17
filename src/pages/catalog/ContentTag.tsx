@@ -54,7 +54,7 @@ export const ContentTag: React.FC = () => {
         page: pagination.page,
         pageSize: pagination.pageSize,
         search: searchQuery,
-        searchFields: ['name', 'slug'],
+        searchFields: ['title', 'slug'],
       };
 
       if (showOnlyOwn && (user?.documentId || user?.id)) {
@@ -97,12 +97,12 @@ export const ContentTag: React.FC = () => {
         cell: ({ row }) => <span className="font-mono text-sm">{row.original.id}</span>,
       },
       {
-        accessorKey: 'attributes.name',
+        accessorKey: 'attributes.title',
         header: 'Nombre',
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
             <Tag className="h-4 w-4 text-muted-foreground" />
-            <Badge variant="outline">{row.original.attributes?.name || 'N/A'}</Badge>
+            <Badge variant="outline">{row.original.attributes?.title || 'N/A'}</Badge>
           </div>
         ),
       },
@@ -144,7 +144,7 @@ export const ContentTag: React.FC = () => {
   // Campos del formulario
   const formFields = [
     {
-      name: 'name',
+      name: 'title',
       label: 'Nombre',
       type: 'text' as const,
       required: true,
