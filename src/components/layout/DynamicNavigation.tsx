@@ -45,7 +45,7 @@ const DynamicNavigation: React.FC<DynamicNavigationProps> = ({ onNavigate, searc
 
   // Definir qué módulos van en cada categoría
   // Módulos del Sistema: Los principales módulos de gestión
-  const systemModules = ['api::project', 'api::customer', 'api::sale'];
+  const systemModules = ['api::project', 'api::customer', 'api::sale', 'api::gallery', 'api::event', 'api::content-info'];
   
   // Módulos Catálogos: Incluye api::project-stage, api::sale-stage y otros catálogos
   // Estos se determinan automáticamente (todos los que NO están en systemModules)
