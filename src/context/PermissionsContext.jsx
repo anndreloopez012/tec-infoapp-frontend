@@ -228,6 +228,11 @@ export const PermissionsProvider = ({ children }) => {
       "api::type-user": "Tipos de Usuario",
       "api::gallery": "Galería",
       "api::event": "Eventos",
+      "api::content-category": "Categorias de Contenido",
+      "api::content-tag": "Tags de Contenido",
+      "api::event-attendance": "Asistencia de Eventos",
+      "api::event-location": "Lugares para Eventos",
+      "api::event-type": "Tipos de Evento",
       "api::content-info": "Información de Contenido",
       "api::home-page": "Página de Inicio",
     };
