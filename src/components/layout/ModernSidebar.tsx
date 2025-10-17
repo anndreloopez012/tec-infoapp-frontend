@@ -68,7 +68,7 @@ const ModernSidebar = () => {
       requiredRoles: ['super', 'admin'],
       children: [
         {
-          title: 'Home Page',
+          title: 'Página de Inicio',
           href: '/admin/homepage',
           icon: Home,
           requiredRoles: ['super', 'admin'],

@@ -226,6 +226,10 @@ export const PermissionsProvider = ({ children }) => {
       "api::solution": "Soluciones",
       "api::ticket-status": "Estados de Tickets",
       "api::type-user": "Tipos de Usuario",
+      "api::gallery": "Galería",
+      "api::event": "Eventos",
+      "api::content-info": "Información de Contenido",
+      "api::home-page": "Página de Inicio",
     };
 
     return (
