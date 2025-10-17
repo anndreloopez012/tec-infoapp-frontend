@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { contentInfoService, contentCategoryService } from '@/services/catalogServices';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -258,8 +259,8 @@ const ContentGlobal = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex-1">
-                <p className="text-sm text-muted-foreground line-clamp-3">
-                  {truncateText(item.content || '', 150)}
+                <p className="text-sm text-muted-foreground line-clamp-2">
+                  {item.category_content?.description || 'Haz clic en "Ver más" para leer el contenido completo'}
                 </p>
               </CardContent>
               <CardFooter className="flex justify-between items-center gap-2">
@@ -344,8 +345,8 @@ const ContentGlobal = () => {
                       </Badge>
                     </CardDescription>
                   </CardHeader>
-                  <p className="text-muted-foreground mb-4 line-clamp-3">
-                    {truncateText(item.content || '', 300)}
+                  <p className="text-muted-foreground mb-4 line-clamp-2">
+                    {item.category_content?.description || 'Haz clic para leer el contenido completo'}
                   </p>
                   <div className="flex items-center justify-between">
                     <Button 
@@ -411,8 +412,8 @@ const ContentGlobal = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  {truncateText(item.content || '', 200)}
+                <p className="text-sm text-muted-foreground line-clamp-2">
+                  {item.category_content?.description || 'Ver contenido completo'}
                 </p>
               </CardContent>
               <CardFooter>
@@ -694,34 +695,96 @@ const ContentGlobal = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 }}
+                  className="flex-1"
                 >
-                  <h2 className="text-4xl font-bold mb-3 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                  <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                     {selectedContent.title}
                   </h2>
-                  <div className="flex flex-wrap gap-2">
+                  
+                  {/* Information Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    {/* Category */}
                     {selectedContent.category_content && (
-                      <Badge variant="secondary" className="transition-transform hover:scale-105">
-                        <Tag className="w-3 h-3 mr-1" />
-                        {selectedContent.category_content.name}
-                      </Badge>
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          Categoría
+                        </label>
+                        <Badge variant="secondary" className="transition-transform hover:scale-105">
+                          <Tag className="w-3 h-3 mr-1" />
+                          {selectedContent.category_content.name}
+                        </Badge>
+                      </div>
                     )}
+
+                    {/* Company */}
                     {selectedContent.company && (
-                      <Badge variant="outline" className="transition-transform hover:scale-105">
-                        <Building2 className="w-3 h-3 mr-1" />
-                        {selectedContent.company.name}
-                      </Badge>
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          Empresa
+                        </label>
+                        <Badge variant="outline" className="transition-transform hover:scale-105">
+                          <Building2 className="w-3 h-3 mr-1" />
+                          {selectedContent.company.name}
+                        </Badge>
+                      </div>
                     )}
-                    <Badge variant="outline" className="transition-transform hover:scale-105">
-                      <Calendar className="w-3 h-3 mr-1" />
-                      {new Date(selectedContent.publish_date).toLocaleDateString('es-MX')}
-                    </Badge>
+
+                    {/* Publish Date */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        Fecha de Publicación
+                      </label>
+                      <Badge variant="outline" className="transition-transform hover:scale-105">
+                        <Calendar className="w-3 h-3 mr-1" />
+                        {new Date(selectedContent.publish_date).toLocaleDateString('es-MX', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </Badge>
+                    </div>
+
+                    {/* Status */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        Estado
+                      </label>
+                      <Badge 
+                        variant={selectedContent.status_content === 'published' ? 'default' : 'secondary'}
+                        className="transition-transform hover:scale-105"
+                      >
+                        {selectedContent.status_content === 'published' ? 'Publicado' : 
+                         selectedContent.status_content === 'draft' ? 'Borrador' : 'Archivado'}
+                      </Badge>
+                    </div>
+
+                    {/* Slug */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        Slug
+                      </label>
+                      <p className="text-sm font-mono bg-accent/50 px-2 py-1 rounded">
+                        {selectedContent.slug}
+                      </p>
+                    </div>
+
+                    {/* Document ID */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        ID de Documento
+                      </label>
+                      <p className="text-sm font-mono bg-accent/50 px-2 py-1 rounded truncate">
+                        {selectedContent.documentId}
+                      </p>
+                    </div>
                   </div>
                 </motion.div>
+                
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setSelectedContent(null)}
-                  className="rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors"
+                  className="rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors flex-shrink-0 ml-4"
                 >
                   ✕
                 </Button>
@@ -733,14 +796,19 @@ const ContentGlobal = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.25 }}
-                  className="flex items-center gap-2 p-4 bg-accent/30 rounded-lg mb-6"
+                  className="mb-6"
                 >
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <User className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">{selectedContent.author.username}</p>
-                    <p className="text-xs text-muted-foreground">{selectedContent.author.email}</p>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
+                    Autor
+                  </label>
+                  <div className="flex items-center gap-3 p-4 bg-accent/30 rounded-lg">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{selectedContent.author.username}</p>
+                      <p className="text-sm text-muted-foreground">{selectedContent.author.email}</p>
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -750,9 +818,15 @@ const ContentGlobal = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="prose prose-sm max-w-none dark:prose-invert"
-                dangerouslySetInnerHTML={{ __html: selectedContent.content || '' }}
-              />
+                className="mb-6"
+              >
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 block">
+                  Contenido
+                </label>
+                <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-a:text-primary prose-code:text-foreground prose-pre:bg-accent/50 prose-li:text-foreground">
+                  <ReactMarkdown>{selectedContent.content || 'Sin contenido'}</ReactMarkdown>
+                </div>
+              </motion.div>
 
               {/* Comment Section */}
               {selectedContent.comment && (
@@ -760,10 +834,34 @@ const ContentGlobal = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="mt-6 p-4 bg-accent/20 rounded-lg border-l-4 border-primary"
+                  className="mb-6"
                 >
-                  <p className="text-sm font-medium mb-1">Comentario:</p>
-                  <p className="text-sm text-muted-foreground">{selectedContent.comment}</p>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
+                    Comentarios
+                  </label>
+                  <div className="p-4 bg-accent/20 rounded-lg border-l-4 border-primary">
+                    <p className="text-sm">{selectedContent.comment}</p>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Attachments Info */}
+              {selectedContent.attachments && selectedContent.attachments.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.45 }}
+                >
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
+                    Archivos Adjuntos
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedContent.attachments.map((attachment) => (
+                      <Badge key={attachment.id} variant="outline" className="text-xs">
+                        {attachment.alternativeText || `Imagen ${attachment.id}`}
+                      </Badge>
+                    ))}
+                  </div>
                 </motion.div>
               )}
             </div>
