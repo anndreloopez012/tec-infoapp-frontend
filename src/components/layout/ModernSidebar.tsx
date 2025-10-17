@@ -64,6 +64,11 @@ const ModernSidebar = () => {
       icon: LayoutDashboard,
     },
     {
+      title: 'Contenido Global',
+      href: '/content-global',
+      icon: FileText,
+    },
+    {
       title: 'Administración',
       href: '/admin',
       icon: Shield,

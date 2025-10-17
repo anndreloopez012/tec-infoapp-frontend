@@ -48,6 +48,7 @@ import ContentInfo from '@/pages/catalog/ContentInfo';
 import Gallery from '@/pages/catalog/Gallery';
 import Event from '@/pages/Event';
 import EventCalendar from '@/pages/EventCalendar';
+import ContentGlobal from '@/pages/ContentGlobal';
 
 // Layout
 import ModernLayout from '@/components/layout/ModernLayout';
@@ -101,6 +102,7 @@ const App = () => {
               </ProtectedRoute>
             }>
               <Route path="/dashboard" element={<ModernDashboard />} />
+              <Route path="/content-global" element={<ContentGlobal />} />
               {/* Admin Routes */}
               <Route path="/admin/users" element={
                 <ProtectedRoute permissions={['api::user.user.find']}>
