@@ -344,6 +344,7 @@ class CatalogService {
 // ===============================================
 // INSTANCIAS DE SERVICIOS PARA CADA CATÁLOGO
 // ===============================================
+export const eventService = new CatalogService('events', 'Eventos');
 export const eventAttendanceService = new CatalogService('event-attendances', 'Asistencia de Eventos');
 export const contentCategoryService = new CatalogService('content-categories', 'Categorías de Contenido');
 export const companyService = new CatalogService('companies', 'Empresas');

@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { eventAttendanceService } from "@/services/catalogServices";
+import { eventService, eventTypeService, eventLocationService, companyService } from "@/services/catalogServices";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Pagination,
@@ -48,13 +48,16 @@ import { es } from "date-fns/locale";
 interface EventData {
   id?: number;
   documentId?: string;
-  event?: string | any;
-  attendee?: string | any;
-  status?: string;
-  attendance_date?: string;
-  notes?: string;
-  check_in_time?: string;
-  check_out_time?: string;
+  title?: string;
+  description?: string;
+  start_date?: string;
+  end_date?: string;
+  content?: string;
+  type_event?: any;
+  location?: any;
+  organizers_company?: any;
+  main_image?: any;
+  attendees?: any;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -72,34 +75,57 @@ const Event = () => {
   const [totalPages, setTotalPages] = useState(1);
   const pageSize = 9;
 
+  // Dropdown options
+  const [eventTypes, setEventTypes] = useState<any[]>([]);
+  const [locations, setLocations] = useState<any[]>([]);
+  const [companies, setCompanies] = useState<any[]>([]);
+
   const [formData, setFormData] = useState<EventData>({
-    event: "",
-    attendee: "",
-    status: "pending",
-    attendance_date: "",
-    notes: "",
-    check_in_time: "",
-    check_out_time: "",
+    title: "",
+    description: "",
+    start_date: "",
+    end_date: "",
+    content: "",
+    type_event: "",
+    location: "",
+    organizers_company: "",
   });
 
   const { toast } = useToast();
 
   useEffect(() => {
     loadData();
+    loadDropdownData();
   }, [currentPage]);
 
   useEffect(() => {
     handleSearch();
   }, [searchQuery, data]);
 
+  const loadDropdownData = async () => {
+    try {
+      const [typesResult, locationsResult, companiesResult] = await Promise.all([
+        eventTypeService.getAll({ pageSize: 100 }),
+        eventLocationService.getAll({ pageSize: 100 }),
+        companyService.getAll({ pageSize: 100 }),
+      ]);
+
+      if (typesResult.success) setEventTypes(typesResult.data);
+      if (locationsResult.success) setLocations(locationsResult.data);
+      if (companiesResult.success) setCompanies(companiesResult.data);
+    } catch (error) {
+      console.error("Error loading dropdown data:", error);
+    }
+  };
+
   const loadData = async () => {
     setLoading(true);
     try {
-      const result = await eventAttendanceService.getAll({
+      const result = await eventService.getAll({
         page: currentPage,
         pageSize: pageSize,
         populate: "*",
-        searchFields: ["event", "attendee", "status"],
+        searchFields: ["title", "description"],
         search: searchQuery,
       });
 
@@ -129,9 +155,8 @@ const Event = () => {
     }
 
     const filtered = data.filter((item) =>
-      item.event?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.attendee?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.status?.toLowerCase().includes(searchQuery.toLowerCase())
+      item.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description?.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredData(filtered);
   };
@@ -139,13 +164,14 @@ const Event = () => {
   const handleCreate = () => {
     setEditingItem(null);
     setFormData({
-      event: "",
-      attendee: "",
-      status: "pending",
-      attendance_date: "",
-      notes: "",
-      check_in_time: "",
-      check_out_time: "",
+      title: "",
+      description: "",
+      start_date: "",
+      end_date: "",
+      content: "",
+      type_event: "",
+      location: "",
+      organizers_company: "",
     });
     setIsDialogOpen(true);
   };
@@ -154,13 +180,14 @@ const Event = () => {
     setEditingItem(item);
     
     setFormData({
-      event: item.event || "",
-      attendee: item.attendee || "",
-      status: item.status || "pending",
-      attendance_date: item.attendance_date || "",
-      notes: item.notes || "",
-      check_in_time: item.check_in_time || "",
-      check_out_time: item.check_out_time || "",
+      title: item.title || "",
+      description: item.description || "",
+      start_date: item.start_date ? item.start_date.split('T')[0] : "",
+      end_date: item.end_date ? item.end_date.split('T')[0] : "",
+      content: item.content || "",
+      type_event: item.type_event?.documentId || "",
+      location: item.location?.documentId || "",
+      organizers_company: item.organizers_company?.documentId || "",
     });
     setIsDialogOpen(true);
   };
@@ -174,12 +201,12 @@ const Event = () => {
     if (!deletingItem?.documentId) return;
 
     try {
-      const result = await eventAttendanceService.delete(deletingItem.documentId);
+      const result = await eventService.delete(deletingItem.documentId);
 
       if (result.success) {
         toast({
           title: "Éxito",
-          description: "Asistencia eliminada correctamente",
+          description: "Evento eliminado correctamente",
         });
         loadData();
       } else {
@@ -189,7 +216,7 @@ const Event = () => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "No se pudo eliminar la asistencia",
+        description: error.message || "No se pudo eliminar el evento",
       });
     } finally {
       setIsDeleteDialogOpen(false);
@@ -200,36 +227,37 @@ const Event = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.event?.trim() || !formData.attendee?.trim()) {
+    if (!formData.title?.trim()) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "El evento y el asistente son requeridos",
+        description: "El título es requerido",
       });
       return;
     }
 
     try {
       const payload: any = {
-        event: formData.event,
-        attendee: formData.attendee,
-        status: formData.status,
-        attendance_date: formData.attendance_date,
-        notes: formData.notes,
-        check_in_time: formData.check_in_time,
-        check_out_time: formData.check_out_time,
+        title: formData.title,
+        description: formData.description,
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+        content: formData.content,
+        type_event: formData.type_event || null,
+        location: formData.location || null,
+        organizers_company: formData.organizers_company || null,
       };
 
       const result = editingItem
-        ? await eventAttendanceService.update(editingItem.documentId!, payload)
-        : await eventAttendanceService.create(payload);
+        ? await eventService.update(editingItem.documentId!, payload)
+        : await eventService.create(payload);
 
       if (result.success) {
         toast({
           title: "Éxito",
           description: editingItem
-            ? "Asistencia actualizada correctamente"
-            : "Asistencia creada correctamente",
+            ? "Evento actualizado correctamente"
+            : "Evento creado correctamente",
         });
         setIsDialogOpen(false);
         loadData();
@@ -240,7 +268,7 @@ const Event = () => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "No se pudo guardar la asistencia",
+        description: error.message || "No se pudo guardar el evento",
       });
     }
   };
@@ -249,18 +277,6 @@ const Event = () => {
     setCurrentPage(page);
   };
 
-  const getStatusBadge = (status?: string) => {
-    switch (status) {
-      case "confirmed":
-        return <Badge className="bg-green-500">Confirmado</Badge>;
-      case "pending":
-        return <Badge variant="secondary">Pendiente</Badge>;
-      case "cancelled":
-        return <Badge variant="destructive">Cancelado</Badge>;
-      default:
-        return <Badge variant="outline">{status || "N/A"}</Badge>;
-    }
-  };
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -268,12 +284,12 @@ const Event = () => {
         <div>
           <h1 className="text-3xl font-bold">Eventos</h1>
           <p className="text-muted-foreground">
-            Gestiona la asistencia a eventos
+            Gestiona los eventos
           </p>
         </div>
         <Button onClick={handleCreate}>
           <Plus className="mr-2 h-4 w-4" />
-          Nueva Asistencia
+          Nuevo Evento
         </Button>
       </div>
 
@@ -309,47 +325,42 @@ const Event = () => {
                     <div className="flex-1">
                       <CardTitle className="flex items-center gap-2">
                         <Calendar className="h-5 w-5 text-primary" />
-                        {typeof item.event === 'object' && item.event !== null
-                          ? (item.event as any).title || (item.event as any).name || "Sin evento"
-                          : item.event || "Sin evento"}
+                        {item.title || "Sin título"}
                       </CardTitle>
-                      <CardDescription className="flex items-center gap-2 mt-2">
-                        <Users className="h-4 w-4" />
-                        {typeof item.attendee === 'object' && item.attendee !== null
-                          ? (item.attendee as any).name || (item.attendee as any).username || "Sin asistente"
-                          : item.attendee || "Sin asistente"}
+                      <CardDescription className="mt-2">
+                        {item.description || "Sin descripción"}
                       </CardDescription>
                     </div>
-                    {getStatusBadge(item.status)}
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {item.attendance_date && (
+                    {item.start_date && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Calendar className="h-4 w-4" />
-                        {format(new Date(item.attendance_date), "dd 'de' MMMM, yyyy", { locale: es })}
+                        Inicio: {format(new Date(item.start_date), "dd 'de' MMMM, yyyy", { locale: es })}
                       </div>
                     )}
                     
-                    {item.check_in_time && (
+                    {item.end_date && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock className="h-4 w-4" />
-                        Entrada: {item.check_in_time}
+                        <Calendar className="h-4 w-4" />
+                        Fin: {format(new Date(item.end_date), "dd 'de' MMMM, yyyy", { locale: es })}
                       </div>
                     )}
                     
-                    {item.check_out_time && (
+                    {item.type_event && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock className="h-4 w-4" />
-                        Salida: {item.check_out_time}
+                        <Users className="h-4 w-4" />
+                        Tipo: {item.type_event.name}
                       </div>
                     )}
                     
-                    {item.notes && (
-                      <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
-                        {item.notes}
-                      </p>
+                    {item.location && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <MapPin className="h-4 w-4" />
+                        {item.location.name}
+                      </div>
                     )}
 
                     <div className="flex gap-2 pt-4">
@@ -414,113 +425,143 @@ const Event = () => {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingItem ? "Editar Asistencia" : "Nueva Asistencia"}
+              {editingItem ? "Editar Evento" : "Nuevo Evento"}
             </DialogTitle>
             <DialogDescription>
               {editingItem
-                ? "Modifica los datos de la asistencia al evento"
-                : "Completa los datos para registrar una nueva asistencia"}
+                ? "Modifica los datos del evento"
+                : "Completa los datos para crear un nuevo evento"}
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="event">Evento *</Label>
-                <Input
-                  id="event"
-                  value={formData.event}
-                  onChange={(e) =>
-                    setFormData({ ...formData, event: e.target.value })
-                  }
-                  placeholder="Nombre del evento"
-                  required
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="title">Título *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
+                placeholder="Título del evento"
+                required
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="attendee">Asistente *</Label>
-                <Input
-                  id="attendee"
-                  value={formData.attendee}
-                  onChange={(e) =>
-                    setFormData({ ...formData, attendee: e.target.value })
-                  }
-                  placeholder="Nombre del asistente"
-                  required
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Descripción</Label>
+              <Textarea
+                id="description"
+                value={formData.description || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                rows={3}
+                placeholder="Descripción del evento"
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="status">Estado</Label>
+                <Label htmlFor="start_date">Fecha de Inicio</Label>
+                <Input
+                  id="start_date"
+                  type="date"
+                  value={formData.start_date || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, start_date: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="end_date">Fecha de Fin</Label>
+                <Input
+                  id="end_date"
+                  type="date"
+                  value={formData.end_date || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, end_date: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="type_event">Tipo de Evento</Label>
                 <Select
-                  value={formData.status}
+                  value={formData.type_event || ""}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, status: value })
+                    setFormData({ ...formData, type_event: value })
                   }
                 >
                   <SelectTrigger className="bg-background">
-                    <SelectValue placeholder="Seleccionar estado" />
+                    <SelectValue placeholder="Seleccionar tipo" />
                   </SelectTrigger>
                   <SelectContent className="bg-background z-50">
-                    <SelectItem value="pending">Pendiente</SelectItem>
-                    <SelectItem value="confirmed">Confirmado</SelectItem>
-                    <SelectItem value="cancelled">Cancelado</SelectItem>
+                    {eventTypes.map((type) => (
+                      <SelectItem key={type.documentId} value={type.documentId}>
+                        {type.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="attendance_date">Fecha de Asistencia</Label>
-                <Input
-                  id="attendance_date"
-                  type="date"
-                  value={formData.attendance_date || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, attendance_date: e.target.value })
+                <Label htmlFor="location">Ubicación</Label>
+                <Select
+                  value={formData.location || ""}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, location: value })
                   }
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="check_in_time">Hora de Entrada</Label>
-                <Input
-                  id="check_in_time"
-                  type="time"
-                  value={formData.check_in_time || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, check_in_time: e.target.value })
-                  }
-                />
+                >
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Seleccionar ubicación" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background z-50">
+                    {locations.map((loc) => (
+                      <SelectItem key={loc.documentId} value={loc.documentId}>
+                        {loc.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="check_out_time">Hora de Salida</Label>
-                <Input
-                  id="check_out_time"
-                  type="time"
-                  value={formData.check_out_time || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, check_out_time: e.target.value })
+                <Label htmlFor="organizers_company">Organizador</Label>
+                <Select
+                  value={formData.organizers_company || ""}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, organizers_company: value })
                   }
-                />
+                >
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Seleccionar organizador" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background z-50">
+                    {companies.map((company) => (
+                      <SelectItem key={company.documentId} value={company.documentId}>
+                        {company.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes">Notas</Label>
+              <Label htmlFor="content">Contenido</Label>
               <Textarea
-                id="notes"
-                value={formData.notes || ""}
+                id="content"
+                value={formData.content || ""}
                 onChange={(e) =>
-                  setFormData({ ...formData, notes: e.target.value })
+                  setFormData({ ...formData, content: e.target.value })
                 }
-                rows={3}
-                placeholder="Notas adicionales sobre la asistencia"
+                rows={4}
+                placeholder="Contenido detallado del evento"
               />
             </div>
 
@@ -545,12 +586,8 @@ const Event = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer. Se eliminará permanentemente la
-              asistencia de "{typeof deletingItem?.attendee === 'object' 
-                ? (deletingItem?.attendee as any)?.name || (deletingItem?.attendee as any)?.username 
-                : deletingItem?.attendee}" al evento "{typeof deletingItem?.event === 'object'
-                ? (deletingItem?.event as any)?.title || (deletingItem?.event as any)?.name
-                : deletingItem?.event}".
+              Esta acción no se puede deshacer. Se eliminará permanentemente el
+              evento "{deletingItem?.title}".
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
