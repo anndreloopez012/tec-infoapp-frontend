@@ -88,16 +88,25 @@ class CatalogService {
 
       console.log(`✅ ${this.entityName} obtenidos:`, response.data?.data?.length || 0);
       
-      const data = Array.isArray(response.data) ? response.data : response.data.data || [];
+      // Normalizar datos para que siempre tengamos { id, attributes, ...attributes }
+      const rawData = Array.isArray(response.data) ? response.data : response.data.data || [];
+      const normalized = (rawData || []).map((item: any) => {
+        const attrs = item?.attributes || item || {};
+        return {
+          id: item?.id ?? attrs?.id ?? item?.documentId,
+          attributes: attrs,
+          // también exponemos los atributos a nivel raíz para facilitar rendering
+          ...attrs,
+        };
+      });
       const meta = response.data.meta || {};
       
       return {
         success: true,
-        data: data,
+        data: normalized,
         meta: meta,
         pagination: meta.pagination || {}
       };
-      
     } catch (error: any) {
       console.error(`❌ Error al obtener ${this.entityName}:`, error);
       
@@ -124,11 +133,18 @@ class CatalogService {
       
       console.log(`✅ ${this.entityName} obtenido`);
       
-      return {
-        success: true,
-        data: response.data.data || response.data
+      const raw = response.data?.data ?? response.data;
+      const attrs = raw?.attributes || raw || {};
+      const normalized = {
+        id: raw?.id ?? attrs?.id ?? raw?.documentId,
+        attributes: attrs,
+        ...attrs,
       };
       
+      return {
+        success: true,
+        data: normalized
+      };
     } catch (error: any) {
       console.error(`❌ Error al obtener ${this.entityName}:`, error);
       
@@ -154,12 +170,19 @@ class CatalogService {
       
       console.log(`✅ ${this.entityName} creado`);
       
-      return {
-        success: true,
-        data: response.data.data || response.data,
-        message: `${this.entityName} creado exitosamente`
+      const raw = response.data?.data ?? response.data;
+      const attrs = raw?.attributes || raw || {};
+      const normalized = {
+        id: raw?.id ?? attrs?.id ?? raw?.documentId,
+        attributes: attrs,
+        ...attrs,
       };
       
+      return {
+        success: true,
+        data: normalized,
+        message: `${this.entityName} creado exitosamente`
+      };
     } catch (error: any) {
       console.error(`❌ Error al crear ${this.entityName}:`, error);
       
@@ -185,12 +208,19 @@ class CatalogService {
       
       console.log(`✅ ${this.entityName} actualizado`);
       
-      return {
-        success: true,
-        data: response.data.data || response.data,
-        message: `${this.entityName} actualizado exitosamente`
+      const raw = response.data?.data ?? response.data;
+      const attrs = raw?.attributes || raw || {};
+      const normalized = {
+        id: raw?.id ?? attrs?.id ?? raw?.documentId,
+        attributes: attrs,
+        ...attrs,
       };
       
+      return {
+        success: true,
+        data: normalized,
+        message: `${this.entityName} actualizado exitosamente`
+      };
     } catch (error: any) {
       console.error(`❌ Error al actualizar ${this.entityName}:`, error);
       

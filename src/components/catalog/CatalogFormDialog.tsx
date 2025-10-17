@@ -103,6 +103,10 @@ export const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
     defaultValues: defaultValues,
   });
 
+  // Sincronizar cuando cambian los valores por edición
+  React.useEffect(() => {
+    form.reset(defaultValues);
+  }, [defaultValues]);
   const handleSubmit = async (data: any) => {
     try {
       await onSubmit(data);
