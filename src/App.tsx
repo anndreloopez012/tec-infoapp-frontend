@@ -44,6 +44,7 @@ import Company from '@/pages/catalog/Company';
 import EventLocation from '@/pages/catalog/EventLocation';
 import ContentTag from '@/pages/catalog/ContentTag';
 import EventType from '@/pages/catalog/EventType';
+import ContentInfo from '@/pages/catalog/ContentInfo';
 
 // Layout
 import ModernLayout from '@/components/layout/ModernLayout';
@@ -144,6 +145,9 @@ const App = () => {
               <Route path="/catalog/event-location" element={<EventLocation />} />
               <Route path="/catalog/content-tag" element={<ContentTag />} />
               <Route path="/catalog/event-type" element={<EventType />} />
+              
+              {/* System Module Routes */}
+              <Route path="/contentinfo" element={<ContentInfo />} />
               
               {/* Rutas dinámicas para módulos */}
               <Route path="/:module" element={<ModulePage />} />
