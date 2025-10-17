@@ -351,5 +351,6 @@ export const eventLocationService = new CatalogService('event-locations', 'Lugar
 export const contentTagService = new CatalogService('content-tags', 'Tags de Contenido');
 export const eventTypeService = new CatalogService('event-types', 'Tipos de Evento');
 export const contentInfoService = new CatalogService('content-infos', 'Información de Contenido');
+export const galleryService = new CatalogService('galleries', 'Galería');
 
 export default CatalogService;
