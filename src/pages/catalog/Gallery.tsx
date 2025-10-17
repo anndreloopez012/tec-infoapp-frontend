@@ -230,6 +230,43 @@ const Gallery = () => {
     }
 
     try {
+      let uploadedMediaIds: number[] = [];
+
+      // Primero subir las imágenes nuevas si hay
+      if (uploadedFiles.length > 0) {
+        const formDataUpload = new FormData();
+        uploadedFiles.forEach(file => {
+          formDataUpload.append('files', file);
+        });
+
+        try {
+          const uploadResponse = await fetch(
+            `${import.meta.env.VITE_API_URL || 'https://tec-adm.server-softplus.plus'}/api/upload`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              },
+              body: formDataUpload,
+            }
+          );
+
+          if (uploadResponse.ok) {
+            const uploadedData = await uploadResponse.json();
+            uploadedMediaIds = uploadedData.map((img: any) => img.id);
+          }
+        } catch (uploadError) {
+          console.error('Error uploading files:', uploadError);
+          throw new Error('Error al subir las imágenes');
+        }
+      }
+
+      // Combinar IDs de medios existentes con los nuevos
+      const allMediaIds = [
+        ...existingMedia.map(img => img.id),
+        ...uploadedMediaIds
+      ];
+
       const payload: any = {
         title: formData.title,
         description: formData.description,
@@ -243,35 +280,13 @@ const Gallery = () => {
         payload.tags_content = formData.tags_content;
       }
 
-      if (existingMedia.length > 0) {
-        payload.media = existingMedia.map(img => img.id);
+      if (allMediaIds.length > 0) {
+        payload.media = allMediaIds;
       }
 
-      let result = editingItem
+      const result = editingItem
         ? await galleryService.update(editingItem.documentId!, payload)
         : await galleryService.create(payload);
-
-      if (result.success && uploadedFiles.length > 0) {
-        const formDataUpload = new FormData();
-        uploadedFiles.forEach(file => {
-          formDataUpload.append('files', file);
-        });
-        formDataUpload.append('ref', 'api::gallery.gallery');
-        formDataUpload.append('refId', result.data.id || result.data.documentId);
-        formDataUpload.append('field', 'media');
-
-        try {
-          await fetch(`${import.meta.env.VITE_API_URL || 'https://tec-adm.server-softplus.plus'}/api/upload`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            },
-            body: formDataUpload,
-          });
-        } catch (uploadError) {
-          console.error('Error uploading files:', uploadError);
-        }
-      }
 
       if (result.success) {
         toast({
