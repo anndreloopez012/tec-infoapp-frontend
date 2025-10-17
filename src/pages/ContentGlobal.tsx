@@ -18,7 +18,8 @@ import {
   Search,
   User,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { API_CONFIG } from '@/config/api';
@@ -197,6 +198,34 @@ const ContentGlobal = () => {
     // Prefer medium format for cards, fallback to original
     const format = attachment.formats?.medium || attachment.formats?.large;
     return format ? getImageUrl(format) : getImageUrl(attachment);
+  };
+
+  const downloadImage = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Error downloading image:', error);
+    }
+  };
+
+  const downloadAllImages = async (attachments: Attachment[]) => {
+    for (const attachment of attachments) {
+      const url = getImageUrl(attachment);
+      if (url) {
+        await downloadImage(url, `attachment-${attachment.id}.png`);
+        // Small delay between downloads
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
   };
 
   const stripHtml = (html: string) => {
@@ -757,26 +786,6 @@ const ContentGlobal = () => {
                          selectedContent.status_content === 'draft' ? 'Borrador' : 'Archivado'}
                       </Badge>
                     </div>
-
-                    {/* Slug */}
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                        Slug
-                      </label>
-                      <p className="text-sm font-mono bg-accent/50 px-2 py-1 rounded">
-                        {selectedContent.slug}
-                      </p>
-                    </div>
-
-                    {/* Document ID */}
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                        ID de Documento
-                      </label>
-                      <p className="text-sm font-mono bg-accent/50 px-2 py-1 rounded truncate">
-                        {selectedContent.documentId}
-                      </p>
-                    </div>
                   </div>
                 </motion.div>
                 
@@ -845,21 +854,51 @@ const ContentGlobal = () => {
                 </motion.div>
               )}
 
-              {/* Attachments Info */}
+              {/* Attachments Gallery */}
               {selectedContent.attachments && selectedContent.attachments.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.45 }}
                 >
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
-                    Archivos Adjuntos
-                  </label>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      Archivos Adjuntos ({selectedContent.attachments.length})
+                    </label>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => downloadAllImages(selectedContent.attachments!)}
+                      className="gap-2"
+                    >
+                      <Download className="w-4 h-4" />
+                      Descargar todas
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {selectedContent.attachments.map((attachment) => (
-                      <Badge key={attachment.id} variant="outline" className="text-xs">
-                        {attachment.alternativeText || `Imagen ${attachment.id}`}
-                      </Badge>
+                      <motion.div
+                        key={attachment.id}
+                        whileHover={{ scale: 1.05 }}
+                        className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-accent/20"
+                      >
+                        <img
+                          src={getBestImageFormat(attachment) || getImageUrl(attachment)}
+                          alt={attachment.alternativeText || `Adjunto ${attachment.id}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => downloadImage(getImageUrl(attachment)!, `attachment-${attachment.id}.png`)}
+                            className="gap-2"
+                          >
+                            <Download className="w-4 h-4" />
+                            Descargar
+                          </Button>
+                        </div>
+                      </motion.div>
                     ))}
                   </div>
                 </motion.div>
