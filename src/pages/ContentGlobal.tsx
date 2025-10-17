@@ -100,6 +100,7 @@ const ContentGlobal = () => {
 
   useEffect(() => {
     if (selectedCategory !== null) {
+      console.log('Selected category changed:', selectedCategory);
       loadContent();
     }
   }, [selectedCategory]);
@@ -156,6 +157,7 @@ const ContentGlobal = () => {
   const loadContent = async () => {
     setLoading(true);
     try {
+      console.log('Loading content for category:', selectedCategory);
       const result = await contentInfoService.getAll({
         pageSize: 100,
         populate: '*',
@@ -166,6 +168,7 @@ const ContentGlobal = () => {
         }
       });
       
+      console.log('Content loaded:', result.data.length, 'items');
       if (result.success) {
         setContent(result.data);
         setFilteredContent(result.data);
@@ -199,16 +202,16 @@ const ContentGlobal = () => {
     const category = categories.find(c => c.id === categoryId);
     if (category?.color) return category.color;
     
-    // Colores predeterminados que sean coherentes con el tema
+    // Colores predeterminados usando semantic tokens del sistema de diseño
     const defaultColors = [
-      '#8B5CF6', // Purple
-      '#3B82F6', // Blue
-      '#10B981', // Green
-      '#F59E0B', // Amber
-      '#EF4444', // Red
-      '#EC4899', // Pink
-      '#6366F1', // Indigo
-      '#14B8A6', // Teal
+      'hsl(189 100% 50%)',  // primary - cyan
+      'hsl(262 83% 58%)',   // secondary - purple
+      'hsl(24 95% 53%)',    // accent - orange
+      'hsl(142 76% 36%)',   // success - green
+      'hsl(199 89% 48%)',   // info - blue
+      'hsl(38 92% 50%)',    // warning - yellow
+      'hsl(332 83% 58%)',   // pink
+      'hsl(171 76% 41%)',   // teal
     ];
     
     // Usar el ID de la categoría para un color consistente
@@ -298,11 +301,11 @@ const ContentGlobal = () => {
                 <CardDescription className="flex flex-wrap gap-2 mt-2">
                   {item.category_content && (
                     <Badge 
-                      variant="secondary" 
-                      className="text-xs border-2 transition-all hover:scale-105"
+                      className="text-xs font-semibold transition-all hover:scale-105 border-2"
                       style={{ 
-                        borderColor: getCategoryColor(item.category_content.id) || undefined,
-                        backgroundColor: `${getCategoryColor(item.category_content.id)}15` || undefined
+                        borderColor: getCategoryColor(item.category_content.id) || 'hsl(var(--primary))',
+                        backgroundColor: 'hsl(var(--card))',
+                        color: getCategoryColor(item.category_content.id) || 'hsl(var(--primary))'
                       }}
                     >
                       <Tag className="w-3 h-3 mr-1" />
@@ -571,7 +574,12 @@ const ContentGlobal = () => {
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-card/80 backdrop-blur-md border-b sticky top-0 z-40 shadow-lg"
+        className="sticky top-0 z-40 shadow-lg"
+        style={{
+          background: 'linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--card) / 0.95) 100%)',
+          backdropFilter: 'blur(20px)',
+          borderBottom: '1px solid hsl(var(--border))'
+        }}
       >
         <div className="container mx-auto px-4">
           {/* Category Navigation - Main Nav Style */}
@@ -590,12 +598,15 @@ const ContentGlobal = () => {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
-                        onClick={() => setSelectedCategory(category.id)}
+                        onClick={() => {
+                          console.log('Category clicked:', category.id, category.name);
+                          setSelectedCategory(category.id);
+                        }}
                         className={`
                           relative px-6 py-3 rounded-lg font-medium text-sm transition-all duration-300
                           ${isActive
                             ? 'text-white shadow-lg scale-105'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/20'
                           }
                         `}
                       >
@@ -603,8 +614,10 @@ const ContentGlobal = () => {
                         {isActive && (
                           <motion.div
                             layoutId="activeCategory"
-                            className="absolute inset-0 rounded-lg"
-                            style={{ backgroundColor: categoryColor || undefined }}
+                            className="absolute inset-0 rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.2)]"
+                            style={{ 
+                              backgroundColor: categoryColor || 'hsl(var(--primary))',
+                            }}
                             transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                           />
                         )}
@@ -777,11 +790,11 @@ const ContentGlobal = () => {
                           Categoría
                         </label>
                         <Badge 
-                          variant="secondary" 
-                          className="text-sm border-2 transition-all hover:scale-105"
+                          className="text-sm font-semibold transition-all hover:scale-105 border-2"
                           style={{ 
-                            borderColor: getCategoryColor(selectedContent.category_content.id) || undefined,
-                            backgroundColor: `${getCategoryColor(selectedContent.category_content.id)}15` || undefined
+                            borderColor: getCategoryColor(selectedContent.category_content.id) || 'hsl(var(--primary))',
+                            backgroundColor: 'hsl(var(--card))',
+                            color: getCategoryColor(selectedContent.category_content.id) || 'hsl(var(--primary))'
                           }}
                         >
                           <Tag className="w-4 h-4 mr-1" />
