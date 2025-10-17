@@ -537,108 +537,110 @@ const ContentGlobal = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
-      {/* Hero Header with Category Navigation */}
+      {/* Navigation Header */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-card/50 backdrop-blur-sm border-b sticky top-0 z-40 shadow-sm"
+        className="bg-card/80 backdrop-blur-md border-b sticky top-0 z-40 shadow-lg"
       >
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex flex-col gap-6">
-            <div>
-              <motion.h1 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 }}
-                className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent"
-              >
-                Contenido Global
-              </motion.h1>
-              <motion.p 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-muted-foreground mt-2"
-              >
-                Explora nuestro contenido organizado por categorías
-              </motion.p>
-            </div>
+        <div className="container mx-auto px-4">
+          {/* Category Navigation - Main Nav Style */}
+          {categories.length > 0 && (
+            <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between py-4">
+              {/* Categories as Navigation */}
+              <nav className="flex-1">
+                <div className="flex flex-wrap gap-2 items-center">
+                  {categories.map((category, index) => (
+                    <motion.button
+                      key={category.id}
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      onClick={() => setSelectedCategory(category.id)}
+                      className={`
+                        relative px-6 py-3 rounded-lg font-medium text-sm transition-all duration-300
+                        ${selectedCategory === category.id
+                          ? 'text-primary-foreground shadow-lg'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                        }
+                      `}
+                    >
+                      {/* Animated background for active state */}
+                      {selectedCategory === category.id && (
+                        <motion.div
+                          layoutId="activeCategory"
+                          className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 rounded-lg"
+                          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                        />
+                      )}
+                      
+                      {/* Category icon and name */}
+                      <span className="relative z-10 flex items-center gap-2">
+                        <Tag className="w-4 h-4" />
+                        {category.name}
+                      </span>
+                    </motion.button>
+                  ))}
+                </div>
+              </nav>
 
-            {/* Category Navigation - Embedded Style */}
-            {categories.length > 0 && (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between"
-              >
-                <div className="flex-1 max-w-4xl">
-                  <Tabs 
-                    value={selectedCategory?.toString()} 
-                    onValueChange={(value) => setSelectedCategory(Number(value))}
-                    className="w-full"
+              {/* Search and View Controls */}
+              <div className="flex gap-3 items-center flex-wrap">
+                {/* Search Input */}
+                <motion.div 
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="relative flex-1 lg:w-64 min-w-[200px]"
+                >
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Buscar..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-background/80 backdrop-blur-sm border-primary/20 focus:border-primary transition-all duration-200 h-11"
+                  />
+                </motion.div>
+                
+                {/* View Mode Toggles */}
+                <motion.div 
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex gap-1 bg-background/80 backdrop-blur-sm border rounded-lg p-1"
+                >
+                  <Button
+                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                    size="icon"
+                    onClick={() => setViewMode('grid')}
+                    title="Vista en cuadrícula"
+                    className="h-9 w-9 transition-all duration-200"
                   >
-                    <TabsList className="w-full justify-start h-auto p-1 bg-background/60 backdrop-blur-sm border">
-                      {categories.map((category) => (
-                        <TabsTrigger 
-                          key={category.id} 
-                          value={category.id.toString()}
-                          className="whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300 hover:scale-105"
-                        >
-                          <Tag className="w-3 h-3 mr-2" />
-                          {category.name}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                  </Tabs>
-                </div>
-
-                {/* Search and View Mode */}
-                <div className="flex gap-2 items-center">
-                  <div className="relative flex-1 lg:w-64">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      type="text"
-                      placeholder="Buscar contenido..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 bg-background/60 backdrop-blur-sm border-primary/20 focus:border-primary transition-colors"
-                    />
-                  </div>
-                  
-                  <div className="flex gap-1 bg-background/60 backdrop-blur-sm border rounded-lg p-1">
-                    <Button
-                      variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                      size="icon"
-                      onClick={() => setViewMode('grid')}
-                      title="Vista en cuadrícula"
-                      className="h-9 w-9 transition-all duration-200"
-                    >
-                      <LayoutGrid className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant={viewMode === 'list' ? 'default' : 'ghost'}
-                      size="icon"
-                      onClick={() => setViewMode('list')}
-                      title="Vista en lista"
-                      className="h-9 w-9 transition-all duration-200"
-                    >
-                      <List className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant={viewMode === 'masonry' ? 'default' : 'ghost'}
-                      size="icon"
-                      onClick={() => setViewMode('masonry')}
-                      title="Vista mosaico"
-                      className="h-9 w-9 transition-all duration-200"
-                    >
-                      <Columns className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </div>
+                    <LayoutGrid className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'list' ? 'default' : 'ghost'}
+                    size="icon"
+                    onClick={() => setViewMode('list')}
+                    title="Vista en lista"
+                    className="h-9 w-9 transition-all duration-200"
+                  >
+                    <List className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'masonry' ? 'default' : 'ghost'}
+                    size="icon"
+                    onClick={() => setViewMode('masonry')}
+                    title="Vista mosaico"
+                    className="h-9 w-9 transition-all duration-200"
+                  >
+                    <Columns className="w-4 h-4" />
+                  </Button>
+                </motion.div>
+              </div>
+            </div>
+          )}
         </div>
       </motion.div>
 
