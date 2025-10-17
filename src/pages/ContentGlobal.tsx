@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
-import { contentInfoService, contentCategoryService } from '@/services/catalogServices';
-import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { 
-  LayoutGrid, 
-  List, 
-  Columns, 
+import React, { useState, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import { contentInfoService, contentCategoryService } from "@/services/catalogServices";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import {
+  LayoutGrid,
+  List,
+  Columns,
   Calendar,
   Eye,
   Tag,
@@ -19,19 +19,13 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
-  Download
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { API_CONFIG } from '@/config/api';
-import LoadingSpinner from '@/components/common/LoadingSpinner';
-import EmptyState from '@/components/common/EmptyState';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
+  Download,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { API_CONFIG } from "@/config/api";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
+import EmptyState from "@/components/common/EmptyState";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 interface Attachment {
   id: number;
@@ -52,7 +46,7 @@ interface ContentItem {
   slug: string;
   content: string;
   active: boolean;
-  status_content: 'draft' | 'published' | 'archived';
+  status_content: "draft" | "published" | "archived";
   publish_date: string;
   category_content?: {
     id: number;
@@ -80,18 +74,18 @@ interface Category {
   color?: string;
 }
 
-type ViewMode = 'grid' | 'list' | 'masonry' | 'compact';
+type ViewMode = "grid" | "list" | "masonry" | "compact";
 
 const ContentGlobal = () => {
   const [content, setContent] = useState<ContentItem[]>([]);
   const [filteredContent, setFilteredContent] = useState<ContentItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [loading, setLoading] = useState(true);
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  
+  const [searchQuery, setSearchQuery] = useState("");
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -100,7 +94,7 @@ const ContentGlobal = () => {
 
   useEffect(() => {
     if (selectedCategory !== null) {
-      console.log('Selected category changed:', selectedCategory);
+      console.log("Selected category changed:", selectedCategory);
       loadContent();
     }
   }, [selectedCategory]);
@@ -114,13 +108,14 @@ const ContentGlobal = () => {
       setFilteredContent(content);
       return;
     }
-    
+
     const query = searchQuery.toLowerCase();
-    const filtered = content.filter(item => 
-      item.title.toLowerCase().includes(query) ||
-      item.content.toLowerCase().includes(query) ||
-      item.category_content?.name.toLowerCase().includes(query) ||
-      item.company?.name.toLowerCase().includes(query)
+    const filtered = content.filter(
+      (item) =>
+        item.title.toLowerCase().includes(query) ||
+        item.content.toLowerCase().includes(query) ||
+        item.category_content?.name.toLowerCase().includes(query) ||
+        item.company?.name.toLowerCase().includes(query),
     );
     setFilteredContent(filtered);
   };
@@ -129,10 +124,10 @@ const ContentGlobal = () => {
     try {
       const result = await contentCategoryService.getAll({
         pageSize: 100,
-        sort: 'name:asc',
+        sort: "name:asc",
         additionalFilters: {
-          'filters[active][$eq]': true
-        }
+          "filters[active][$eq]": true,
+        },
       });
 
       if (result.success && result.data.length > 0) {
@@ -142,15 +137,15 @@ const ContentGlobal = () => {
         toast({
           title: "No hay categorías disponibles",
           description: "Por favor, crea categorías de contenido primero.",
-          variant: "destructive"
+          variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('Error loading categories:', error);
+      console.error("Error loading categories:", error);
       toast({
         title: "Error",
         description: "No se pudieron cargar las categorías",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -159,31 +154,30 @@ const ContentGlobal = () => {
 
   const loadContent = async () => {
     if (!selectedCategory) return;
-    
+
     setLoading(true);
     try {
-      console.log('Loading content for category:', selectedCategory);
+      console.log("Loading content for category:", selectedCategory);
       const result = await contentInfoService.getAll({
         pageSize: 100,
-        sort: 'publish_date:desc',
+        sort: "publish_date:desc",
         additionalFilters: {
-          'filters[category_content][id][$eq]': selectedCategory,
-          'filters[active][$eq]': true,
-          'filters[status_content][$eq]': 'published'
-        }
+          "filters[category_content][id][$eq]": selectedCategory,
+          "filters[status_content][$eq]": "published",
+        },
       });
 
-      console.log('Content loaded:', result.data.length, 'items');
+      console.log("Content loaded:", result.data.length, "items");
       if (result.success) {
         setContent(result.data);
         setFilteredContent(result.data);
       }
     } catch (error) {
-      console.error('Error loading content:', error);
+      console.error("Error loading content:", error);
       toast({
         title: "Error",
         description: "No se pudo cargar el contenido",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -192,9 +186,7 @@ const ContentGlobal = () => {
 
   const getImageUrl = (imageData: any) => {
     if (!imageData?.url) return null;
-    return imageData.url.startsWith('http') 
-      ? imageData.url 
-      : `${API_CONFIG.BASE_URL}${imageData.url}`;
+    return imageData.url.startsWith("http") ? imageData.url : `${API_CONFIG.BASE_URL}${imageData.url}`;
   };
 
   const getMainImage = (item: ContentItem) => {
@@ -204,21 +196,21 @@ const ContentGlobal = () => {
 
   const getCategoryColor = (categoryId: number | undefined) => {
     if (!categoryId) return null;
-    const category = categories.find(c => c.id === categoryId);
+    const category = categories.find((c) => c.id === categoryId);
     if (category?.color) return category.color;
-    
+
     // Colores predeterminados usando semantic tokens del sistema de diseño
     const defaultColors = [
-      'hsl(189 100% 50%)',  // primary - cyan
-      'hsl(262 83% 58%)',   // secondary - purple
-      'hsl(24 95% 53%)',    // accent - orange
-      'hsl(142 76% 36%)',   // success - green
-      'hsl(199 89% 48%)',   // info - blue
-      'hsl(38 92% 50%)',    // warning - yellow
-      'hsl(332 83% 58%)',   // pink
-      'hsl(171 76% 41%)',   // teal
+      "hsl(189 100% 50%)", // primary - cyan
+      "hsl(262 83% 58%)", // secondary - purple
+      "hsl(24 95% 53%)", // accent - orange
+      "hsl(142 76% 36%)", // success - green
+      "hsl(199 89% 48%)", // info - blue
+      "hsl(38 92% 50%)", // warning - yellow
+      "hsl(332 83% 58%)", // pink
+      "hsl(171 76% 41%)", // teal
     ];
-    
+
     // Usar el ID de la categoría para un color consistente
     const index = categoryId % defaultColors.length;
     return defaultColors[index];
@@ -236,7 +228,7 @@ const ContentGlobal = () => {
       const response = await fetch(url);
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = blobUrl;
       link.download = filename;
       document.body.appendChild(link);
@@ -244,7 +236,7 @@ const ContentGlobal = () => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
-      console.error('Error downloading image:', error);
+      console.error("Error downloading image:", error);
     }
   };
 
@@ -254,21 +246,21 @@ const ContentGlobal = () => {
       if (url) {
         await downloadImage(url, `attachment-${attachment.id}.png`);
         // Small delay between downloads
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
     }
   };
 
   const stripHtml = (html: string) => {
-    const tmp = document.createElement('DIV');
+    const tmp = document.createElement("DIV");
     tmp.innerHTML = html;
-    return tmp.textContent || tmp.innerText || '';
+    return tmp.textContent || tmp.innerText || "";
   };
 
   const truncateText = (text: string, maxLength: number) => {
     const stripped = stripHtml(text);
     if (stripped.length <= maxLength) return stripped;
-    return stripped.substring(0, maxLength) + '...';
+    return stripped.substring(0, maxLength) + "...";
   };
 
   const renderGridView = () => (
@@ -300,17 +292,15 @@ const ContentGlobal = () => {
                 </div>
               )}
               <CardHeader>
-                <CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">
-                  {item.title}
-                </CardTitle>
+                <CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">{item.title}</CardTitle>
                 <CardDescription className="flex flex-wrap gap-2 mt-2">
                   {item.category_content && (
-                    <Badge 
+                    <Badge
                       className="text-xs font-semibold transition-all hover:scale-105 border-2"
-                      style={{ 
-                        borderColor: getCategoryColor(item.category_content.id) || 'hsl(var(--primary))',
-                        backgroundColor: 'hsl(var(--card))',
-                        color: getCategoryColor(item.category_content.id) || 'hsl(var(--primary))'
+                      style={{
+                        borderColor: getCategoryColor(item.category_content.id) || "hsl(var(--primary))",
+                        backgroundColor: "hsl(var(--card))",
+                        color: getCategoryColor(item.category_content.id) || "hsl(var(--primary))",
                       }}
                     >
                       <Tag className="w-3 h-3 mr-1" />
@@ -334,7 +324,7 @@ const ContentGlobal = () => {
                 <div className="flex flex-col gap-1 flex-1 min-w-0">
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
-                    {new Date(item.publish_date).toLocaleDateString('es-MX')}
+                    {new Date(item.publish_date).toLocaleDateString("es-MX")}
                   </span>
                   {item.author && (
                     <span className="text-xs text-muted-foreground flex items-center gap-1 truncate">
@@ -343,8 +333,8 @@ const ContentGlobal = () => {
                     </span>
                   )}
                 </div>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant="ghost"
                   onClick={() => setSelectedContent(item)}
                   className="group-hover:bg-primary group-hover:text-primary-foreground transition-colors flex-shrink-0"
@@ -390,9 +380,7 @@ const ContentGlobal = () => {
                 )}
                 <div className="flex-1 p-6">
                   <CardHeader className="p-0 mb-4">
-                    <CardTitle className="group-hover:text-primary transition-colors">
-                      {item.title}
-                    </CardTitle>
+                    <CardTitle className="group-hover:text-primary transition-colors">{item.title}</CardTitle>
                     <CardDescription className="flex flex-wrap gap-2 mt-2">
                       {item.category_content && (
                         <Badge variant="secondary">
@@ -408,18 +396,15 @@ const ContentGlobal = () => {
                       )}
                       <Badge variant="outline">
                         <Calendar className="w-3 h-3 mr-1" />
-                        {new Date(item.publish_date).toLocaleDateString('es-MX')}
+                        {new Date(item.publish_date).toLocaleDateString("es-MX")}
                       </Badge>
                     </CardDescription>
                   </CardHeader>
                   <p className="text-muted-foreground mb-4 line-clamp-2">
-                    {item.category_content?.description || 'Haz clic para leer el contenido completo'}
+                    {item.category_content?.description || "Haz clic para leer el contenido completo"}
                   </p>
                   <div className="flex items-center justify-between">
-                    <Button 
-                      size="sm"
-                      onClick={() => setSelectedContent(item)}
-                    >
+                    <Button size="sm" onClick={() => setSelectedContent(item)}>
                       <Eye className="w-4 h-4 mr-2" />
                       Leer más
                     </Button>
@@ -467,9 +452,7 @@ const ContentGlobal = () => {
                 </div>
               )}
               <CardHeader>
-                <CardTitle className="text-lg group-hover:text-primary transition-colors">
-                  {item.title}
-                </CardTitle>
+                <CardTitle className="text-lg group-hover:text-primary transition-colors">{item.title}</CardTitle>
                 <CardDescription className="flex flex-wrap gap-2 mt-2">
                   {item.category_content && (
                     <Badge variant="secondary" className="text-xs">
@@ -480,16 +463,11 @@ const ContentGlobal = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground line-clamp-2">
-                  {item.category_content?.description || 'Ver contenido completo'}
+                  {item.category_content?.description || "Ver contenido completo"}
                 </p>
               </CardContent>
               <CardFooter>
-                <Button 
-                  size="sm" 
-                  variant="ghost"
-                  onClick={() => setSelectedContent(item)}
-                  className="w-full"
-                >
+                <Button size="sm" variant="ghost" onClick={() => setSelectedContent(item)} className="w-full">
                   Ver detalles
                 </Button>
               </CardFooter>
@@ -512,7 +490,7 @@ const ContentGlobal = () => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <Card 
+            <Card
               className="p-4 hover:bg-accent/50 transition-colors cursor-pointer"
               onClick={() => setSelectedContent(item)}
             >
@@ -532,9 +510,7 @@ const ContentGlobal = () => {
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold truncate hover:text-primary transition-colors">
-                    {item.title}
-                  </h3>
+                  <h3 className="font-semibold truncate hover:text-primary transition-colors">{item.title}</h3>
                   <div className="flex items-center gap-2 mt-1">
                     {item.category_content && (
                       <Badge variant="secondary" className="text-xs">
@@ -542,7 +518,7 @@ const ContentGlobal = () => {
                       </Badge>
                     )}
                     <span className="text-xs text-muted-foreground">
-                      {new Date(item.publish_date).toLocaleDateString('es-MX')}
+                      {new Date(item.publish_date).toLocaleDateString("es-MX")}
                     </span>
                   </div>
                 </div>
@@ -556,13 +532,13 @@ const ContentGlobal = () => {
 
   const renderContent = () => {
     switch (viewMode) {
-      case 'grid':
+      case "grid":
         return renderGridView();
-      case 'list':
+      case "list":
         return renderListView();
-      case 'masonry':
+      case "masonry":
         return renderMasonryView();
-      case 'compact':
+      case "compact":
         return renderCompactView();
       default:
         return renderGridView();
@@ -576,14 +552,14 @@ const ContentGlobal = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
       {/* Navigation Header */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="sticky top-0 z-40 shadow-lg"
         style={{
-          background: 'linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--card) / 0.95) 100%)',
-          backdropFilter: 'blur(20px)',
-          borderBottom: '1px solid hsl(var(--border))'
+          background: "linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--card) / 0.95) 100%)",
+          backdropFilter: "blur(20px)",
+          borderBottom: "1px solid hsl(var(--border))",
         }}
       >
         <div className="container mx-auto px-4">
@@ -596,7 +572,7 @@ const ContentGlobal = () => {
                   {categories.map((category, index) => {
                     const categoryColor = getCategoryColor(category.id);
                     const isActive = selectedCategory === category.id;
-                    
+
                     return (
                       <motion.button
                         key={category.id}
@@ -604,14 +580,15 @@ const ContentGlobal = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
                         onClick={() => {
-                          console.log('Category clicked:', category.id, category.name);
+                          console.log("Category clicked:", category.id, category.name);
                           setSelectedCategory(category.id);
                         }}
                         className={`
                           relative px-6 py-3 rounded-lg font-medium text-sm transition-all duration-300
-                          ${isActive
-                            ? 'text-white shadow-lg scale-105'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/20'
+                          ${
+                            isActive
+                              ? "text-white shadow-lg scale-105"
+                              : "text-muted-foreground hover:text-foreground hover:bg-accent/20"
                           }
                         `}
                       >
@@ -620,13 +597,13 @@ const ContentGlobal = () => {
                           <motion.div
                             layoutId="activeCategory"
                             className="absolute inset-0 rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.2)]"
-                            style={{ 
-                              backgroundColor: categoryColor || 'hsl(var(--primary))',
+                            style={{
+                              backgroundColor: categoryColor || "hsl(var(--primary))",
                             }}
                             transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                           />
                         )}
-                        
+
                         {/* Category icon and name */}
                         <span className="relative z-10 flex items-center gap-2">
                           <Tag className="w-4 h-4" />
@@ -641,7 +618,7 @@ const ContentGlobal = () => {
               {/* Search and View Controls */}
               <div className="flex gap-3 items-center flex-wrap">
                 {/* Search Input */}
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 }}
@@ -656,36 +633,36 @@ const ContentGlobal = () => {
                     className="pl-10 bg-background/80 backdrop-blur-sm border-primary/20 focus:border-primary transition-all duration-200 h-11"
                   />
                 </motion.div>
-                
+
                 {/* View Mode Toggles */}
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 }}
                   className="flex gap-1 bg-background/80 backdrop-blur-sm border rounded-lg p-1"
                 >
                   <Button
-                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                    variant={viewMode === "grid" ? "default" : "ghost"}
                     size="icon"
-                    onClick={() => setViewMode('grid')}
+                    onClick={() => setViewMode("grid")}
                     title="Vista en cuadrícula"
                     className="h-9 w-9 transition-all duration-200"
                   >
                     <LayoutGrid className="w-4 h-4" />
                   </Button>
                   <Button
-                    variant={viewMode === 'list' ? 'default' : 'ghost'}
+                    variant={viewMode === "list" ? "default" : "ghost"}
                     size="icon"
-                    onClick={() => setViewMode('list')}
+                    onClick={() => setViewMode("list")}
                     title="Vista en lista"
                     className="h-9 w-9 transition-all duration-200"
                   >
                     <List className="w-4 h-4" />
                   </Button>
                   <Button
-                    variant={viewMode === 'masonry' ? 'default' : 'ghost'}
+                    variant={viewMode === "masonry" ? "default" : "ghost"}
                     size="icon"
-                    onClick={() => setViewMode('masonry')}
+                    onClick={() => setViewMode("masonry")}
                     title="Vista mosaico"
                     className="h-9 w-9 transition-all duration-200"
                   >
@@ -703,13 +680,14 @@ const ContentGlobal = () => {
         {loading ? (
           <LoadingSpinner />
         ) : filteredContent.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-          >
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
             <EmptyState
               title={searchQuery ? "No se encontraron resultados" : "No hay contenido disponible"}
-              description={searchQuery ? "Intenta con otros términos de búsqueda" : "No se encontró contenido publicado en esta categoría"}
+              description={
+                searchQuery
+                  ? "Intenta con otros términos de búsqueda"
+                  : "No se encontró contenido publicado en esta categoría"
+              }
             />
           </motion.div>
         ) : (
@@ -719,7 +697,7 @@ const ContentGlobal = () => {
 
       {/* Detail Modal */}
       {selectedContent && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -785,7 +763,7 @@ const ContentGlobal = () => {
                   <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                     {selectedContent.title}
                   </h2>
-                  
+
                   {/* Information Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     {/* Category */}
@@ -794,12 +772,12 @@ const ContentGlobal = () => {
                         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                           Categoría
                         </label>
-                        <Badge 
+                        <Badge
                           className="text-sm font-semibold transition-all hover:scale-105 border-2"
-                          style={{ 
-                            borderColor: getCategoryColor(selectedContent.category_content.id) || 'hsl(var(--primary))',
-                            backgroundColor: 'hsl(var(--card))',
-                            color: getCategoryColor(selectedContent.category_content.id) || 'hsl(var(--primary))'
+                          style={{
+                            borderColor: getCategoryColor(selectedContent.category_content.id) || "hsl(var(--primary))",
+                            backgroundColor: "hsl(var(--card))",
+                            color: getCategoryColor(selectedContent.category_content.id) || "hsl(var(--primary))",
                           }}
                         >
                           <Tag className="w-4 h-4 mr-1" />
@@ -828,10 +806,10 @@ const ContentGlobal = () => {
                       </label>
                       <Badge variant="outline" className="transition-transform hover:scale-105">
                         <Calendar className="w-3 h-3 mr-1" />
-                        {new Date(selectedContent.publish_date).toLocaleDateString('es-MX', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
+                        {new Date(selectedContent.publish_date).toLocaleDateString("es-MX", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
                         })}
                       </Badge>
                     </div>
@@ -841,17 +819,20 @@ const ContentGlobal = () => {
                       <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                         Estado
                       </label>
-                      <Badge 
-                        variant={selectedContent.status_content === 'published' ? 'default' : 'secondary'}
+                      <Badge
+                        variant={selectedContent.status_content === "published" ? "default" : "secondary"}
                         className="transition-transform hover:scale-105"
                       >
-                        {selectedContent.status_content === 'published' ? 'Publicado' : 
-                         selectedContent.status_content === 'draft' ? 'Borrador' : 'Archivado'}
+                        {selectedContent.status_content === "published"
+                          ? "Publicado"
+                          : selectedContent.status_content === "draft"
+                            ? "Borrador"
+                            : "Archivado"}
                       </Badge>
                     </div>
                   </div>
                 </motion.div>
-                
+
                 <Button
                   variant="ghost"
                   size="icon"
@@ -886,7 +867,7 @@ const ContentGlobal = () => {
               )}
 
               {/* Content */}
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
@@ -896,7 +877,7 @@ const ContentGlobal = () => {
                   Contenido
                 </label>
                 <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-a:text-primary prose-code:text-foreground prose-pre:bg-accent/50 prose-li:text-foreground">
-                  <ReactMarkdown>{selectedContent.content || 'Sin contenido'}</ReactMarkdown>
+                  <ReactMarkdown>{selectedContent.content || "Sin contenido"}</ReactMarkdown>
                 </div>
               </motion.div>
 
@@ -919,11 +900,7 @@ const ContentGlobal = () => {
 
               {/* Attachments Gallery */}
               {selectedContent.attachments && selectedContent.attachments.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.45 }}
-                >
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
                   <div className="flex items-center justify-between mb-3">
                     <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                       Archivos Adjuntos ({selectedContent.attachments.length})
