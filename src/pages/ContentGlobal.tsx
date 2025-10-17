@@ -14,12 +14,34 @@ import {
   Eye,
   Tag,
   Building2,
-  Search
+  Search,
+  User,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { API_CONFIG } from '@/config/api';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel';
+
+interface Attachment {
+  id: number;
+  url: string;
+  alternativeText?: string;
+  formats?: {
+    large?: { url: string };
+    medium?: { url: string };
+    small?: { url: string };
+    thumbnail?: { url: string };
+  };
+}
 
 interface ContentItem {
   id: number;
@@ -39,13 +61,13 @@ interface ContentItem {
     id: number;
     name: string;
   };
-  main_image?: {
+  attachments?: Attachment[];
+  author?: {
     id: number;
-    url: string;
-    alternativeText?: string;
-    formats?: any;
+    username: string;
+    email: string;
   };
-  attachments?: any[];
+  comment?: string;
 }
 
 interface Category {
@@ -164,6 +186,18 @@ const ContentGlobal = () => {
       : `${API_CONFIG.BASE_URL}${imageData.url}`;
   };
 
+  const getMainImage = (item: ContentItem) => {
+    if (!item.attachments || item.attachments.length === 0) return null;
+    return item.attachments[0];
+  };
+
+  const getBestImageFormat = (attachment: Attachment) => {
+    if (!attachment) return null;
+    // Prefer medium format for cards, fallback to original
+    const format = attachment.formats?.medium || attachment.formats?.large;
+    return format ? getImageUrl(format) : getImageUrl(attachment);
+  };
+
   const stripHtml = (html: string) => {
     const tmp = document.createElement('DIV');
     tmp.innerHTML = html;
@@ -188,15 +222,20 @@ const ContentGlobal = () => {
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-300 cursor-pointer group">
-              {item.main_image && (
-                <div className="relative h-48 overflow-hidden rounded-t-lg">
+            <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-300 cursor-pointer group overflow-hidden">
+              {getMainImage(item) && (
+                <div className="relative h-48 overflow-hidden">
                   <img
-                    src={getImageUrl(item.main_image)}
-                    alt={item.main_image.alternativeText || item.title}
+                    src={getBestImageFormat(getMainImage(item)!)}
+                    alt={getMainImage(item)?.alternativeText || item.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  {item.attachments && item.attachments.length > 1 && (
+                    <Badge className="absolute top-2 right-2 bg-background/90 text-foreground">
+                      {item.attachments.length} fotos
+                    </Badge>
+                  )}
                 </div>
               )}
               <CardHeader>
@@ -223,16 +262,24 @@ const ContentGlobal = () => {
                   {truncateText(item.content || '', 150)}
                 </p>
               </CardContent>
-              <CardFooter className="flex justify-between items-center">
-                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  {new Date(item.publish_date).toLocaleDateString('es-MX')}
-                </span>
+              <CardFooter className="flex justify-between items-center gap-2">
+                <div className="flex flex-col gap-1 flex-1 min-w-0">
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    {new Date(item.publish_date).toLocaleDateString('es-MX')}
+                  </span>
+                  {item.author && (
+                    <span className="text-xs text-muted-foreground flex items-center gap-1 truncate">
+                      <User className="w-3 h-3 flex-shrink-0" />
+                      {item.author.username}
+                    </span>
+                  )}
+                </div>
                 <Button 
                   size="sm" 
                   variant="ghost"
                   onClick={() => setSelectedContent(item)}
-                  className="group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                  className="group-hover:bg-primary group-hover:text-primary-foreground transition-colors flex-shrink-0"
                 >
                   <Eye className="w-4 h-4 mr-1" />
                   Ver más
@@ -257,15 +304,20 @@ const ContentGlobal = () => {
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="hover:shadow-md transition-shadow cursor-pointer group">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer group overflow-hidden">
               <div className="flex flex-col md:flex-row">
-                {item.main_image && (
-                  <div className="md:w-64 h-48 md:h-auto overflow-hidden rounded-l-lg">
+                {getMainImage(item) && (
+                  <div className="md:w-64 h-48 md:h-auto overflow-hidden relative">
                     <img
-                      src={getImageUrl(item.main_image)}
-                      alt={item.main_image.alternativeText || item.title}
+                      src={getBestImageFormat(getMainImage(item)!)}
+                      alt={getMainImage(item)?.alternativeText || item.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
+                    {item.attachments && item.attachments.length > 1 && (
+                      <Badge className="absolute top-2 right-2 bg-background/90 text-foreground">
+                        {item.attachments.length} fotos
+                      </Badge>
+                    )}
                   </div>
                 )}
                 <div className="flex-1 p-6">
@@ -295,13 +347,21 @@ const ContentGlobal = () => {
                   <p className="text-muted-foreground mb-4 line-clamp-3">
                     {truncateText(item.content || '', 300)}
                   </p>
-                  <Button 
-                    size="sm"
-                    onClick={() => setSelectedContent(item)}
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    Leer más
-                  </Button>
+                  <div className="flex items-center justify-between">
+                    <Button 
+                      size="sm"
+                      onClick={() => setSelectedContent(item)}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Leer más
+                    </Button>
+                    {item.author && (
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <User className="w-3 h-3" />
+                        {item.author.username}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             </Card>
@@ -323,14 +383,19 @@ const ContentGlobal = () => {
             transition={{ duration: 0.3 }}
             className="break-inside-avoid"
           >
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer group mb-6">
-              {item.main_image && (
-                <div className="relative overflow-hidden rounded-t-lg">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer group mb-6 overflow-hidden">
+              {getMainImage(item) && (
+                <div className="relative overflow-hidden">
                   <img
-                    src={getImageUrl(item.main_image)}
-                    alt={item.main_image.alternativeText || item.title}
+                    src={getBestImageFormat(getMainImage(item)!)}
+                    alt={getMainImage(item)?.alternativeText || item.title}
                     className="w-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
+                  {item.attachments && item.attachments.length > 1 && (
+                    <Badge className="absolute top-2 right-2 bg-background/90 text-foreground">
+                      {item.attachments.length} fotos
+                    </Badge>
+                  )}
                 </div>
               )}
               <CardHeader>
@@ -384,12 +449,19 @@ const ContentGlobal = () => {
               onClick={() => setSelectedContent(item)}
             >
               <div className="flex items-center gap-4">
-                {item.main_image && (
-                  <img
-                    src={getImageUrl(item.main_image)}
-                    alt={item.title}
-                    className="w-16 h-16 object-cover rounded"
-                  />
+                {getMainImage(item) && (
+                  <div className="relative">
+                    <img
+                      src={getBestImageFormat(getMainImage(item)!)}
+                      alt={item.title}
+                      className="w-16 h-16 object-cover rounded"
+                    />
+                    {item.attachments && item.attachments.length > 1 && (
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                        {item.attachments.length}
+                      </Badge>
+                    )}
+                  </div>
                 )}
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold truncate hover:text-primary transition-colors">
@@ -573,20 +645,47 @@ const ContentGlobal = () => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: "spring", duration: 0.5 }}
-            className="bg-card rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-primary/10"
+            className="bg-card rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto border border-primary/10"
             onClick={(e) => e.stopPropagation()}
           >
-            {selectedContent.main_image && (
-              <div className="relative h-80 overflow-hidden rounded-t-2xl">
-                <motion.img
-                  initial={{ scale: 1.1 }}
-                  animate={{ scale: 1 }}
-                  transition={{ duration: 0.6 }}
-                  src={getImageUrl(selectedContent.main_image)}
-                  alt={selectedContent.main_image.alternativeText || selectedContent.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+            {/* Image Carousel */}
+            {selectedContent.attachments && selectedContent.attachments.length > 0 && (
+              <div className="relative">
+                {selectedContent.attachments.length === 1 ? (
+                  <div className="relative h-96 overflow-hidden rounded-t-2xl">
+                    <motion.img
+                      initial={{ scale: 1.1 }}
+                      animate={{ scale: 1 }}
+                      transition={{ duration: 0.6 }}
+                      src={getImageUrl(selectedContent.attachments[0])}
+                      alt={selectedContent.attachments[0].alternativeText || selectedContent.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+                  </div>
+                ) : (
+                  <Carousel className="w-full rounded-t-2xl overflow-hidden">
+                    <CarouselContent>
+                      {selectedContent.attachments.map((attachment, index) => (
+                        <CarouselItem key={attachment.id}>
+                          <div className="relative h-96">
+                            <img
+                              src={getImageUrl(attachment)}
+                              alt={attachment.alternativeText || `${selectedContent.title} - Imagen ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+                            <div className="absolute bottom-4 right-4 bg-background/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm">
+                              {index + 1} / {selectedContent.attachments.length}
+                            </div>
+                          </div>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="left-4" />
+                    <CarouselNext className="right-4" />
+                  </Carousel>
+                )}
               </div>
             )}
             <div className="p-8">
@@ -627,6 +726,26 @@ const ContentGlobal = () => {
                   ✕
                 </Button>
               </div>
+
+              {/* Author Info */}
+              {selectedContent.author && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25 }}
+                  className="flex items-center gap-2 p-4 bg-accent/30 rounded-lg mb-6"
+                >
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <User className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">{selectedContent.author.username}</p>
+                    <p className="text-xs text-muted-foreground">{selectedContent.author.email}</p>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Content */}
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -634,6 +753,19 @@ const ContentGlobal = () => {
                 className="prose prose-sm max-w-none dark:prose-invert"
                 dangerouslySetInnerHTML={{ __html: selectedContent.content || '' }}
               />
+
+              {/* Comment Section */}
+              {selectedContent.comment && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="mt-6 p-4 bg-accent/20 rounded-lg border-l-4 border-primary"
+                >
+                  <p className="text-sm font-medium mb-1">Comentario:</p>
+                  <p className="text-sm text-muted-foreground">{selectedContent.comment}</p>
+                </motion.div>
+              )}
             </div>
           </motion.div>
         </motion.div>
