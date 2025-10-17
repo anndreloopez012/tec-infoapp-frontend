@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
 import { 
   LayoutGrid, 
   List, 
@@ -12,7 +13,8 @@ import {
   Calendar,
   Eye,
   Tag,
-  Building2
+  Building2,
+  Search
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { API_CONFIG } from '@/config/api';
@@ -38,8 +40,10 @@ interface ContentItem {
     name: string;
   };
   main_image?: {
+    id: number;
     url: string;
     alternativeText?: string;
+    formats?: any;
   };
   attachments?: any[];
 }
@@ -55,11 +59,13 @@ type ViewMode = 'grid' | 'list' | 'masonry' | 'compact';
 
 const ContentGlobal = () => {
   const [content, setContent] = useState<ContentItem[]>([]);
+  const [filteredContent, setFilteredContent] = useState<ContentItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [loading, setLoading] = useState(true);
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   
   const { toast } = useToast();
 
@@ -72,6 +78,26 @@ const ContentGlobal = () => {
       loadContent();
     }
   }, [selectedCategory]);
+
+  useEffect(() => {
+    filterContent();
+  }, [content, searchQuery]);
+
+  const filterContent = () => {
+    if (!searchQuery.trim()) {
+      setFilteredContent(content);
+      return;
+    }
+    
+    const query = searchQuery.toLowerCase();
+    const filtered = content.filter(item => 
+      item.title.toLowerCase().includes(query) ||
+      item.content.toLowerCase().includes(query) ||
+      item.category_content?.name.toLowerCase().includes(query) ||
+      item.company?.name.toLowerCase().includes(query)
+    );
+    setFilteredContent(filtered);
+  };
 
   const loadCategories = async () => {
     try {
@@ -117,6 +143,7 @@ const ContentGlobal = () => {
       
       if (result.success) {
         setContent(result.data);
+        setFilteredContent(result.data);
       }
     } catch (error) {
       console.error('Error loading content:', error);
@@ -152,7 +179,7 @@ const ContentGlobal = () => {
   const renderGridView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <AnimatePresence mode="popLayout">
-        {content.map((item) => (
+        {filteredContent.map((item) => (
           <motion.div
             key={item.id}
             layout
@@ -221,7 +248,7 @@ const ContentGlobal = () => {
   const renderListView = () => (
     <div className="space-y-4">
       <AnimatePresence mode="popLayout">
-        {content.map((item) => (
+        {filteredContent.map((item) => (
           <motion.div
             key={item.id}
             layout
@@ -287,7 +314,7 @@ const ContentGlobal = () => {
   const renderMasonryView = () => (
     <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
       <AnimatePresence mode="popLayout">
-        {content.map((item) => (
+        {filteredContent.map((item) => (
           <motion.div
             key={item.id}
             initial={{ opacity: 0, y: 20 }}
@@ -343,7 +370,7 @@ const ContentGlobal = () => {
   const renderCompactView = () => (
     <div className="space-y-2">
       <AnimatePresence mode="popLayout">
-        {content.map((item) => (
+        {filteredContent.map((item) => (
           <motion.div
             key={item.id}
             layout
@@ -407,148 +434,209 @@ const ContentGlobal = () => {
   }
 
   return (
-    <div className="container mx-auto py-6 px-4 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Contenido Global</h1>
-          <p className="text-muted-foreground mt-2">
-            Explora nuestro contenido organizado por categorías
-          </p>
-        </div>
-
-        {/* Category Filter */}
-        {categories.length > 0 && (
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <Tabs 
-              value={selectedCategory?.toString()} 
-              onValueChange={(value) => setSelectedCategory(Number(value))}
-              className="w-full sm:w-auto overflow-x-auto"
-            >
-              <TabsList className="inline-flex w-auto">
-                {categories.map((category) => (
-                  <TabsTrigger 
-                    key={category.id} 
-                    value={category.id.toString()}
-                    className="whitespace-nowrap"
-                  >
-                    {category.name}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
-
-            {/* View Mode Selector */}
-            <div className="flex gap-2">
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
-                size="icon"
-                onClick={() => setViewMode('grid')}
-                title="Vista en cuadrícula"
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
+      {/* Hero Header with Category Navigation */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-card/50 backdrop-blur-sm border-b sticky top-0 z-40 shadow-sm"
+      >
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex flex-col gap-6">
+            <div>
+              <motion.h1 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent"
               >
-                <LayoutGrid className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                size="icon"
-                onClick={() => setViewMode('list')}
-                title="Vista en lista"
+                Contenido Global
+              </motion.h1>
+              <motion.p 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-muted-foreground mt-2"
               >
-                <List className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'masonry' ? 'default' : 'outline'}
-                size="icon"
-                onClick={() => setViewMode('masonry')}
-                title="Vista mosaico"
-              >
-                <Columns className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'compact' ? 'default' : 'outline'}
-                size="icon"
-                onClick={() => setViewMode('compact')}
-                title="Vista compacta"
-              >
-                <List className="w-4 h-4" />
-              </Button>
+                Explora nuestro contenido organizado por categorías
+              </motion.p>
             </div>
+
+            {/* Category Navigation - Embedded Style */}
+            {categories.length > 0 && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between"
+              >
+                <div className="flex-1 max-w-4xl">
+                  <Tabs 
+                    value={selectedCategory?.toString()} 
+                    onValueChange={(value) => setSelectedCategory(Number(value))}
+                    className="w-full"
+                  >
+                    <TabsList className="w-full justify-start h-auto p-1 bg-background/60 backdrop-blur-sm border">
+                      {categories.map((category) => (
+                        <TabsTrigger 
+                          key={category.id} 
+                          value={category.id.toString()}
+                          className="whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300 hover:scale-105"
+                        >
+                          <Tag className="w-3 h-3 mr-2" />
+                          {category.name}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                  </Tabs>
+                </div>
+
+                {/* Search and View Mode */}
+                <div className="flex gap-2 items-center">
+                  <div className="relative flex-1 lg:w-64">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder="Buscar contenido..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 bg-background/60 backdrop-blur-sm border-primary/20 focus:border-primary transition-colors"
+                    />
+                  </div>
+                  
+                  <div className="flex gap-1 bg-background/60 backdrop-blur-sm border rounded-lg p-1">
+                    <Button
+                      variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                      size="icon"
+                      onClick={() => setViewMode('grid')}
+                      title="Vista en cuadrícula"
+                      className="h-9 w-9 transition-all duration-200"
+                    >
+                      <LayoutGrid className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === 'list' ? 'default' : 'ghost'}
+                      size="icon"
+                      onClick={() => setViewMode('list')}
+                      title="Vista en lista"
+                      className="h-9 w-9 transition-all duration-200"
+                    >
+                      <List className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === 'masonry' ? 'default' : 'ghost'}
+                      size="icon"
+                      onClick={() => setViewMode('masonry')}
+                      title="Vista mosaico"
+                      className="h-9 w-9 transition-all duration-200"
+                    >
+                      <Columns className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      </motion.div>
 
       {/* Content Display */}
-      {loading ? (
-        <LoadingSpinner />
-      ) : content.length === 0 ? (
-        <EmptyState
-          title="No hay contenido disponible"
-          description="No se encontró contenido publicado en esta categoría"
-        />
-      ) : (
-        renderContent()
-      )}
-
-      {/* Detail Modal */}
-      {selectedContent && (
-        <div 
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={() => setSelectedContent(null)}
-        >
+      <div className="container mx-auto px-4 py-8">
+        {loading ? (
+          <LoadingSpinner />
+        ) : filteredContent.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-card rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            <EmptyState
+              title={searchQuery ? "No se encontraron resultados" : "No hay contenido disponible"}
+              description={searchQuery ? "Intenta con otros términos de búsqueda" : "No se encontró contenido publicado en esta categoría"}
+            />
+          </motion.div>
+        ) : (
+          renderContent()
+        )}
+      </div>
+
+      {/* Detail Modal */}
+      {selectedContent && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-background/95 backdrop-blur-md z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedContent(null)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: "spring", duration: 0.5 }}
+            className="bg-card rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-primary/10"
             onClick={(e) => e.stopPropagation()}
           >
             {selectedContent.main_image && (
-              <div className="relative h-64 overflow-hidden rounded-t-lg">
-                <img
+              <div className="relative h-80 overflow-hidden rounded-t-2xl">
+                <motion.img
+                  initial={{ scale: 1.1 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.6 }}
                   src={getImageUrl(selectedContent.main_image)}
                   alt={selectedContent.main_image.alternativeText || selectedContent.title}
                   className="w-full h-full object-cover"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
               </div>
             )}
             <div className="p-8">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h2 className="text-3xl font-bold mb-2">{selectedContent.title}</h2>
+              <div className="flex items-start justify-between mb-6">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <h2 className="text-4xl font-bold mb-3 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                    {selectedContent.title}
+                  </h2>
                   <div className="flex flex-wrap gap-2">
                     {selectedContent.category_content && (
-                      <Badge variant="secondary">
+                      <Badge variant="secondary" className="transition-transform hover:scale-105">
                         <Tag className="w-3 h-3 mr-1" />
                         {selectedContent.category_content.name}
                       </Badge>
                     )}
                     {selectedContent.company && (
-                      <Badge variant="outline">
+                      <Badge variant="outline" className="transition-transform hover:scale-105">
                         <Building2 className="w-3 h-3 mr-1" />
                         {selectedContent.company.name}
                       </Badge>
                     )}
-                    <Badge variant="outline">
+                    <Badge variant="outline" className="transition-transform hover:scale-105">
                       <Calendar className="w-3 h-3 mr-1" />
                       {new Date(selectedContent.publish_date).toLocaleDateString('es-MX')}
                     </Badge>
                   </div>
-                </div>
+                </motion.div>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setSelectedContent(null)}
+                  className="rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors"
                 >
                   ✕
                 </Button>
               </div>
-              <div 
-                className="prose prose-sm max-w-none"
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="prose prose-sm max-w-none dark:prose-invert"
                 dangerouslySetInnerHTML={{ __html: selectedContent.content || '' }}
               />
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </div>
   );
