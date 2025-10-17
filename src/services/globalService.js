@@ -311,29 +311,103 @@ class GlobalService {
       
       const root = document.documentElement;
       
-      // Convertir colores HEX a HSL y aplicar
+      // Convertir colores HEX a HSL y aplicar con variantes
       if (colors.primaryColor) {
         const primaryHSL = this.hexToHSL(colors.primaryColor);
         if (primaryHSL) {
+          // Color principal
           root.style.setProperty('--primary', `${primaryHSL.h} ${primaryHSL.s}% ${primaryHSL.l}%`);
+          
+          // Variantes light y dark
+          const lightL = Math.min(primaryHSL.l + 15, 90);
+          const darkL = Math.max(primaryHSL.l - 15, 20);
+          root.style.setProperty('--primary-light', `${primaryHSL.h} ${primaryHSL.s}% ${lightL}%`);
+          root.style.setProperty('--primary-dark', `${primaryHSL.h} ${primaryHSL.s}% ${darkL}%`);
+          
+          // Actualizar color del ring (usado en focus)
+          root.style.setProperty('--ring', `${primaryHSL.h} ${primaryHSL.s}% ${primaryHSL.l}%`);
+          
+          // Actualizar sidebar primary
+          root.style.setProperty('--sidebar-primary', `${primaryHSL.h} ${primaryHSL.s}% ${primaryHSL.l}%`);
+          root.style.setProperty('--sidebar-ring', `${primaryHSL.h} ${primaryHSL.s}% ${primaryHSL.l}%`);
         }
       }
       
       if (colors.secondaryColor) {
         const secondaryHSL = this.hexToHSL(colors.secondaryColor);
         if (secondaryHSL) {
+          // Color secundario
           root.style.setProperty('--secondary', `${secondaryHSL.h} ${secondaryHSL.s}% ${secondaryHSL.l}%`);
+          
+          // Variantes light y dark
+          const lightL = Math.min(secondaryHSL.l + 15, 90);
+          const darkL = Math.max(secondaryHSL.l - 15, 20);
+          root.style.setProperty('--secondary-light', `${secondaryHSL.h} ${secondaryHSL.s}% ${lightL}%`);
+          root.style.setProperty('--secondary-dark', `${secondaryHSL.h} ${secondaryHSL.s}% ${darkL}%`);
         }
       }
       
       if (colors.accentColor) {
         const accentHSL = this.hexToHSL(colors.accentColor);
         if (accentHSL) {
+          // Color de acento
           root.style.setProperty('--accent', `${accentHSL.h} ${accentHSL.s}% ${accentHSL.l}%`);
+          
+          // Variantes light y dark
+          const lightL = Math.min(accentHSL.l + 15, 90);
+          const darkL = Math.max(accentHSL.l - 15, 20);
+          root.style.setProperty('--accent-light', `${accentHSL.h} ${accentHSL.s}% ${lightL}%`);
+          root.style.setProperty('--accent-dark', `${accentHSL.h} ${accentHSL.s}% ${darkL}%`);
         }
       }
       
-      console.log('✅ Colores del tema aplicados');
+      // Actualizar gradientes dinámicamente
+      if (colors.primaryColor && colors.accentColor) {
+        const primaryHSL = this.hexToHSL(colors.primaryColor);
+        const accentHSL = this.hexToHSL(colors.accentColor);
+        
+        if (primaryHSL && accentHSL) {
+          root.style.setProperty(
+            '--gradient-primary', 
+            `linear-gradient(135deg, hsl(${primaryHSL.h} ${primaryHSL.s}% ${primaryHSL.l}%) 0%, hsl(${accentHSL.h} ${accentHSL.s}% ${accentHSL.l}%) 100%)`
+          );
+        }
+      }
+      
+      if (colors.secondaryColor && colors.primaryColor) {
+        const secondaryHSL = this.hexToHSL(colors.secondaryColor);
+        const primaryHSL = this.hexToHSL(colors.primaryColor);
+        
+        if (secondaryHSL && primaryHSL) {
+          root.style.setProperty(
+            '--gradient-secondary', 
+            `linear-gradient(135deg, hsl(${secondaryHSL.h} ${secondaryHSL.s}% ${secondaryHSL.l}%) 0%, hsl(${primaryHSL.h} ${primaryHSL.s}% ${primaryHSL.l}%) 100%)`
+          );
+        }
+      }
+      
+      if (colors.accentColor && colors.secondaryColor) {
+        const accentHSL = this.hexToHSL(colors.accentColor);
+        const secondaryHSL = this.hexToHSL(colors.secondaryColor);
+        
+        if (accentHSL && secondaryHSL) {
+          root.style.setProperty(
+            '--gradient-accent', 
+            `linear-gradient(135deg, hsl(${accentHSL.h} ${accentHSL.s}% ${accentHSL.l}%) 0%, hsl(${secondaryHSL.h} ${secondaryHSL.s}% ${secondaryHSL.l}%) 100%)`
+          );
+        }
+      }
+      
+      // Actualizar sombras con glow usando el color primario
+      if (colors.primaryColor) {
+        const primaryHSL = this.hexToHSL(colors.primaryColor);
+        if (primaryHSL) {
+          root.style.setProperty('--shadow-glow', `0 0 20px hsl(${primaryHSL.h} ${primaryHSL.s}% ${primaryHSL.l}% / 0.3)`);
+          root.style.setProperty('--shadow-glow-lg', `0 0 40px hsl(${primaryHSL.h} ${primaryHSL.s}% ${primaryHSL.l}% / 0.4)`);
+        }
+      }
+      
+      console.log('✅ Colores del tema aplicados con variantes y gradientes');
       
     } catch (error) {
       console.error('❌ Error al aplicar colores:', error);
