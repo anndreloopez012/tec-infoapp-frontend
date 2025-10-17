@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import CatalogTable from '@/components/catalog/CatalogTable';
-import { contentInfoService } from '@/services/catalogServices';
+import { contentInfoService, contentCategoryService, companyService } from '@/services/catalogServices';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import MDEditor from '@uiw/react-md-editor';
+import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
@@ -23,18 +24,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { contentCategoryService, contentTagService } from '@/services/catalogServices';
 
 interface ContentInfoData {
   id?: number;
   documentId?: string;
   title: string;
-  description?: string;
+  slug?: string;
   content?: string;
-  content_category?: any;
-  content_tags?: any[];
+  active?: boolean;
+  status_content?: 'draft' | 'published' | 'archived';
   publish_date?: string;
-  status?: 'draft' | 'published' | 'archived';
+  category_content?: any;
+  company?: any;
+  author?: any;
 }
 
 const ContentInfo = () => {
@@ -51,20 +53,21 @@ const ContentInfo = () => {
   const [editingItem, setEditingItem] = useState<ContentInfoData | null>(null);
   const [formData, setFormData] = useState<ContentInfoData>({
     title: '',
-    description: '',
+    slug: '',
     content: '',
-    status: 'draft',
+    active: true,
+    status_content: 'draft',
   });
   const [categories, setCategories] = useState<any[]>([]);
-  const [tags, setTags] = useState<any[]>([]);
+  const [companies, setCompanies] = useState<any[]>([]);
   
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Cargar categorías y tags
+  // Cargar categorías y compañías
   useEffect(() => {
     loadCategories();
-    loadTags();
+    loadCompanies();
   }, []);
 
   const loadCategories = async () => {
@@ -74,10 +77,10 @@ const ContentInfo = () => {
     }
   };
 
-  const loadTags = async () => {
-    const result = await contentTagService.getAll({ pageSize: 100 });
+  const loadCompanies = async () => {
+    const result = await companyService.getAll({ pageSize: 100 });
     if (result.success) {
-      setTags(result.data);
+      setCompanies(result.data);
     }
   };
 
@@ -87,35 +90,38 @@ const ContentInfo = () => {
       header: 'Título',
     },
     {
-      accessorKey: 'description',
-      header: 'Descripción',
-      cell: ({ row }) => {
-        const desc = row.getValue('description') as string;
-        return desc ? (desc.length > 50 ? `${desc.substring(0, 50)}...` : desc) : '-';
-      },
+      accessorKey: 'slug',
+      header: 'Slug',
     },
     {
-      accessorKey: 'content_category',
+      accessorKey: 'category_content',
       header: 'Categoría',
       cell: ({ row }) => {
-        const category = row.original.content_category?.data || row.original.content_category;
-        return category?.name || category?.attributes?.name || '-';
+        const category = row.original.category_content;
+        return category?.name || '-';
       },
     },
     {
-      accessorKey: 'content_tags',
-      header: 'Tags',
+      accessorKey: 'company',
+      header: 'Empresa',
       cell: ({ row }) => {
-        const tagsData = row.original.content_tags?.data || row.original.content_tags || [];
-        if (!Array.isArray(tagsData) || tagsData.length === 0) return '-';
-        return tagsData.map((tag: any) => tag?.name || tag?.attributes?.name).filter(Boolean).join(', ');
+        const company = row.original.company;
+        return company?.name || '-';
       },
     },
     {
-      accessorKey: 'status',
+      accessorKey: 'active',
+      header: 'Activo',
+      cell: ({ row }) => {
+        const active = row.getValue('active');
+        return active ? 'Sí' : 'No';
+      },
+    },
+    {
+      accessorKey: 'status_content',
       header: 'Estado',
       cell: ({ row }) => {
-        const status = row.getValue('status') as string;
+        const status = row.getValue('status_content') as string;
         const statusMap: Record<string, string> = {
           draft: 'Borrador',
           published: 'Publicado',
@@ -141,8 +147,9 @@ const ContentInfo = () => {
         page,
         pageSize,
         search,
-        searchFields: ['title', 'description', 'content'],
+        searchFields: ['title', 'slug', 'content'],
         sort: 'createdAt:desc',
+        populate: 'category_content,company,author,attachments',
       });
 
       if (result.success) {
@@ -193,32 +200,28 @@ const ContentInfo = () => {
     setEditingItem(null);
     setFormData({
       title: '',
-      description: '',
+      slug: '',
       content: '',
-      status: 'draft',
+      active: true,
+      status_content: 'draft',
     });
     setIsDialogOpen(true);
   };
 
   const handleEdit = (item: any) => {
     setEditingItem(item);
-    const categoryId = item.content_category?.data?.documentId || 
-                      item.content_category?.data?.id || 
-                      item.content_category?.documentId || 
-                      item.content_category?.id;
-    
-    const tagIds = (item.content_tags?.data || item.content_tags || [])
-      .map((tag: any) => tag?.documentId || tag?.id)
-      .filter(Boolean);
+    const categoryId = item.category_content?.documentId || item.category_content?.id;
+    const companyId = item.company?.documentId || item.company?.id;
 
     setFormData({
       title: item.title || '',
-      description: item.description || '',
+      slug: item.slug || '',
       content: item.content || '',
-      content_category: categoryId,
-      content_tags: tagIds,
-      publish_date: item.publish_date || '',
-      status: item.status || 'draft',
+      active: item.active ?? true,
+      status_content: item.status_content || 'draft',
+      publish_date: item.publish_date?.split('T')[0] || '',
+      category_content: categoryId,
+      company: companyId,
     });
     setIsDialogOpen(true);
   };
@@ -259,19 +262,20 @@ const ContentInfo = () => {
     try {
       const payload: any = {
         title: formData.title,
-        description: formData.description || null,
+        slug: formData.slug || formData.title.toLowerCase().replace(/\s+/g, '-'),
         content: formData.content || null,
-        status: formData.status || 'draft',
+        active: formData.active ?? true,
+        status_content: formData.status_content || 'draft',
         publish_date: formData.publish_date || null,
       };
 
       // Agregar relaciones
-      if (formData.content_category) {
-        payload.content_category = formData.content_category;
+      if (formData.category_content) {
+        payload.category_content = formData.category_content;
       }
       
-      if (formData.content_tags && formData.content_tags.length > 0) {
-        payload.content_tags = formData.content_tags;
+      if (formData.company) {
+        payload.company = formData.company;
       }
 
       const result = editingItem
@@ -347,33 +351,33 @@ const ContentInfo = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Descripción</Label>
-              <Textarea
-                id="description"
-                value={formData.description || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Ingrese una descripción breve"
-                rows={3}
+              <Label htmlFor="slug">Slug</Label>
+              <Input
+                id="slug"
+                value={formData.slug || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                placeholder="Se generará automáticamente del título"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="content">Contenido</Label>
-              <Textarea
-                id="content"
-                value={formData.content || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                placeholder="Ingrese el contenido completo"
-                rows={6}
-              />
+              <Label htmlFor="content">Contenido (Markdown)</Label>
+              <div data-color-mode="light">
+                <MDEditor
+                  value={formData.content || ''}
+                  onChange={(value) => setFormData(prev => ({ ...prev, content: value || '' }))}
+                  height={400}
+                  preview="edit"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="category">Categoría</Label>
                 <Select
-                  value={formData.content_category as string}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, content_category: value }))}
+                  value={formData.category_content as string}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, category_content: value }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccione una categoría" />
@@ -389,10 +393,31 @@ const ContentInfo = () => {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="company">Empresa</Label>
+                <Select
+                  value={formData.company as string}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, company: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccione una empresa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {companies.map((comp) => (
+                      <SelectItem key={comp.documentId} value={comp.documentId}>
+                        {comp.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
                 <Label htmlFor="status">Estado</Label>
                 <Select
-                  value={formData.status}
-                  onValueChange={(value: any) => setFormData(prev => ({ ...prev, status: value }))}
+                  value={formData.status_content}
+                  onValueChange={(value: any) => setFormData(prev => ({ ...prev, status_content: value }))}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -404,39 +429,25 @@ const ContentInfo = () => {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="publish_date">Fecha de Publicación</Label>
-              <Input
-                id="publish_date"
-                type="date"
-                value={formData.publish_date || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, publish_date: e.target.value }))}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Tags</Label>
-              <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 border rounded-md">
-                {tags.map((tag) => (
-                  <label key={tag.documentId} className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={(formData.content_tags || []).includes(tag.documentId)}
-                      onChange={(e) => {
-                        const currentTags = formData.content_tags || [];
-                        const newTags = e.target.checked
-                          ? [...currentTags, tag.documentId]
-                          : currentTags.filter((id) => id !== tag.documentId);
-                        setFormData(prev => ({ ...prev, content_tags: newTags }));
-                      }}
-                      className="rounded"
-                    />
-                    <span className="text-sm">{tag.name}</span>
-                  </label>
-                ))}
+              <div className="space-y-2">
+                <Label htmlFor="publish_date">Fecha de Publicación</Label>
+                <Input
+                  id="publish_date"
+                  type="date"
+                  value={formData.publish_date || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, publish_date: e.target.value }))}
+                />
               </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="active"
+                checked={formData.active ?? true}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, active: checked }))}
+              />
+              <Label htmlFor="active">Activo</Label>
             </div>
 
             <DialogFooter>
