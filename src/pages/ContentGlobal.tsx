@@ -571,15 +571,15 @@ const ContentGlobal = () => {
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-card/80 backdrop-blur-md border-b sticky top-0 z-40 shadow-lg"
+        className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-slate-700 shadow-2xl sticky top-0 z-40"
       >
         <div className="container mx-auto px-4">
           {/* Category Navigation - Main Nav Style */}
           {categories.length > 0 && (
             <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between py-4">
               {/* Categories as Navigation - Centered */}
-              <nav className="flex-1 flex justify-center">
-                <div className="flex flex-wrap gap-2 items-center justify-center">
+              <div className="flex-1 flex justify-center">
+                <div className="flex flex-wrap gap-3 items-center justify-center">
                   {categories.map((category, index) => {
                     const categoryColor = getCategoryColor(category.id);
                     const isActive = selectedCategory === category.id;
@@ -592,10 +592,10 @@ const ContentGlobal = () => {
                         transition={{ delay: index * 0.05 }}
                         onClick={() => setSelectedCategory(category.id)}
                         className={`
-                          relative px-6 py-3 rounded-lg font-medium text-sm transition-all duration-300
+                          relative px-6 py-3 rounded-xl font-semibold text-base transition-all duration-300
                           ${isActive
-                            ? 'text-white shadow-lg scale-105'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                            ? 'text-white shadow-2xl scale-105'
+                            : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
                           }
                         `}
                       >
@@ -603,8 +603,12 @@ const ContentGlobal = () => {
                         {isActive && (
                           <motion.div
                             layoutId="activeCategory"
-                            className="absolute inset-0 rounded-lg"
-                            style={{ backgroundColor: categoryColor || undefined }}
+                            className="absolute inset-0 rounded-xl"
+                            style={{
+                              background: categoryColor
+                                ? `linear-gradient(135deg, ${categoryColor}, ${categoryColor}dd)`
+                                : 'linear-gradient(135deg, #3B82F6, #8B5CF6)'
+                            }}
                             transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                           />
                         )}
