@@ -208,6 +208,22 @@ export const PermissionsProvider = ({ children }) => {
 
   // Generate route based on endpoint
   const generateRoute = (endpoint) => {
+    // Mapeo específico para módulos de catálogos
+    const catalogRoutes = {
+      "api::event-attendance": "/catalog/event-attendance",
+      "api::content-category": "/catalog/content-category",
+      "api::company": "/catalog/company",
+      "api::event-location": "/catalog/event-location",
+      "api::content-tag": "/catalog/content-tag",
+      "api::event-type": "/catalog/event-type",
+    };
+
+    // Si es un catálogo, usar la ruta específica
+    if (catalogRoutes[endpoint]) {
+      return catalogRoutes[endpoint];
+    }
+
+    // Para otros módulos, usar la conversión estándar
     const cleanName = endpoint.replace("api::", "").replace(/-/g, "");
     return `/${cleanName}`;
   };

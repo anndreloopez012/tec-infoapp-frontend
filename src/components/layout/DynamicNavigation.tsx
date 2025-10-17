@@ -14,6 +14,12 @@ import {
   Ticket,
   UserCheck,
   Bell,
+  Calendar,
+  MapPin,
+  Tag,
+  Building2,
+  CalendarCheck,
+  Folder,
 } from "lucide-react";
 import { useAuthPermissions } from "@/hooks/useAuthPermissions";
 
@@ -30,6 +36,12 @@ const moduleIcons = {
   "api::solution": Wrench,
   "api::ticket-status": Ticket,
   "api::type-user": UserCheck,
+  // Iconos para catálogos
+  "api::event-attendance": CalendarCheck,
+  "api::content-category": Folder,
+  "api::event-location": MapPin,
+  "api::content-tag": Tag,
+  "api::event-type": Calendar,
 };
 
 interface DynamicNavigationProps {
