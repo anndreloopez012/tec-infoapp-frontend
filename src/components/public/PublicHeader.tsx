@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Moon, Sun, LogIn, Menu, X } from 'lucide-react';
+import { Moon, Sun, LogIn, Menu, X, Calendar, Users, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
 import { publicCategoryService } from '@/services/publicApiService';
@@ -50,33 +50,42 @@ export const PublicHeader = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center space-x-2">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-lg">T</span>
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 shadow-sm">
+      <div className="container flex h-20 items-center justify-between">
+        <Link to="/" className="flex items-center space-x-3 group">
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary via-primary/80 to-secondary flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+            <span className="text-primary-foreground font-bold text-xl">T</span>
           </div>
-          <span className="font-bold text-xl bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            TEC
-          </span>
+          <div className="flex flex-col">
+            <span className="font-bold text-xl bg-gradient-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent leading-none">
+              TEC Portal
+            </span>
+            <span className="text-xs text-muted-foreground">Innovación & Tecnología</span>
+          </div>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-2">
+        <nav className="hidden md:flex items-center gap-3">
           <Button
             variant={isActive('/public/calendar') ? 'default' : 'ghost'}
             size="sm"
             onClick={() => handleNavigation('/public/calendar')}
+            className="rounded-full px-4 hover-scale"
           >
+            <Calendar className="h-4 w-4 mr-2" />
             Calendario
           </Button>
           <Button
             variant={isActive('/public/events') ? 'default' : 'ghost'}
             size="sm"
             onClick={() => handleNavigation('/public/events')}
+            className="rounded-full px-4 hover-scale"
           >
+            <Users className="h-4 w-4 mr-2" />
             Eventos
           </Button>
+          
+          <div className="h-6 w-px bg-border mx-2" />
           
           {categories.map((category) => (
             <Button
@@ -85,29 +94,31 @@ export const PublicHeader = () => {
               size="sm"
               onClick={() => handleNavigation(`/public/category/${category.documentId}`)}
               className={cn(
-                "transition-all duration-200",
+                "rounded-full px-4 hover-scale transition-all duration-300",
                 category.color && `hover:bg-[${category.color}]/10`
               )}
             >
+              <BookOpen className="h-4 w-4 mr-2" />
               {category.name}
             </Button>
           ))}
         </nav>
 
         {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="h-9 w-9"
+            className="h-10 w-10 rounded-full hover-scale"
           >
-            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </Button>
           <Button
             variant="default"
             size="sm"
             onClick={() => handleNavigation('/login')}
+            className="rounded-full px-6 hover-scale shadow-lg"
           >
             <LogIn className="h-4 w-4 mr-2" />
             Iniciar Sesión
