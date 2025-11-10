@@ -16,19 +16,22 @@ import {
   Network,
   Layers,
   Terminal,
+  TrendingUp,
+  Building2,
+  Lightbulb,
+  Target,
+  Award,
+  ArrowRight,
+  CheckCircle2,
+  Server,
+  Wifi,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 export default function PublicLanding() {
   const navigate = useNavigate();
-  const [scrollY, setScrollY] = useState(0);
 
-  useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const handleNavigation = (path: string) => {
     if (document.startViewTransition) {
@@ -63,7 +66,6 @@ export default function PublicLanding() {
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
               animationDelay: delay,
-              transform: `translateY(${scrollY * 0.1}px)`,
             }}
           >
             <Icon className="h-24 w-24 text-primary" />
@@ -72,10 +74,7 @@ export default function PublicLanding() {
       </div>
 
       {/* Hero Section */}
-      <section
-        className="relative overflow-hidden py-20 md:py-32"
-        style={{ transform: `translateY(${scrollY * 0.5}px)` }}
-      >
+      <section className="relative overflow-hidden py-20 md:py-32">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-secondary/10" />
         <div className="absolute inset-0">
           <div className="absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-primary/20 blur-3xl animate-pulse" />
@@ -107,8 +106,7 @@ export default function PublicLanding() {
               className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto animate-fade-in"
               style={{ animationDelay: "0.2s" }}
             >
-              Mantente al día con todos los eventos, actividades y contenido relacionado con empresas y tecnología del
-              TEC
+              El centro de innovación tecnológica que reúne emprendedores y empresas para impulsar el desarrollo de nuevas tecnologías
             </p>
 
             <div
@@ -150,8 +148,126 @@ export default function PublicLanding() {
         </div>
       </section>
 
+      {/* TEC Ecosystem Section */}
+      <section className="py-20 border-t relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5" />
+        <div className="container relative z-10">
+          <div className="text-center space-y-4 mb-16 animate-fade-in">
+            <div className="inline-flex items-center gap-2 rounded-full border border-secondary/20 bg-secondary/10 px-4 py-2 text-sm text-secondary mb-4">
+              <Building2 className="h-4 w-4 animate-pulse" />
+              <span>Ecosistema de Innovación</span>
+            </div>
+            <h2 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
+              Silicon Valley con Frijoles
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Un concepto innovador adaptado a las realidades de Guatemala y Latinoamérica, ofreciendo espacios e infraestructura de clase mundial
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+            {[
+              {
+                icon: Lightbulb,
+                title: "Innovación",
+                description: "Espacios diseñados para generar nuevas ideas",
+                color: "from-yellow-500/20 to-orange-500/20",
+                iconColor: "text-yellow-500",
+              },
+              {
+                icon: Network,
+                title: "Networking",
+                description: "Conecta con emprendedores y empresas tech",
+                color: "from-blue-500/20 to-cyan-500/20",
+                iconColor: "text-blue-500",
+              },
+              {
+                icon: TrendingUp,
+                title: "Crecimiento",
+                description: "Impulsa tu startup al siguiente nivel",
+                color: "from-green-500/20 to-emerald-500/20",
+                iconColor: "text-green-500",
+              },
+              {
+                icon: Target,
+                title: "Estrategia",
+                description: "Acceso a mentorías y recursos clave",
+                color: "from-purple-500/20 to-pink-500/20",
+                iconColor: "text-purple-500",
+              },
+            ].map((item, index) => (
+              <div
+                key={index}
+                className="group relative overflow-hidden rounded-2xl border bg-card p-6 hover-scale transition-all duration-300"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-100 transition-opacity`} />
+                <div className="relative">
+                  <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-background/50 backdrop-blur-sm">
+                    <item.icon className={`h-6 w-6 ${item.iconColor}`} />
+                  </div>
+                  <h3 className="text-xl font-bold mb-2">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground">{item.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-20 border-t relative">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+        <div className="container relative z-10">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              {
+                icon: Building2,
+                value: "50+",
+                label: "Empresas Tech",
+                description: "En nuestro ecosistema",
+              },
+              {
+                icon: Users,
+                value: "1000+",
+                label: "Emprendedores",
+                description: "Conectados diariamente",
+              },
+              {
+                icon: Calendar,
+                value: "200+",
+                label: "Eventos Anuales",
+                description: "De tecnología e innovación",
+              },
+              {
+                icon: Award,
+                value: "24/7",
+                label: "Acceso",
+                description: "A espacios de trabajo",
+              },
+            ].map((stat, index) => (
+              <div
+                key={index}
+                className="relative group"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-500"></div>
+                <div className="relative text-center p-8 rounded-2xl border bg-card backdrop-blur-sm hover-scale transition-all duration-300">
+                  <stat.icon className="h-12 w-12 mx-auto mb-4 text-primary group-hover:scale-110 transition-transform" />
+                  <div className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                    {stat.value}
+                  </div>
+                  <div className="text-lg font-semibold mb-1">{stat.label}</div>
+                  <div className="text-sm text-muted-foreground">{stat.description}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
-      <section className="py-20 border-t relative" style={{ transform: `translateY(${scrollY * 0.3}px)` }}>
+      <section className="py-20 border-t relative">
         <div className="container relative z-10">
           <div className="text-center space-y-4 mb-16 animate-fade-in">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm text-primary mb-4">
@@ -159,10 +275,10 @@ export default function PublicLanding() {
               <span>Plataforma Integral</span>
             </div>
             <h2 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
-              ¿Qué puedes hacer aquí?
+              Plataforma Digital del TEC
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Todo lo que necesitas para estar conectado con el ecosistema tecnológico y empresarial
+              Accede a toda la información de eventos, contenido y oportunidades del ecosistema tecnológico
             </p>
           </div>
 
@@ -208,24 +324,43 @@ export default function PublicLanding() {
             </Card>
           </div>
 
-          {/* Additional Tech Stats Section */}
-          <div className="grid md:grid-cols-4 gap-6 mt-16">
+          {/* Benefits Section */}
+          <div className="mt-20 grid md:grid-cols-3 gap-8">
             {[
-              { icon: Cpu, label: "Tecnología", value: "Innovación", color: "primary" },
-              { icon: Database, label: "Datos", value: "En tiempo real", color: "secondary" },
-              { icon: Cloud, label: "Cloud", value: "Escalable", color: "accent" },
-              { icon: Network, label: "Conectividad", value: "24/7", color: "primary" },
-            ].map((stat, index) => (
+              {
+                icon: CheckCircle2,
+                title: "Acceso Inmediato",
+                items: ["Consulta eventos sin registro", "Información actualizada", "Calendario interactivo"],
+              },
+              {
+                icon: Server,
+                title: "Tecnología Avanzada",
+                items: ["Plataforma en tiempo real", "API moderna y rápida", "Integración con Google Calendar"],
+              },
+              {
+                icon: Wifi,
+                title: "Siempre Conectado",
+                items: ["Notificaciones de eventos", "Actualizaciones automáticas", "Acceso desde cualquier lugar"],
+              },
+            ].map((benefit, index) => (
               <div
                 key={index}
-                className="text-center p-6 rounded-xl border bg-card/50 backdrop-blur-sm hover-scale transition-all duration-300 group"
+                className="relative group"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <stat.icon
-                  className={`h-10 w-10 mx-auto mb-3 text-${stat.color} group-hover:scale-110 transition-transform`}
-                />
-                <div className="text-2xl font-bold mb-1">{stat.value}</div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/50 to-secondary/50 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
+                <div className="relative p-6 rounded-2xl border bg-card/80 backdrop-blur-sm">
+                  <benefit.icon className="h-10 w-10 text-primary mb-4 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-xl font-bold mb-4">{benefit.title}</h3>
+                  <ul className="space-y-2">
+                    {benefit.items.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <ArrowRight className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             ))}
           </div>
