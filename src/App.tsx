@@ -3,8 +3,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
+import { PageTransition } from "@/components/PageTransition";
 
 // Context Providers  
 import { AuthProvider } from '@/context/AuthContext';
@@ -62,6 +63,106 @@ import NotificationIntegration from '@/components/NotificationIntegration';
 
 const queryClient = new QueryClient();
 
+const AppRoutes = () => {
+  const location = useLocation();
+  
+  useEffect(() => {
+    // Implement View Transitions API for smooth page changes
+    if (!document.startViewTransition) {
+      return;
+    }
+
+    document.startViewTransition(() => {
+      // The browser will handle the transition
+    });
+  }, [location.pathname]);
+
+  return (
+    <PageTransition>
+      <Routes>
+        {/* Public Landing */}
+        <Route path="/" element={<PublicLanding />} />
+        <Route path="/public/calendar" element={<PublicCalendar />} />
+        <Route path="/public/events" element={<PublicEvents />} />
+        <Route path="/public/category/:categoryId" element={<CategoryContent />} />
+        
+        {/* Auth Routes */}
+        <Route path="/login" element={<ModernLogin />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        
+        {/* Protected Routes with Modern Layout */}
+        <Route element={
+          <ProtectedRoute>
+            <ModernLayout />
+          </ProtectedRoute>
+        }>
+          <Route path="/dashboard" element={<ModernDashboard />} />
+          <Route path="/content-global" element={<ContentGlobal />} />
+          {/* Admin Routes */}
+          <Route path="/admin/users" element={
+            <ProtectedRoute permissions={['api::user.user.find']}>
+              <Users />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/roles" element={
+            <ProtectedRoute roles={['super_admin', 'admin']}>
+              <RoleManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/permissions" element={
+            <ProtectedRoute roles={['super_admin', 'admin']}>
+              <PermissionManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/type-users" element={
+            <ProtectedRoute roles={['super_admin', 'admin']}>
+              <TypeUser />
+            </ProtectedRoute>
+          } />
+          <Route path="/settings" element={
+            <ProtectedRoute roles={['super_admin', 'admin']}>
+              <GlobalSettings />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/notifications" element={
+            <ProtectedRoute roles={['super_admin', 'admin']}>
+              <AdminNotifications />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/notifications/settings" element={<NotificationSettings />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/admin/bitacora" element={
+            <ProtectedRoute roles={['super_admin', 'admin']}>
+              <Bitacora />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={<Profile />} />
+          
+          {/* Catalog Routes */}
+          <Route path="/catalog/event-attendance" element={<EventAttendance />} />
+          <Route path="/catalog/content-category" element={<ContentCategory />} />
+          <Route path="/catalog/company" element={<Company />} />
+          <Route path="/catalog/event-location" element={<EventLocation />} />
+          <Route path="/catalog/content-tag" element={<ContentTag />} />
+          <Route path="/catalog/event-type" element={<EventType />} />
+          
+          {/* System Module Routes */}
+          <Route path="/contentinfo" element={<ContentInfo />} />
+          <Route path="/gallery" element={<Gallery />} />
+          <Route path="/event" element={<Event />} />
+          <Route path="/calendar" element={<EventCalendar />} />
+          
+          {/* Rutas dinámicas para módulos */}
+          <Route path="/:module" element={<ModulePage />} />
+        </Route>
+        
+        {/* Catch-all route */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </PageTransition>
+  );
+};
+
 const App = () => {
   // Register service worker for PWA functionality
   useEffect(() => {
@@ -95,88 +196,9 @@ const App = () => {
                   <NotificationIntegration />
                   <Toaster />
                   <Sonner />
-          <BrowserRouter>
-          <Routes>
-            {/* Public Landing */}
-            <Route path="/" element={<PublicLanding />} />
-            <Route path="/public/calendar" element={<PublicCalendar />} />
-            <Route path="/public/events" element={<PublicEvents />} />
-            <Route path="/public/category/:categoryId" element={<CategoryContent />} />
-            
-            {/* Auth Routes */}
-            <Route path="/login" element={<ModernLogin />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            
-            {/* Protected Routes with Modern Layout */}
-            <Route element={
-              <ProtectedRoute>
-                <ModernLayout />
-              </ProtectedRoute>
-            }>
-              <Route path="/dashboard" element={<ModernDashboard />} />
-              <Route path="/content-global" element={<ContentGlobal />} />
-              {/* Admin Routes */}
-              <Route path="/admin/users" element={
-                <ProtectedRoute permissions={['api::user.user.find']}>
-                  <Users />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/roles" element={
-                <ProtectedRoute roles={['super_admin', 'admin']}>
-                  <RoleManagement />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/permissions" element={
-                <ProtectedRoute roles={['super_admin', 'admin']}>
-                  <PermissionManagement />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/type-users" element={
-                <ProtectedRoute roles={['super_admin', 'admin']}>
-                  <TypeUser />
-                </ProtectedRoute>
-              } />
-              <Route path="/settings" element={
-                <ProtectedRoute roles={['super_admin', 'admin']}>
-                  <GlobalSettings />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/notifications" element={
-                <ProtectedRoute roles={['super_admin', 'admin']}>
-                  <AdminNotifications />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/notifications/settings" element={<NotificationSettings />} />
-              <Route path="/notifications" element={<NotificationsPage />} />
-              <Route path="/admin/bitacora" element={
-                <ProtectedRoute roles={['super_admin', 'admin']}>
-                  <Bitacora />
-                </ProtectedRoute>
-              } />
-              <Route path="/profile" element={<Profile />} />
-              
-              {/* Catalog Routes */}
-              <Route path="/catalog/event-attendance" element={<EventAttendance />} />
-              <Route path="/catalog/content-category" element={<ContentCategory />} />
-              <Route path="/catalog/company" element={<Company />} />
-              <Route path="/catalog/event-location" element={<EventLocation />} />
-              <Route path="/catalog/content-tag" element={<ContentTag />} />
-              <Route path="/catalog/event-type" element={<EventType />} />
-              
-              {/* System Module Routes */}
-              <Route path="/contentinfo" element={<ContentInfo />} />
-              <Route path="/gallery" element={<Gallery />} />
-              <Route path="/event" element={<Event />} />
-              <Route path="/calendar" element={<EventCalendar />} />
-              
-              {/* Rutas dinámicas para módulos */}
-              <Route path="/:module" element={<ModulePage />} />
-            </Route>
-            
-            {/* Catch-all route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-            </BrowserRouter>
+                  <BrowserRouter>
+                    <AppRoutes />
+                  </BrowserRouter>
                 </NotificationsProvider>
               </PermissionsProvider>
             </AuthProvider>
