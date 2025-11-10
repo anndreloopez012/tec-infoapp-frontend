@@ -1,9 +1,24 @@
-import { PublicHeader } from '@/components/public/PublicHeader';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, Users, BookOpen, Zap, Globe, Sparkles, Cpu, Code2, Database, Rocket, Cloud, Network, Layers, Terminal } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { PublicHeader } from "@/components/public/PublicHeader";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Calendar,
+  Users,
+  BookOpen,
+  Zap,
+  Globe,
+  Sparkles,
+  Cpu,
+  Code2,
+  Database,
+  Rocket,
+  Cloud,
+  Network,
+  Layers,
+  Terminal,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 export default function PublicLanding() {
   const navigate = useNavigate();
@@ -11,8 +26,8 @@ export default function PublicLanding() {
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const handleNavigation = (path: string) => {
@@ -26,18 +41,18 @@ export default function PublicLanding() {
   };
 
   const techIcons = [
-    { Icon: Cpu, delay: '0s' },
-    { Icon: Code2, delay: '0.5s' },
-    { Icon: Database, delay: '1s' },
-    { Icon: Cloud, delay: '1.5s' },
-    { Icon: Network, delay: '2s' },
-    { Icon: Layers, delay: '2.5s' },
+    { Icon: Cpu, delay: "0s" },
+    { Icon: Code2, delay: "0.5s" },
+    { Icon: Database, delay: "1s" },
+    { Icon: Cloud, delay: "1.5s" },
+    { Icon: Network, delay: "2s" },
+    { Icon: Layers, delay: "2.5s" },
   ];
 
   return (
     <div className="min-h-screen bg-background">
       <PublicHeader />
-      
+
       {/* Floating Tech Icons Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         {techIcons.map(({ Icon, delay }, index) => (
@@ -57,23 +72,29 @@ export default function PublicLanding() {
       </div>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 md:py-32" style={{ transform: `translateY(${scrollY * 0.5}px)` }}>
+      <section
+        className="relative overflow-hidden py-20 md:py-32"
+        style={{ transform: `translateY(${scrollY * 0.5}px)` }}
+      >
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-secondary/10" />
         <div className="absolute inset-0">
           <div className="absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-primary/20 blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 h-96 w-96 rounded-full bg-secondary/20 blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+          <div
+            className="absolute bottom-1/4 right-1/4 h-96 w-96 rounded-full bg-secondary/20 blur-3xl animate-pulse"
+            style={{ animationDelay: "1s" }}
+          />
         </div>
-        
+
         {/* Grid Pattern Overlay */}
         <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-        
+
         <div className="container relative z-10">
           <div className="mx-auto max-w-4xl text-center space-y-8 animate-fade-in">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm text-primary animate-scale-in">
               <Sparkles className="h-4 w-4" />
               <span>Bienvenido al Portal TEC</span>
             </div>
-            
+
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight animate-fade-in">
               <span className="bg-gradient-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent animate-gradient">
                 Descubre Eventos
@@ -81,12 +102,19 @@ export default function PublicLanding() {
               <br />
               <span className="text-foreground">y Contenido Empresarial</span>
             </h1>
-            
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: '0.2s' }}>
-              Mantente al día con todos los eventos, actividades y contenido relacionado con empresas y tecnología del TEC
+
+            <p
+              className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto animate-fade-in"
+              style={{ animationDelay: "0.2s" }}
+            >
+              Mantente al día con todos los eventos, actividades y contenido relacionado con empresas y tecnología del
+              TEC
             </p>
-            
-            <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground animate-fade-in" style={{ animationDelay: '0.3s' }}>
+
+            <div
+              className="flex items-center justify-center gap-4 text-sm text-muted-foreground animate-fade-in"
+              style={{ animationDelay: "0.3s" }}
+            >
               <div className="flex items-center gap-2">
                 <Terminal className="h-4 w-4 text-primary animate-pulse" />
                 <span>Tecnología</span>
@@ -102,20 +130,16 @@ export default function PublicLanding() {
                 <span>Comunidad</span>
               </div>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              <Button
-                size="lg"
-                onClick={() => handleNavigation('/public/events')}
-                className="text-lg px-8 hover-scale"
-              >
+              <Button size="lg" onClick={() => handleNavigation("/public/events")} className="text-lg px-8 hover-scale">
                 <Calendar className="mr-2 h-5 w-5" />
                 Ver Eventos
               </Button>
               <Button
                 size="lg"
                 variant="outline"
-                onClick={() => handleNavigation('/public/calendar')}
+                onClick={() => handleNavigation("/public/calendar")}
                 className="text-lg px-8 hover-scale"
               >
                 <Globe className="mr-2 h-5 w-5" />
@@ -141,7 +165,7 @@ export default function PublicLanding() {
               Todo lo que necesitas para estar conectado con el ecosistema tecnológico y empresarial
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8 mb-16">
             <Card className="border-primary/20 hover:border-primary/40 transition-all duration-500 hover-scale group relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -151,7 +175,8 @@ export default function PublicLanding() {
                 </div>
                 <CardTitle className="text-xl">Calendario Interactivo</CardTitle>
                 <CardDescription className="text-base">
-                  Visualiza todos los eventos en un calendario interactivo y agrégalos a tu Google Calendar con un solo clic
+                  Visualiza todos los eventos en un calendario interactivo y agrégalos a tu Google Calendar con un solo
+                  clic
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -186,17 +211,19 @@ export default function PublicLanding() {
           {/* Additional Tech Stats Section */}
           <div className="grid md:grid-cols-4 gap-6 mt-16">
             {[
-              { icon: Cpu, label: 'Tecnología', value: 'Innovación', color: 'primary' },
-              { icon: Database, label: 'Datos', value: 'En tiempo real', color: 'secondary' },
-              { icon: Cloud, label: 'Cloud', value: 'Escalable', color: 'accent' },
-              { icon: Network, label: 'Conectividad', value: '24/7', color: 'primary' },
+              { icon: Cpu, label: "Tecnología", value: "Innovación", color: "primary" },
+              { icon: Database, label: "Datos", value: "En tiempo real", color: "secondary" },
+              { icon: Cloud, label: "Cloud", value: "Escalable", color: "accent" },
+              { icon: Network, label: "Conectividad", value: "24/7", color: "primary" },
             ].map((stat, index) => (
-              <div 
+              <div
                 key={index}
                 className="text-center p-6 rounded-xl border bg-card/50 backdrop-blur-sm hover-scale transition-all duration-300 group"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <stat.icon className={`h-10 w-10 mx-auto mb-3 text-${stat.color} group-hover:scale-110 transition-transform`} />
+                <stat.icon
+                  className={`h-10 w-10 mx-auto mb-3 text-${stat.color} group-hover:scale-110 transition-transform`}
+                />
                 <div className="text-2xl font-bold mb-1">{stat.value}</div>
                 <div className="text-sm text-muted-foreground">{stat.label}</div>
               </div>
@@ -216,17 +243,11 @@ export default function PublicLanding() {
                   <Zap className="h-4 w-4" />
                   <span>Acceso completo</span>
                 </div>
-                <h2 className="text-3xl md:text-4xl font-bold">
-                  ¿Quieres más funcionalidades?
-                </h2>
+                <h2 className="text-3xl md:text-4xl font-bold">¿Quieres más funcionalidades?</h2>
                 <p className="text-lg text-muted-foreground">
                   Inicia sesión para acceder a funcionalidades exclusivas y gestionar contenido
                 </p>
-                <Button
-                  size="lg"
-                  onClick={() => handleNavigation('/login')}
-                  className="text-lg px-8 hover-scale"
-                >
+                <Button size="lg" onClick={() => handleNavigation("/login")} className="text-lg px-8 hover-scale">
                   Iniciar Sesión
                 </Button>
               </div>
@@ -253,18 +274,18 @@ export default function PublicLanding() {
                 Plataforma integral para eventos, contenido empresarial y tecnológico del Tecnológico
               </p>
             </div>
-            
+
             <div className="space-y-4">
               <h3 className="font-semibold text-sm uppercase tracking-wider">Enlaces Rápidos</h3>
               <div className="flex flex-col gap-2">
-                <button 
-                  onClick={() => handleNavigation('/public/calendar')}
+                <button
+                  onClick={() => handleNavigation("/public/calendar")}
                   className="text-sm text-muted-foreground hover:text-primary transition-colors text-left"
                 >
                   Calendario
                 </button>
-                <button 
-                  onClick={() => handleNavigation('/public/events')}
+                <button
+                  onClick={() => handleNavigation("/public/events")}
                   className="text-sm text-muted-foreground hover:text-primary transition-colors text-left"
                 >
                   Eventos
@@ -275,23 +296,23 @@ export default function PublicLanding() {
             <div className="space-y-4">
               <h3 className="font-semibold text-sm uppercase tracking-wider">Desarrollado por</h3>
               <div className="flex flex-col gap-3">
-                <a 
-                  href="https://softplusgt.com/" 
-                  target="_blank" 
+                <a
+                  href="https://softplusgt.com/"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
                 >
                   <Code2 className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                  <span className="font-medium">SoftPlus</span>
+                  <span className="font-medium">SoftPlus - GT</span>
                 </a>
-                <a 
-                  href="https://alcore-gt.com/" 
-                  target="_blank" 
+                <a
+                  href="https://alcore-gt.com/"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
                 >
                   <Layers className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                  <span className="font-medium">Alcore</span>
+                  <span className="font-medium">ALCORE - GT</span>
                 </a>
               </div>
             </div>
