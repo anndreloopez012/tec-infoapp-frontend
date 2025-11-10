@@ -363,4 +363,22 @@ All colors MUST be HSL.
       box-shadow: var(--shadow-md);
     }
   }
+
+  /* View Transitions API Support */
+  @view-transition {
+    navigation: auto;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.3s;
+  }
+
+  ::view-transition-old(root) {
+    animation-name: fade-out;
+  }
+
+  ::view-transition-new(root) {
+    animation-name: fade-in;
+  }
 }

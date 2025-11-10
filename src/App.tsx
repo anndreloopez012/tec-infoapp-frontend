@@ -28,6 +28,12 @@ import NotFound from '@/pages/NotFound';
 import ModulePage from '@/pages/ModulePage';
 import NotificationsPage from '@/pages/NotificationsPage';
 
+// Public Pages
+import PublicLanding from '@/pages/PublicLanding';
+import PublicCalendar from '@/pages/public/PublicCalendar';
+import PublicEvents from '@/pages/public/PublicEvents';
+import CategoryContent from '@/pages/public/CategoryContent';
+
 // Admin Pages
 import RoleManagement from '@/pages/admin/RoleManagement';
 import PermissionManagement from '@/pages/admin/PermissionManagement';
@@ -91,7 +97,13 @@ const App = () => {
                   <Sonner />
           <BrowserRouter>
           <Routes>
-            {/* Public Routes */}
+            {/* Public Landing */}
+            <Route path="/" element={<PublicLanding />} />
+            <Route path="/public/calendar" element={<PublicCalendar />} />
+            <Route path="/public/events" element={<PublicEvents />} />
+            <Route path="/public/category/:categoryId" element={<CategoryContent />} />
+            
+            {/* Auth Routes */}
             <Route path="/login" element={<ModernLogin />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             
@@ -160,9 +172,6 @@ const App = () => {
               {/* Rutas dinámicas para módulos */}
               <Route path="/:module" element={<ModulePage />} />
             </Route>
-            
-            {/* Root redirect */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
             
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
