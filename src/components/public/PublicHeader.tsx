@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Moon, Sun, LogIn, Menu, X, Calendar, Users, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
@@ -18,6 +18,7 @@ export const PublicHeader = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadCategories();
@@ -34,16 +35,6 @@ export const PublicHeader = () => {
 
     if (result.success) {
       setCategories(result.data);
-    }
-  };
-
-  const handleNavigation = (path: string) => {
-    if (document.startViewTransition) {
-      document.startViewTransition(() => {
-        window.location.href = path;
-      });
-    } else {
-      window.location.href = path;
     }
   };
 
@@ -69,7 +60,7 @@ export const PublicHeader = () => {
           <Button
             variant={isActive('/public/calendar') ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => handleNavigation('/public/calendar')}
+            onClick={() => navigate('/public/calendar')}
             className="rounded-full px-4 hover-scale"
           >
             <Calendar className="h-4 w-4 mr-2" />
@@ -78,7 +69,7 @@ export const PublicHeader = () => {
           <Button
             variant={isActive('/public/events') ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => handleNavigation('/public/events')}
+            onClick={() => navigate('/public/events')}
             className="rounded-full px-4 hover-scale"
           >
             <Users className="h-4 w-4 mr-2" />
@@ -92,7 +83,7 @@ export const PublicHeader = () => {
               key={category.id}
               variant={isActive(`/public/category/${category.documentId}`) ? 'default' : 'ghost'}
               size="sm"
-              onClick={() => handleNavigation(`/public/category/${category.documentId}`)}
+              onClick={() => navigate(`/public/category/${category.documentId}`)}
               className={cn(
                 "rounded-full px-4 hover-scale transition-all duration-300",
                 category.color && `hover:bg-[${category.color}]/10`
@@ -117,7 +108,7 @@ export const PublicHeader = () => {
           <Button
             variant="default"
             size="sm"
-            onClick={() => handleNavigation('/login')}
+            onClick={() => navigate('/login')}
             className="rounded-full px-6 hover-scale shadow-lg"
           >
             <LogIn className="h-4 w-4 mr-2" />
@@ -144,7 +135,7 @@ export const PublicHeader = () => {
             size="sm"
             className="w-full justify-start"
             onClick={() => {
-              handleNavigation('/public/calendar');
+              navigate('/public/calendar');
               setMobileMenuOpen(false);
             }}
           >
@@ -155,7 +146,7 @@ export const PublicHeader = () => {
             size="sm"
             className="w-full justify-start"
             onClick={() => {
-              handleNavigation('/public/events');
+              navigate('/public/events');
               setMobileMenuOpen(false);
             }}
           >
@@ -169,7 +160,7 @@ export const PublicHeader = () => {
               size="sm"
               className="w-full justify-start"
               onClick={() => {
-                handleNavigation(`/public/category/${category.documentId}`);
+                navigate(`/public/category/${category.documentId}`);
                 setMobileMenuOpen(false);
               }}
             >
@@ -192,7 +183,7 @@ export const PublicHeader = () => {
               size="sm"
               className="flex-1"
               onClick={() => {
-                handleNavigation('/login');
+                navigate('/login');
                 setMobileMenuOpen(false);
               }}
             >
