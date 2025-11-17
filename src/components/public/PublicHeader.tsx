@@ -28,9 +28,6 @@ export const PublicHeader = () => {
     const result = await publicCategoryService.getAll({
       pageSize: 100,
       sort: 'name:asc',
-      additionalFilters: {
-        'filters[active][$eq]': true,
-      },
     });
 
     if (result.success) {
