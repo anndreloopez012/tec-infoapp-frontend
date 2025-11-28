@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNotifications } from '@/context/NotificationsContext';
 import { useAuth } from '@/context/AuthContext';
 import notificationService from '@/services/notificationService';
@@ -10,9 +10,12 @@ import notificationService from '@/services/notificationService';
 export const useSystemNotifications = () => {
   const { addNotification } = useNotifications();
   const { user, isAuthenticated } = useAuth();
+  const hasNotifiedRef = useRef(false);
 
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (isAuthenticated && user && !hasNotifiedRef.current) {
+      hasNotifiedRef.current = true;
+      
       // Notificación de bienvenida cuando el usuario se loguea
       addNotification({
         title: `Bienvenido, ${user.name || user.username}`,
@@ -32,7 +35,12 @@ export const useSystemNotifications = () => {
       // Verificar notificaciones de seguridad
       checkSecurityAlerts();
     }
-  }, [isAuthenticated, user]);
+    
+    // Reset cuando el usuario se desloguee
+    if (!isAuthenticated) {
+      hasNotifiedRef.current = false;
+    }
+  }, [isAuthenticated, user?.id]);
 
   // Verificar actualizaciones del sistema
   const checkSystemUpdates = () => {

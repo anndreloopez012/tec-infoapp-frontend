@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useRef, useMemo } from 'react';
 import { toast } from '@/hooks/use-toast';
 import notificationService from '@/services/notificationService.js';
 import { enhancedNotificationService } from '@/services/enhancedNotificationService';
@@ -106,18 +106,18 @@ export const useNotifications = () => {
 // Provider
 export const NotificationsProvider = ({ children }) => {
   const [state, dispatch] = useReducer(notificationsReducer, initialState);
+  const loadingRef = useRef(false);
 
-  // Cargar notificaciones reales del servicio
+  // Cargar notificaciones reales del servicio - SIN INTERVALO AUTOMÁTICO
   useEffect(() => {
     loadNotifications();
-    
-    // Configurar intervalo para refrescar notificaciones cada 60 segundos (reducido de 10s)
-    const interval = setInterval(loadNotifications, 60000);
-    
-    return () => clearInterval(interval);
   }, []);
 
   const loadNotifications = async () => {
+    // Evitar múltiples cargas simultáneas
+    if (loadingRef.current) return;
+    loadingRef.current = true;
+
     try {
       dispatch({ type: ActionTypes.SET_LOADING, payload: true });
       
@@ -129,8 +129,6 @@ export const NotificationsProvider = ({ children }) => {
         // Cargar notificaciones reales de Strapi
         const response = await enhancedNotificationService.getUserNotifications(userId);
         const notifications = response.data?.map(userNotification => {
-          console.log('📧 Processing user notification:', userNotification);
-          
           return {
             id: userNotification.id,
             title: userNotification.notification?.title || 'Sin título',
@@ -155,6 +153,8 @@ export const NotificationsProvider = ({ children }) => {
       // Fallback al servicio local en caso de error
       const notifications = notificationService.getAllNotifications();
       dispatch({ type: ActionTypes.SET_NOTIFICATIONS, payload: notifications });
+    } finally {
+      loadingRef.current = false;
     }
   };
 
@@ -315,7 +315,8 @@ export const NotificationsProvider = ({ children }) => {
     return success;
   };
 
-  const value = {
+  // Memoizar el valor para evitar re-renders innecesarios
+  const value = useMemo(() => ({
     // State
     ...state,
     
@@ -340,7 +341,7 @@ export const NotificationsProvider = ({ children }) => {
     // Utils
     clearError: () => dispatch({ type: ActionTypes.CLEAR_ERROR }),
     refreshNotifications: loadNotifications
-  };
+  }), [state]);
 
   return (
     <NotificationsContext.Provider value={value}>
