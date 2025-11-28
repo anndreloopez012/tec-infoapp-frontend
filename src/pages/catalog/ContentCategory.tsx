@@ -39,11 +39,10 @@ export const ContentCategory: React.FC = () => {
   const [itemToDelete, setItemToDelete] = useState<any>(null);
 
   // Permisos
-  // Permisos (temporalmente deshabilitados)
-  const canCreate = true;
-  const canEdit = true;
-  const canDelete = true;
-  const canViewAll = true;
+  const canCreate = hasPermission('api::content-category.content-category.create');
+  const canEdit = hasPermission('api::content-category.content-category.update');
+  const canDelete = hasPermission('api::content-category.content-category.delete');
+  const canViewAll = hasPermission('api::content-category.content-category.find');
 
   // Cargar datos
   const loadData = async () => {

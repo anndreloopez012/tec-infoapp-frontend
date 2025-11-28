@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 import { galleryService, contentCategoryService, contentTagService } from "@/services/catalogServices";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -77,6 +78,12 @@ const Gallery = () => {
   });
 
   const { toast } = useToast();
+  const { hasPermission } = useAuth();
+
+  // Permisos
+  const canCreate = hasPermission('api::gallery.gallery.create');
+  const canEdit = hasPermission('api::gallery.gallery.update');
+  const canDelete = hasPermission('api::gallery.gallery.delete');
 
   useEffect(() => {
     loadData();
@@ -326,10 +333,12 @@ const Gallery = () => {
             Gestiona las galerías de imágenes
           </p>
         </div>
-        <Button onClick={handleCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nueva Galería
-        </Button>
+        {canCreate && (
+          <Button onClick={handleCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nueva Galería
+          </Button>
+        )}
       </div>
 
       <div className="flex items-center gap-4">
@@ -392,26 +401,30 @@ const Gallery = () => {
                 </div>
 
                 <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    size="icon"
-                    variant="secondary"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEdit(item);
-                    }}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="destructive"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteConfirm(item);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  {canEdit && (
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(item);
+                      }}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {canDelete && (
+                    <Button
+                      size="icon"
+                      variant="destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteConfirm(item);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}

@@ -39,11 +39,10 @@ export const EventAttendance: React.FC = () => {
   const [itemToDelete, setItemToDelete] = useState<any>(null);
 
   // Permisos
-  // Permisos (temporalmente deshabilitados)
-  const canCreate = true;
-  const canEdit = true;
-  const canDelete = true;
-  const canViewAll = true;
+  const canCreate = hasPermission('api::event-attendance.event-attendance.create');
+  const canEdit = hasPermission('api::event-attendance.event-attendance.update');
+  const canDelete = hasPermission('api::event-attendance.event-attendance.delete');
+  const canViewAll = hasPermission('api::event-attendance.event-attendance.find');
 
   // Cargar datos
   const loadData = async () => {

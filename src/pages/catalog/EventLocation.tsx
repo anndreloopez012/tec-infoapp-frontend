@@ -54,11 +54,10 @@ export const EventLocation: React.FC = () => {
   const [itemToDelete, setItemToDelete] = useState<any>(null);
 
   // Permisos
-  // Permisos (temporalmente deshabilitados)
-  const canCreate = true;
-  const canEdit = true;
-  const canDelete = true;
-  const canViewAll = true;
+  const canCreate = hasPermission('api::event-location.event-location.create');
+  const canEdit = hasPermission('api::event-location.event-location.update');
+  const canDelete = hasPermission('api::event-location.event-location.delete');
+  const canViewAll = hasPermission('api::event-location.event-location.find');
 
   // Cargar datos
   const loadData = async () => {
