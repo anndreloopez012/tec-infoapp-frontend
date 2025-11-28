@@ -130,7 +130,7 @@ export default function TicketDetail() {
         formData.append('files', file);
       });
 
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem(API_CONFIG.STORAGE_KEYS.AUTH_TOKEN) || API_CONFIG.AUTH_TOKEN;
       
       if (!token) {
         throw new Error('No hay sesión activa');
