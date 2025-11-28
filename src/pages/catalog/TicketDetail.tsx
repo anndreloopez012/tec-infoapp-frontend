@@ -316,24 +316,17 @@ export default function TicketDetail() {
         createdBy: user?.id
       };
 
-      // Preparar todos los seguimientos
-      const allFollowUps = followUps.map((f, i) => {
-        if (i === index) {
-          return followUpToSave;
-        }
-        // Mantener los seguimientos ya guardados
-        if (f.isSaved) {
-          return {
-            Comentario: f.Comentario,
-            Adjuntos: (f.Adjuntos || []).map(file => file.id),
-            createdBy: f.createdBy?.id
-          };
-        }
-        return null;
-      }).filter(Boolean);
+      // Preparar todos los seguimientos: NINGUNO debe perderse
+      const allFollowUps = followUps
+        .filter(f => f.Comentario.trim() || (f.Adjuntos && f.Adjuntos.length > 0))
+        .map(f => ({
+          ...(f.id ? { id: f.id } : {}),
+          Comentario: f.Comentario,
+          Adjuntos: (f.Adjuntos || []).map((file: any) => file.id),
+        }));
 
       const payload = {
-        followup: allFollowUps
+        followup: allFollowUps,
       };
 
       await ticketService.update(id!, payload);
