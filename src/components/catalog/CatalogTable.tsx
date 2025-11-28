@@ -90,13 +90,14 @@ export const CatalogTable: React.FC<CatalogTableProps> = ({
   const [searchValue, setSearchValue] = useState('');
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  // Debounce search with proper cleanup
+  // Debounce search solo cuando cambia el texto, no la función
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       onSearch(searchValue);
     }, 500);
     return () => clearTimeout(timeoutId);
-  }, [searchValue, onSearch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchValue]);
 
   // Agregar columna de acciones si hay permisos
   const columns = useMemo(() => {
