@@ -91,6 +91,7 @@ const TicketType = () => {
 
   useEffect(() => {
     fetchData(pagination.page, pagination.pageSize, searchTerm);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handlePageChange = (newPage) => {

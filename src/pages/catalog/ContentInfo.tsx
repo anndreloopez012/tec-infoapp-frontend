@@ -189,6 +189,7 @@ const ContentInfo = () => {
 
   useEffect(() => {
     loadData(pagination.page, pagination.pageSize, searchQuery);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handlePageChange = (page: number) => {
