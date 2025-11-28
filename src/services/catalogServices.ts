@@ -354,4 +354,9 @@ export const eventTypeService = new CatalogService('event-types', 'Tipos de Even
 export const contentInfoService = new CatalogService('content-infos', 'Información de Contenido');
 export const galleryService = new CatalogService('galleries', 'Galería');
 
+// Servicios de Tickets
+export const ticketStatusService = new CatalogService('ticket-statuses', 'Estados de Ticket');
+export const ticketPriorityService = new CatalogService('ticket-priorities', 'Prioridades de Ticket');
+export const ticketTypeService = new CatalogService('ticket-types', 'Tipos de Ticket');
+
 export default CatalogService;

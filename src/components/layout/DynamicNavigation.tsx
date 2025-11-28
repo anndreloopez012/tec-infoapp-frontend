@@ -20,6 +20,9 @@ import {
   Building2,
   CalendarCheck,
   Folder,
+  AlertCircle,
+  Flag,
+  FileType,
 } from "lucide-react";
 import { useAuthPermissions } from "@/hooks/useAuthPermissions";
 
@@ -34,7 +37,6 @@ const moduleIcons = {
   "api::sale": Package,
   "api::sale-stage": BarChart3,
   "api::solution": Wrench,
-  "api::ticket-status": Ticket,
   "api::type-user": UserCheck,
   // Iconos para catálogos
   "api::event-attendance": CalendarCheck,
@@ -42,6 +44,10 @@ const moduleIcons = {
   "api::event-location": MapPin,
   "api::content-tag": Tag,
   "api::event-type": Calendar,
+  // Iconos para tickets
+  "api::ticket-status": AlertCircle,
+  "api::ticket-priority": Flag,
+  "api::ticket-type": FileType,
 };
 
 interface DynamicNavigationProps {
@@ -59,24 +65,28 @@ const DynamicNavigation: React.FC<DynamicNavigationProps> = ({ onNavigate, searc
   // Módulos del Sistema: Los principales módulos de gestión
   const systemModules = ["api::gallery", "api::event", "api::content-info", "api::event-calendar"];
 
+  // Módulos Tickets: Gestión de tickets
+  const ticketModules = ["api::ticket-status", "api::ticket-priority", "api::ticket-type"];
+
   // Módulos excluidos: módulos que no se mostrarán en el menú
   const excludedModules = ["api::customer"];
 
   // Módulos Catálogos: Incluye api::project-stage, api::sale-stage y otros catálogos
-  // Estos se determinan automáticamente (todos los que NO están en systemModules)
+  // Estos se determinan automáticamente (todos los que NO están en systemModules y ticketModules)
 
   // Filter and categorize menus
-  const { catalogModules, systemMenus, filteredCatalogMenus, filteredSystemMenus } = React.useMemo(() => {
+  const { catalogModules, ticketMenusData, systemMenusData, filteredCatalogMenus, filteredTicketMenus, filteredSystemMenus } = React.useMemo(() => {
     if (!navigationMenus) {
-      return { catalogModules: [], systemMenus: [], filteredCatalogMenus: [], filteredSystemMenus: [] };
+      return { catalogModules: [], ticketMenusData: [], systemMenusData: [], filteredCatalogMenus: [], filteredTicketMenus: [], filteredSystemMenus: [] };
     }
 
     // Filtrar módulos excluidos primero
     const visibleMenus = navigationMenus.filter((menu) => !excludedModules.includes(menu.id));
 
     // Separar módulos por categoría
-    const catalogModules = visibleMenus.filter((menu) => !systemModules.includes(menu.id));
-    const systemMenus = visibleMenus.filter((menu) => systemModules.includes(menu.id));
+    const ticketMenusData = visibleMenus.filter((menu) => ticketModules.includes(menu.id));
+    const systemMenusData = visibleMenus.filter((menu) => systemModules.includes(menu.id));
+    const catalogModules = visibleMenus.filter((menu) => !systemModules.includes(menu.id) && !ticketModules.includes(menu.id));
 
     // Aplicar filtro de búsqueda si existe
     if (searchQuery.trim()) {
@@ -84,18 +94,23 @@ const DynamicNavigation: React.FC<DynamicNavigationProps> = ({ onNavigate, searc
       const filteredCatalogMenus = catalogModules.filter(
         (menu) => menu.title.toLowerCase().includes(query) || menu.id.toLowerCase().includes(query),
       );
-      const filteredSystemMenus = systemMenus.filter(
+      const filteredTicketMenus = ticketMenusData.filter(
+        (menu) => menu.title.toLowerCase().includes(query) || menu.id.toLowerCase().includes(query),
+      );
+      const filteredSystemMenus = systemMenusData.filter(
         (menu) => menu.title.toLowerCase().includes(query) || menu.id.toLowerCase().includes(query),
       );
 
-      return { catalogModules, systemMenus, filteredCatalogMenus, filteredSystemMenus };
+      return { catalogModules, ticketMenusData, systemMenusData, filteredCatalogMenus, filteredTicketMenus, filteredSystemMenus };
     }
 
     return {
       catalogModules,
-      systemMenus,
+      ticketMenusData,
+      systemMenusData,
       filteredCatalogMenus: catalogModules,
-      filteredSystemMenus: systemMenus,
+      filteredTicketMenus: ticketMenusData,
+      filteredSystemMenus: systemMenusData,
     };
   }, [navigationMenus, searchQuery]);
 
@@ -118,7 +133,7 @@ const DynamicNavigation: React.FC<DynamicNavigationProps> = ({ onNavigate, searc
     );
   }
 
-  const totalMenus = filteredCatalogMenus.length + filteredSystemMenus.length;
+  const totalMenus = filteredCatalogMenus.length + filteredTicketMenus.length + filteredSystemMenus.length;
 
   if (totalMenus === 0) {
     const message = searchQuery.trim()
@@ -210,6 +225,9 @@ const DynamicNavigation: React.FC<DynamicNavigationProps> = ({ onNavigate, searc
     <div className="space-y-6 px-3">
       {/* Módulos Catálogos - Arriba */}
       {renderMenuSection(filteredCatalogMenus, "Módulos Catálogos")}
+
+      {/* Módulos Tickets - Medio */}
+      {renderMenuSection(filteredTicketMenus, "Módulos Tickets")}
 
       {/* Módulos del Sistema - Abajo */}
       {renderMenuSection(filteredSystemMenus, "Módulos del Sistema")}
