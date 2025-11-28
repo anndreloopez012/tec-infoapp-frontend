@@ -3,18 +3,19 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Plus, Trash2, Upload, Download } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { ticketService, ticketStatusService, ticketPriorityService, ticketTypeService, companyService } from '@/services/catalogServices';
 import { API_CONFIG } from '@/config/api';
+import { FileUploadWithPreview } from '@/components/tickets/FileUploadWithPreview';
+import { FileGallery } from '@/components/tickets/FileGallery';
 
 const ticketSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
@@ -48,7 +49,6 @@ export default function TicketDetail() {
   const [companies, setCompanies] = useState([]);
   const [followUps, setFollowUps] = useState<FollowUp[]>([]);
   const [mediaFiles, setMediaFiles] = useState<any[]>([]);
-  const [uploadingMedia, setUploadingMedia] = useState(false);
 
   const canCreate = hasPermission('api::ticket.ticket.create');
   const canUpdate = hasPermission('api::ticket.ticket.update');
@@ -122,15 +122,11 @@ export default function TicketDetail() {
     }
   };
 
-  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
+  const handleMediaUpload = async (files: File[]) => {
     try {
-      setUploadingMedia(true);
       const formData = new FormData();
       
-      Array.from(files).forEach(file => {
+      files.forEach(file => {
         formData.append('files', file);
       });
 
@@ -159,8 +155,7 @@ export default function TicketDetail() {
         description: "Error al subir los archivos",
         variant: "destructive",
       });
-    } finally {
-      setUploadingMedia(false);
+      throw error;
     }
   };
 
@@ -361,63 +356,25 @@ export default function TicketDetail() {
             <CardTitle>Archivos Adjuntos</CardTitle>
             <CardDescription>Documentos, imágenes o videos relacionados</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Input
-                type="file"
-                multiple
-                onChange={handleMediaUpload}
-                disabled={isReadOnly || uploadingMedia}
-                className="cursor-pointer"
+          <CardContent className="space-y-6">
+            {!isReadOnly && (
+              <FileUploadWithPreview
+                onUpload={handleMediaUpload}
+                disabled={isReadOnly}
+                maxFiles={20}
               />
-              {uploadingMedia && <p className="text-sm text-muted-foreground mt-2">Subiendo archivos...</p>}
-            </div>
+            )}
 
             {mediaFiles.length > 0 && (
-              <div className="space-y-2">
-                {mediaFiles.map((file: any) => (
-                  <div key={file.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      {file.mime?.startsWith('image/') ? (
-                        <img 
-                          src={`${API_CONFIG.BASE_URL}${file.url}`} 
-                          alt={file.name}
-                          className="h-12 w-12 object-cover rounded"
-                        />
-                      ) : (
-                        <div className="h-12 w-12 bg-muted rounded flex items-center justify-center">
-                          📄
-                        </div>
-                      )}
-                      <div>
-                        <p className="text-sm font-medium">{file.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {(file.size / 1024).toFixed(2)} KB
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => window.open(`${API_CONFIG.BASE_URL}${file.url}`, '_blank')}
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                      {!isReadOnly && (
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => removeMediaFile(file.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
+              <div className="pt-4 border-t">
+                <h3 className="text-sm font-medium mb-4">
+                  Archivos subidos ({mediaFiles.length})
+                </h3>
+                <FileGallery
+                  files={mediaFiles}
+                  onRemove={!isReadOnly ? removeMediaFile : undefined}
+                  readOnly={isReadOnly}
+                />
               </div>
             )}
           </CardContent>
