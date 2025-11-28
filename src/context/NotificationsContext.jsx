@@ -111,8 +111,8 @@ export const NotificationsProvider = ({ children }) => {
   useEffect(() => {
     loadNotifications();
     
-    // Configurar intervalo para refrescar notificaciones cada 10 segundos
-    const interval = setInterval(loadNotifications, 10000);
+    // Configurar intervalo para refrescar notificaciones cada 60 segundos (reducido de 10s)
+    const interval = setInterval(loadNotifications, 60000);
     
     return () => clearInterval(interval);
   }, []);
