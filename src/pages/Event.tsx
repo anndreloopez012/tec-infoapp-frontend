@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 import { eventService, eventTypeService, eventLocationService, companyService } from "@/services/catalogServices";
 import { Skeleton } from "@/components/ui/skeleton";
 import { API_CONFIG } from "@/config/api";
@@ -65,6 +66,7 @@ interface EventData {
 }
 
 const Event = () => {
+  const { hasPermission } = useAuth();
   const [data, setData] = useState<EventData[]>([]);
   const [filteredData, setFilteredData] = useState<EventData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -355,10 +357,12 @@ const Event = () => {
             Gestiona los eventos
           </p>
         </div>
-        <Button onClick={handleCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nuevo Evento
-        </Button>
+        {hasPermission('api::event.event.create') && (
+          <Button onClick={handleCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nuevo Evento
+          </Button>
+        )}
       </div>
 
       <div className="flex items-center gap-4">
@@ -444,24 +448,28 @@ const Event = () => {
                     )}
 
                     <div className="flex gap-2 pt-4">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEdit(item)}
-                        className="flex-1"
-                      >
-                        <Pencil className="h-4 w-4 mr-1" />
-                        Editar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDeleteConfirm(item)}
-                        className="flex-1"
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Eliminar
-                      </Button>
+                      {hasPermission('api::event.event.update') && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEdit(item)}
+                          className="flex-1"
+                        >
+                          <Pencil className="h-4 w-4 mr-1" />
+                          Editar
+                        </Button>
+                      )}
+                      {hasPermission('api::event.event.delete') && (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDeleteConfirm(item)}
+                          className="flex-1"
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Eliminar
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardContent>

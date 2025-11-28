@@ -11,6 +11,7 @@ import { RoleService } from '@/services/roleService';
 import { Shield, Plus, Search, Edit, Trash2, Users, MoreVertical, Crown, Settings } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/context/AuthContext';
 
 interface Role {
   id: number;
@@ -23,6 +24,7 @@ interface Role {
 }
 
 const RoleManagement = () => {
+  const { hasPermission } = useAuth();
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -246,13 +248,14 @@ const RoleManagement = () => {
           </p>
         </div>
         
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-gradient-primary hover:opacity-90">
-              <Plus className="w-4 h-4 mr-2" />
-              Nuevo Rol
-            </Button>
-          </DialogTrigger>
+        {hasPermission('api::users-permissions.roles-permissions.createRole') && (
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-primary hover:opacity-90">
+                <Plus className="w-4 h-4 mr-2" />
+                Nuevo Rol
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Crear Nuevo Rol</DialogTitle>
@@ -304,6 +307,7 @@ const RoleManagement = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       {/* Stats Cards */}
@@ -376,30 +380,38 @@ const RoleManagement = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setSelectedRole(role);
-                          setIsEditDialogOpen(true);
-                        }}
-                      >
-                        <Edit className="w-4 h-4 mr-2" />
-                        Editar
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleDuplicateRole(role.id, role.name)}
-                      >
-                        <Shield className="w-4 h-4 mr-2" />
-                        Duplicar
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={() => handleDeleteRole(role.id)}
-                        className="text-red-600"
-                        disabled={['authenticated', 'public'].includes(role.type)}
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Eliminar
-                      </DropdownMenuItem>
+                      {hasPermission('api::users-permissions.roles-permissions.updateRole') && (
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedRole(role);
+                            setIsEditDialogOpen(true);
+                          }}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Editar
+                        </DropdownMenuItem>
+                      )}
+                      {hasPermission('api::users-permissions.roles-permissions.createRole') && (
+                        <DropdownMenuItem
+                          onClick={() => handleDuplicateRole(role.id, role.name)}
+                        >
+                          <Shield className="w-4 h-4 mr-2" />
+                          Duplicar
+                        </DropdownMenuItem>
+                      )}
+                      {(hasPermission('api::users-permissions.roles-permissions.updateRole') || hasPermission('api::users-permissions.roles-permissions.createRole')) && (
+                        <DropdownMenuSeparator />
+                      )}
+                      {hasPermission('api::users-permissions.roles-permissions.deleteRole') && (
+                        <DropdownMenuItem
+                          onClick={() => handleDeleteRole(role.id)}
+                          className="text-red-600"
+                          disabled={['authenticated', 'public'].includes(role.type)}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Eliminar
+                        </DropdownMenuItem>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
