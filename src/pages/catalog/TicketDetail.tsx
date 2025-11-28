@@ -68,6 +68,10 @@ export default function TicketDetail() {
   const canUpdate = hasPermission('api::ticket.ticket.update');
   const isReadOnly = isNew ? !canCreate : !canUpdate;
 
+  // Verificar si el usuario tiene rol super/admin/super_admin
+  const userRole = user?.role?.type || user?.role?.name || '';
+  const isSuperAdmin = ['super', 'admin', 'super_admin'].includes(userRole.toLowerCase());
+
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<TicketFormData>({
     resolver: zodResolver(ticketSchema),
   });
@@ -80,11 +84,32 @@ export default function TicketDetail() {
     }
   }, [id]);
 
+  // Si el usuario NO es super admin, pre-seleccionar su empresa automáticamente
+  useEffect(() => {
+    if (!isSuperAdmin && user && isNew) {
+      // Obtener empresa del usuario
+      const userCompanyId = user.company?.documentId || user.company?.id;
+      const userCompaniesIds = user.companies?.map((c: any) => c.documentId || c.id) || [];
+      
+      // Si tiene empresa(s), pre-seleccionar
+      if (userCompanyId) {
+        console.log('🏢 Pre-seleccionando empresa del usuario:', userCompanyId);
+        setValue('companies', [userCompanyId]);
+      } else if (userCompaniesIds.length > 0) {
+        console.log('🏢 Pre-seleccionando empresas del usuario:', userCompaniesIds);
+        setValue('companies', userCompaniesIds);
+      }
+    }
+  }, [user, isSuperAdmin, isNew]);
+
   // Filtrar usuarios cuando cambien las empresas seleccionadas
   useEffect(() => {
     const selectedCompanies = watch('companies') || [];
     
+    console.log('🔍 Empresas seleccionadas:', selectedCompanies);
+    
     if (selectedCompanies.length === 0) {
+      console.log('⚠️ No hay empresas seleccionadas, limpiando usuarios');
       setFilteredUsers([]);
       return;
     }
@@ -92,24 +117,17 @@ export default function TicketDetail() {
     // Hacer llamada al API con filtro de empresas
     const fetchFilteredUsers = async () => {
       try {
-        const queryParams = new URLSearchParams();
-        queryParams.append('pagination[pageSize]', '1000');
-        
-        // Agregar filtro por empresas seleccionadas
-        selectedCompanies.forEach((companyId: string, index: number) => {
-          queryParams.append(`filters[$or][${index}][company][documentId][$eq]`, companyId);
-          queryParams.append(`filters[$or][${index}][companies][documentId][$in]`, companyId);
-        });
-        
-        // Populate relations
-        queryParams.append('populate[0]', 'company');
-        queryParams.append('populate[1]', 'companies');
-
+        console.log('📞 Llamando al API para obtener usuarios...');
         const response = await userService.getUsers({ pageSize: 1000 });
+        
+        console.log('📦 Usuarios obtenidos del API:', response.data?.length || 0);
         
         // Filtrar manualmente ya que el API puede no soportar el filtro $or complejo
         const filtered = (response.data || []).filter((u: any) => {
-          if (!u.company && !u.companies) return false;
+          if (!u.company && !u.companies) {
+            console.log('❌ Usuario sin empresa:', u.username || u.email);
+            return false;
+          }
           
           const userCompanyIds = u.companies 
             ? u.companies.map((c: any) => c.documentId || c.id)
@@ -117,12 +135,19 @@ export default function TicketDetail() {
               ? [u.company.documentId || u.company.id]
               : [];
           
-          return userCompanyIds.some((cId: string) => selectedCompanies.includes(cId));
+          const matches = userCompanyIds.some((cId: string) => selectedCompanies.includes(cId));
+          
+          if (matches) {
+            console.log('✅ Usuario coincide:', u.username || u.email, 'empresas:', userCompanyIds);
+          }
+          
+          return matches;
         });
         
+        console.log('🎯 Usuarios filtrados:', filtered.length);
         setFilteredUsers(filtered);
       } catch (error) {
-        console.error('Error al filtrar usuarios:', error);
+        console.error('❌ Error al filtrar usuarios:', error);
         setFilteredUsers([]);
       }
     };
@@ -539,91 +564,95 @@ export default function TicketDetail() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="companies">Empresa *</Label>
-                <Popover open={companySearchOpen} onOpenChange={setCompanySearchOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={companySearchOpen}
-                      disabled={isReadOnly}
-                      className="w-full justify-between h-auto min-h-[40px]"
-                    >
-                      <div className="flex flex-wrap gap-1 flex-1">
-                        {watch('companies')?.length ? (
-                          watch('companies')?.map((companyId: string) => {
-                            const company = companies.find((c: any) => c.documentId === companyId);
-                            return company ? (
-                              <Badge key={companyId} variant="secondary" className="mr-1">
-                                {company.name}
-                                <button
-                                  type="button"
-                                  className="ml-1 hover:text-destructive"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
+              {/* Solo mostrar input de empresa si es super admin */}
+              {isSuperAdmin && (
+                <div>
+                  <Label htmlFor="companies">Empresa *</Label>
+                  <Popover open={companySearchOpen} onOpenChange={setCompanySearchOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={companySearchOpen}
+                        disabled={isReadOnly}
+                        className="w-full justify-between h-auto min-h-[40px]"
+                      >
+                        <div className="flex flex-wrap gap-1 flex-1">
+                          {watch('companies')?.length ? (
+                            watch('companies')?.map((companyId: string) => {
+                              const company = companies.find((c: any) => c.documentId === companyId);
+                              return company ? (
+                                <Badge key={companyId} variant="secondary" className="mr-1">
+                                  {company.name}
+                                  <button
+                                    type="button"
+                                    className="ml-1 hover:text-destructive"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const current = watch('companies') || [];
+                                      setValue('companies', current.filter((id: string) => id !== companyId));
+                                      // Limpiar usuarios si no hay empresas
+                                      if (current.length === 1) {
+                                        setValue('users_permissions_users', []);
+                                      }
+                                    }}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </Badge>
+                              ) : null;
+                            })
+                          ) : (
+                            <span className="text-muted-foreground">Seleccionar empresas...</span>
+                          )}
+                        </div>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Buscar empresa..." />
+                        <CommandList>
+                          <CommandEmpty>No se encontró la empresa.</CommandEmpty>
+                          <CommandGroup>
+                            {companies.map((company: any) => {
+                              const isSelected = watch('companies')?.includes(company.documentId);
+                              return (
+                                <CommandItem
+                                  key={company.documentId}
+                                  value={company.name}
+                                  onSelect={() => {
                                     const current = watch('companies') || [];
-                                    setValue('companies', current.filter((id: string) => id !== companyId));
-                                    // Limpiar usuarios si no hay empresas
-                                    if (current.length === 1) {
-                                      setValue('users_permissions_users', []);
+                                    if (isSelected) {
+                                      setValue('companies', current.filter((id: string) => id !== company.documentId));
+                                      // Limpiar usuarios si no hay empresas
+                                      if (current.length === 1) {
+                                        setValue('users_permissions_users', []);
+                                      }
+                                    } else {
+                                      setValue('companies', [...current, company.documentId]);
                                     }
                                   }}
                                 >
-                                  <X className="h-3 w-3" />
-                                </button>
-                              </Badge>
-                            ) : null;
-                          })
-                        ) : (
-                          <span className="text-muted-foreground">Seleccionar empresas...</span>
-                        )}
-                      </div>
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0" align="start">
-                    <Command>
-                      <CommandInput placeholder="Buscar empresa..." />
-                      <CommandList>
-                        <CommandEmpty>No se encontró la empresa.</CommandEmpty>
-                        <CommandGroup>
-                          {companies.map((company: any) => {
-                            const isSelected = watch('companies')?.includes(company.documentId);
-                            return (
-                              <CommandItem
-                                key={company.documentId}
-                                value={company.name}
-                                onSelect={() => {
-                                  const current = watch('companies') || [];
-                                  if (isSelected) {
-                                    setValue('companies', current.filter((id: string) => id !== company.documentId));
-                                    // Limpiar usuarios si no hay empresas
-                                    if (current.length === 1) {
-                                      setValue('users_permissions_users', []);
-                                    }
-                                  } else {
-                                    setValue('companies', [...current, company.documentId]);
-                                  }
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    isSelected ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
-                                {company.name}
-                              </CommandItem>
-                            );
-                          })}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      isSelected ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  {company.name}
+                                </CommandItem>
+                              );
+                            })}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
 
+              {/* Mostrar input de TEC Member cuando haya empresas seleccionadas (automáticas o manuales) */}
               {watch('companies')?.length > 0 && (
                 <div>
                   <Label htmlFor="users_permissions_users">TEC Member</Label>
@@ -668,9 +697,14 @@ export default function TicketDetail() {
                       <Command>
                         <CommandInput placeholder="Buscar miembro..." />
                         <CommandList>
-                          <CommandEmpty>No se encontró el miembro.</CommandEmpty>
+                          <CommandEmpty>
+                            {filteredUsers.length === 0 
+                              ? 'No hay usuarios disponibles para la(s) empresa(s) seleccionada(s)' 
+                              : 'No se encontró el miembro.'}
+                          </CommandEmpty>
                           <CommandGroup>
-                            {filteredUsers.map((userItem: any) => {
+                            {filteredUsers.length > 0 ? (
+                              filteredUsers.map((userItem: any) => {
                                 const isSelected = watch('users_permissions_users')?.includes(String(userItem.id));
                                 return (
                                   <CommandItem
@@ -699,7 +733,12 @@ export default function TicketDetail() {
                                     </div>
                                   </CommandItem>
                                 );
-                              })}
+                              })
+                            ) : (
+                              <div className="p-4 text-center text-sm text-muted-foreground">
+                                No hay usuarios disponibles para la(s) empresa(s) seleccionada(s)
+                              </div>
+                            )}
                           </CommandGroup>
                         </CommandList>
                       </Command>
