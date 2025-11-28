@@ -131,16 +131,24 @@ export default function TicketDetail() {
       });
 
       const token = localStorage.getItem('token');
+      
+      if (!token) {
+        throw new Error('No hay sesión activa');
+      }
 
       const response = await fetch(`${API_CONFIG.BASE_URL}/${API_CONFIG.API_PREFIX}/upload`, {
         method: 'POST',
         headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          'Authorization': `Bearer ${token}`,
         },
         body: formData,
       });
 
-      if (!response.ok) throw new Error('Error al subir archivos');
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Upload error response:', errorData);
+        throw new Error(errorData.error?.message || 'Error al subir archivos');
+      }
 
       const uploadedFiles = await response.json();
       setMediaFiles(prev => [...prev, ...uploadedFiles]);
@@ -153,7 +161,7 @@ export default function TicketDetail() {
       console.error('Error al subir archivos:', error);
       toast({
         title: "Error",
-        description: "Error al subir los archivos",
+        description: error.message || "Error al subir los archivos",
         variant: "destructive",
       });
       throw error;
