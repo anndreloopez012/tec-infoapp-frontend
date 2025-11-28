@@ -3,19 +3,24 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Check, ChevronsUpDown, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { ticketService, ticketStatusService, ticketPriorityService, ticketTypeService, companyService } from '@/services/catalogServices';
+import { userService } from '@/services/userService';
 import { API_CONFIG } from '@/config/api';
 import { FileUploadWithPreview } from '@/components/tickets/FileUploadWithPreview';
 import { FileGallery } from '@/components/tickets/FileGallery';
+import { cn } from '@/lib/utils';
 
 const ticketSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
@@ -24,6 +29,7 @@ const ticketSchema = z.object({
   ticket_priority: z.string().optional(),
   ticket_status: z.string().optional(),
   companies: z.array(z.string()).optional(),
+  users_permissions_users: z.array(z.string()).optional(),
 });
 
 type TicketFormData = z.infer<typeof ticketSchema>;
@@ -50,8 +56,11 @@ export default function TicketDetail() {
   const [ticketPriorities, setTicketPriorities] = useState([]);
   const [ticketTypes, setTicketTypes] = useState([]);
   const [companies, setCompanies] = useState([]);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
   const [followUps, setFollowUps] = useState<FollowUp[]>([]);
   const [mediaFiles, setMediaFiles] = useState<any[]>([]);
+  const [companySearchOpen, setCompanySearchOpen] = useState(false);
+  const [userSearchOpen, setUserSearchOpen] = useState(false);
   const { user } = useAuth();
 
   const canCreate = hasPermission('api::ticket.ticket.create');
@@ -72,17 +81,19 @@ export default function TicketDetail() {
 
   const loadRelatedData = async () => {
     try {
-      const [statusesRes, prioritiesRes, typesRes, companiesRes] = await Promise.all([
+      const [statusesRes, prioritiesRes, typesRes, companiesRes, usersRes] = await Promise.all([
         ticketStatusService.getAll({ pagination: { pageSize: 100 } }),
         ticketPriorityService.getAll({ pagination: { pageSize: 100 } }),
         ticketTypeService.getAll({ pagination: { pageSize: 100 } }),
         companyService.getAll({ pagination: { pageSize: 100 } }),
+        userService.getUsers({ pageSize: 1000 }),
       ]);
 
       setTicketStatuses(statusesRes.data || []);
       setTicketPriorities(prioritiesRes.data || []);
       setTicketTypes(typesRes.data || []);
       setCompanies(companiesRes.data || []);
+      setAllUsers(usersRes.data || []);
     } catch (error: any) {
       console.error('Error al cargar datos relacionados:', error);
       toast({
@@ -102,6 +113,7 @@ export default function TicketDetail() {
           ticket_priority: true,
           ticket_type: true,
           companies: true,
+          users_permissions_users: true,
           media: true,
           followup: {
             populate: ['Adjuntos']
@@ -119,6 +131,7 @@ export default function TicketDetail() {
         setValue('ticket_priority', ticket.ticket_priority?.documentId || '');
         setValue('ticket_type', ticket.ticket_type?.documentId || '');
         setValue('companies', ticket.companies?.map((c: any) => c.documentId) || []);
+        setValue('users_permissions_users', ticket.users_permissions_users?.map((u: any) => String(u.id)) || []);
         
         console.log('Ticket followup data:', ticket.followup);
         
@@ -386,6 +399,9 @@ export default function TicketDetail() {
       if (data.ticket_priority) payload.ticket_priority = data.ticket_priority;
       if (data.ticket_type) payload.ticket_type = data.ticket_type;
       if (data.companies && data.companies.length > 0) payload.companies = data.companies;
+      if (data.users_permissions_users && data.users_permissions_users.length > 0) {
+        payload.users_permissions_users = data.users_permissions_users.map(id => parseInt(id));
+      }
 
       if (isNew) {
         await ticketService.create(payload);
@@ -469,6 +485,192 @@ export default function TicketDetail() {
                 placeholder="Descripción del ticket"
                 rows={4}
               />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="companies">Empresa *</Label>
+                <Popover open={companySearchOpen} onOpenChange={setCompanySearchOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={companySearchOpen}
+                      disabled={isReadOnly}
+                      className="w-full justify-between h-auto min-h-[40px]"
+                    >
+                      <div className="flex flex-wrap gap-1 flex-1">
+                        {watch('companies')?.length ? (
+                          watch('companies')?.map((companyId: string) => {
+                            const company = companies.find((c: any) => c.documentId === companyId);
+                            return company ? (
+                              <Badge key={companyId} variant="secondary" className="mr-1">
+                                {company.name}
+                                <button
+                                  type="button"
+                                  className="ml-1 hover:text-destructive"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const current = watch('companies') || [];
+                                    setValue('companies', current.filter((id: string) => id !== companyId));
+                                    // Limpiar usuarios si no hay empresas
+                                    if (current.length === 1) {
+                                      setValue('users_permissions_users', []);
+                                    }
+                                  }}
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </Badge>
+                            ) : null;
+                          })
+                        ) : (
+                          <span className="text-muted-foreground">Seleccionar empresas...</span>
+                        )}
+                      </div>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Buscar empresa..." />
+                      <CommandList>
+                        <CommandEmpty>No se encontró la empresa.</CommandEmpty>
+                        <CommandGroup>
+                          {companies.map((company: any) => {
+                            const isSelected = watch('companies')?.includes(company.documentId);
+                            return (
+                              <CommandItem
+                                key={company.documentId}
+                                value={company.name}
+                                onSelect={() => {
+                                  const current = watch('companies') || [];
+                                  if (isSelected) {
+                                    setValue('companies', current.filter((id: string) => id !== company.documentId));
+                                    // Limpiar usuarios si no hay empresas
+                                    if (current.length === 1) {
+                                      setValue('users_permissions_users', []);
+                                    }
+                                  } else {
+                                    setValue('companies', [...current, company.documentId]);
+                                  }
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    isSelected ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {company.name}
+                              </CommandItem>
+                            );
+                          })}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {watch('companies')?.length > 0 && (
+                <div>
+                  <Label htmlFor="users_permissions_users">TEC Member</Label>
+                  <Popover open={userSearchOpen} onOpenChange={setUserSearchOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={userSearchOpen}
+                        disabled={isReadOnly}
+                        className="w-full justify-between h-auto min-h-[40px]"
+                      >
+                        <div className="flex flex-wrap gap-1 flex-1">
+                          {watch('users_permissions_users')?.length ? (
+                            watch('users_permissions_users')?.map((userId: string) => {
+                              const userItem = allUsers.find((u: any) => String(u.id) === String(userId));
+                              return userItem ? (
+                                <Badge key={userId} variant="secondary" className="mr-1">
+                                  {userItem.username || userItem.email}
+                                  <button
+                                    type="button"
+                                    className="ml-1 hover:text-destructive"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const current = watch('users_permissions_users') || [];
+                                      setValue('users_permissions_users', current.filter((id: string) => id !== userId));
+                                    }}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </Badge>
+                              ) : null;
+                            })
+                          ) : (
+                            <span className="text-muted-foreground">Seleccionar miembros...</span>
+                          )}
+                        </div>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Buscar miembro..." />
+                        <CommandList>
+                          <CommandEmpty>No se encontró el miembro.</CommandEmpty>
+                          <CommandGroup>
+                            {allUsers
+                              .filter((u: any) => {
+                                // Filtrar usuarios por las empresas seleccionadas
+                                const selectedCompanyIds = watch('companies') || [];
+                                if (!u.company && !u.companies) return false;
+                                
+                                // Soportar tanto company (singular) como companies (plural)
+                                const userCompanyIds = u.companies 
+                                  ? u.companies.map((c: any) => c.documentId || c.id)
+                                  : u.company 
+                                    ? [u.company.documentId || u.company.id]
+                                    : [];
+                                
+                                return userCompanyIds.some((cId: string) => selectedCompanyIds.includes(cId));
+                              })
+                              .map((userItem: any) => {
+                                const isSelected = watch('users_permissions_users')?.includes(String(userItem.id));
+                                return (
+                                  <CommandItem
+                                    key={userItem.id}
+                                    value={userItem.username || userItem.email}
+                                    onSelect={() => {
+                                      const current = watch('users_permissions_users') || [];
+                                      if (isSelected) {
+                                        setValue('users_permissions_users', current.filter((id: string) => id !== String(userItem.id)));
+                                      } else {
+                                        setValue('users_permissions_users', [...current, String(userItem.id)]);
+                                      }
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        isSelected ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                    <div className="flex flex-col">
+                                      <span>{userItem.username || userItem.email}</span>
+                                      {userItem.email && userItem.username && (
+                                        <span className="text-xs text-muted-foreground">{userItem.email}</span>
+                                      )}
+                                    </div>
+                                  </CommandItem>
+                                );
+                              })}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
