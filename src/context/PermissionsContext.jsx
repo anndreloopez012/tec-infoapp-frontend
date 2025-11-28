@@ -220,6 +220,7 @@ export const PermissionsProvider = ({ children }) => {
 
     // Mapeo específico para módulos de tickets
     const ticketRoutes = {
+      "api::ticket": "/ticket",
       "api::ticket-status": "/ticket-status",
       "api::ticket-priority": "/ticket-priority",
       "api::ticket-type": "/ticket-type",
@@ -252,6 +253,7 @@ export const PermissionsProvider = ({ children }) => {
       "api::sale": "Ventas",
       "api::sale-stage": "Etapas de Venta",
       "api::solution": "Soluciones",
+      "api::ticket": "Tickets",
       "api::ticket-status": "Estados de Ticket",
       "api::ticket-priority": "Prioridades de Ticket",
       "api::ticket-type": "Tipos de Ticket",
