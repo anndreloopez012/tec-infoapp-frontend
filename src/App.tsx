@@ -57,6 +57,11 @@ import Event from '@/pages/Event';
 import EventCalendar from '@/pages/EventCalendar';
 import ContentGlobal from '@/pages/ContentGlobal';
 
+// Ticket Pages
+import TicketStatus from '@/pages/catalog/TicketStatus';
+import TicketPriority from '@/pages/catalog/TicketPriority';
+import TicketType from '@/pages/catalog/TicketType';
+
 // Layout
 import ModernLayout from '@/components/layout/ModernLayout';
 import NotificationIntegration from '@/components/NotificationIntegration';
@@ -151,6 +156,11 @@ const AppRoutes = () => {
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/event" element={<Event />} />
           <Route path="/calendar" element={<EventCalendar />} />
+          
+          {/* Ticket Routes */}
+          <Route path="/ticket-status" element={<TicketStatus />} />
+          <Route path="/ticket-priority" element={<TicketPriority />} />
+          <Route path="/ticket-type" element={<TicketType />} />
           
           {/* Rutas dinámicas para módulos */}
           <Route path="/:module" element={<ModulePage />} />
