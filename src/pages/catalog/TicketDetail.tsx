@@ -247,34 +247,10 @@ export default function TicketDetail() {
   };
 
   const removeFollowUp = (index: number) => {
-    const followUp = followUps[index];
-    
-    // Solo permitir eliminar si no está guardado o si es el creador
-    if (followUp.isSaved && followUp.createdBy?.id !== user?.id) {
-      toast({
-        title: "Sin permisos",
-        description: "Solo el creador puede eliminar este seguimiento",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     setFollowUps(prev => prev.filter((_, i) => i !== index));
   };
 
   const toggleEditFollowUp = (index: number) => {
-    const followUp = followUps[index];
-    
-    // Validar que solo el creador pueda editar
-    if (followUp.isSaved && followUp.createdBy?.id !== user?.id) {
-      toast({
-        title: "Sin permisos",
-        description: "Solo el creador puede editar este seguimiento",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     setFollowUps(prev => prev.map((item, i) => 
       i === index ? { ...item, isEditing: !item.isEditing } : item
     ));
@@ -603,9 +579,10 @@ export default function TicketDetail() {
               <p className="text-sm text-muted-foreground">No hay seguimientos registrados</p>
             ) : (
               followUps.map((followUp, index) => {
-                const isOwner = followUp.createdBy?.id === user?.id;
-                const canEdit = !followUp.isSaved || isOwner;
+                // Por defecto, permitir editar seguimientos si no tienen guardado aún
+                // o si es un ticket nuevo y todavía no se ha guardado
                 const isInEditMode = followUp.isEditing !== false;
+                const canModify = !followUp.isSaved || !isReadOnly;
                 
                 return (
                 <Card key={index} className="border-2">
@@ -613,35 +590,47 @@ export default function TicketDetail() {
                     <div className="flex items-start justify-between">
                       <div>
                         <Label className="text-base font-semibold">Comentario {index + 1}</Label>
-                        {followUp.isSaved && followUp.createdBy && (
+                        {followUp.isSaved && (
                           <p className="text-xs text-muted-foreground mt-1">
-                            Creado por: {followUp.createdBy.username || followUp.createdBy.email}
+                            Guardado
                           </p>
                         )}
                       </div>
                       <div className="flex gap-2">
-                        {!isReadOnly && followUp.isSaved && isOwner && (
+                        {!isReadOnly && followUp.isSaved && !isInEditMode && (
                           <Button
                             type="button"
-                            variant={isInEditMode ? "secondary" : "outline"}
+                            variant="outline"
                             size="sm"
                             onClick={() => toggleEditFollowUp(index)}
                           >
-                            {isInEditMode ? "Cancelar" : "Editar"}
+                            Editar
                           </Button>
                         )}
                         {!isReadOnly && isInEditMode && (
-                          <Button
-                            type="button"
-                            variant="default"
-                            size="sm"
-                            onClick={() => saveFollowUp(index)}
-                            disabled={submitting}
-                          >
-                            Guardar
-                          </Button>
+                          <>
+                            {followUp.isSaved && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => toggleEditFollowUp(index)}
+                              >
+                                Cancelar
+                              </Button>
+                            )}
+                            <Button
+                              type="button"
+                              variant="default"
+                              size="sm"
+                              onClick={() => saveFollowUp(index)}
+                              disabled={submitting}
+                            >
+                              Guardar
+                            </Button>
+                          </>
                         )}
-                        {!isReadOnly && canEdit && (
+                        {!isReadOnly && canModify && (
                           <Button
                             type="button"
                             variant="ghost"
@@ -657,29 +646,33 @@ export default function TicketDetail() {
                     <Textarea
                       value={followUp.Comentario}
                       onChange={(e) => updateFollowUp(index, 'Comentario', e.target.value)}
-                      disabled={isReadOnly || (followUp.isSaved && !isInEditMode)}
+                      disabled={!isInEditMode}
                       placeholder="Escribir comentario..."
                       rows={3}
                     />
 
                     {/* Archivos adjuntos del seguimiento */}
                     <div className="space-y-3">
-                      <Label className="text-sm font-medium">Archivos adjuntos</Label>
-                      
-                      {!isReadOnly && isInEditMode && (
-                        <FileUploadWithPreview
-                          onUpload={(files) => handleFollowUpMediaUpload(index, files)}
-                          disabled={isReadOnly || (followUp.isSaved && !isInEditMode)}
-                          maxFiles={10}
-                        />
+                      {isInEditMode && (
+                        <>
+                          <Label className="text-sm font-medium">Subir archivos</Label>
+                          <FileUploadWithPreview
+                            onUpload={(files) => handleFollowUpMediaUpload(index, files)}
+                            disabled={false}
+                            maxFiles={10}
+                          />
+                        </>
                       )}
 
                       {followUp.Adjuntos && followUp.Adjuntos.length > 0 && (
-                        <div className="pt-2">
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">
+                            Archivos adjuntos ({followUp.Adjuntos.length})
+                          </Label>
                           <FileGallery
                             files={followUp.Adjuntos}
-                            onRemove={(!isReadOnly && isInEditMode) ? (fileId) => removeFollowUpMedia(index, fileId) : undefined}
-                            readOnly={isReadOnly || (followUp.isSaved && !isInEditMode)}
+                            onRemove={isInEditMode ? (fileId) => removeFollowUpMedia(index, fileId) : undefined}
+                            readOnly={!isInEditMode}
                           />
                         </div>
                       )}
