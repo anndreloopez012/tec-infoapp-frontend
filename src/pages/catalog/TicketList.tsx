@@ -315,7 +315,7 @@ export default function TicketList() {
 
       {viewMode === 'table' && (
         <CatalogTable
-          title="Listado de Tickets"
+          title=""
           columns={columns}
           data={data}
           loading={loading}
@@ -325,9 +325,8 @@ export default function TicketList() {
           onSearch={handleSearch}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          onCreate={handleCreate}
           onView={handleView}
-          canCreate={canCreate}
+          canCreate={false}
           canEdit={canEdit}
           canDelete={canDelete}
         />
