@@ -157,12 +157,6 @@ const DynamicNavigation: React.FC<DynamicNavigationProps> = ({ onNavigate, searc
                   }
                 `}
               >
-                {/* Efecto de hover */}
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100"
-                  transition={{ duration: 0.2 }}
-                />
-
                 <IconComponent
                   className={`
                   h-4 w-4 transition-colors relative z-10
