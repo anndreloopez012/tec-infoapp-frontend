@@ -7,6 +7,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  useDroppable,
   DragStartEvent,
   DragOverEvent,
   DragEndEvent,
@@ -140,13 +141,15 @@ export function KanbanStatusView({
 
     // Determinar el ID de la nueva columna
     let newStatusId = over.id as string;
-    
-    // Si soltamos sobre un ticket, encontrar su columna
-    const overTicket = tickets.find(t => t.documentId === newStatusId);
-    if (overTicket) {
-      newStatusId = Object.keys(ticketsByStatus).find(statusId =>
-        ticketsByStatus[statusId].some(t => t.documentId === overTicket.documentId)
-      ) || currentStatusId;
+
+    // Si soltamos sobre un ticket, encontrar su columna; si soltamos sobre la columna, over.id ya es el ID de columna
+    if (!ticketsByStatus[newStatusId]) {
+      const overTicket = tickets.find(t => t.documentId === newStatusId);
+      if (overTicket) {
+        newStatusId = Object.keys(ticketsByStatus).find(statusId =>
+          ticketsByStatus[statusId].some(t => t.documentId === overTicket.documentId)
+        ) || currentStatusId;
+      }
     }
 
     // No hacer nada si soltamos en la misma columna
@@ -226,64 +229,67 @@ export function KanbanStatusView({
     >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
         {/* Columnas para cada estado */}
-        {statuses.map(status => (
-          <Card key={status.documentId} className="flex flex-col">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center justify-between text-base">
-                <div className="flex items-center gap-2">
-                  {status.color && (
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: status.color }}
-                    />
-                  )}
-                  <span>{status.name}</span>
-                </div>
-                <Badge variant="secondary" className="ml-2">
-                  {ticketsByStatus[status.documentId]?.length || 0}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1 pt-0">
-              <ScrollArea className="h-[calc(100vh-280px)]">
-                <SortableContext
-                  id={status.documentId}
-                  items={ticketsByStatus[status.documentId]?.map(t => t.documentId) || []}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <div 
-                    className="space-y-2 pr-3 min-h-[200px]"
-                    data-status-id={status.documentId}
-                  >
-                    {ticketsByStatus[status.documentId]?.length === 0 ? (
-                      <div 
-                        id={status.documentId}
-                        className="text-center text-sm text-muted-foreground py-8 border-2 border-dashed rounded-lg min-h-[150px] flex items-center justify-center"
-                      >
-                        Arrastra tickets aquí
-                      </div>
-                    ) : (
-                      ticketsByStatus[status.documentId]?.map(ticket => (
-                        <TicketCard
-                          key={ticket.documentId}
-                          ticket={ticket}
-                          onView={onView}
-                          onEdit={onEdit}
-                          onDelete={onDelete}
-                          canEdit={canEdit}
-                          canDelete={canDelete}
-                          showStatus={false}
-                          showPriority={true}
-                          showType={true}
-                        />
-                      ))
+        {statuses.map(status => {
+          const { setNodeRef, isOver } = useDroppable({ id: status.documentId });
+
+          return (
+            <Card key={status.documentId} className="flex flex-col">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center justify-between text-base">
+                  <div className="flex items-center gap-2">
+                    {status.color && (
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: status.color }}
+                      />
                     )}
+                    <span>{status.name}</span>
                   </div>
-                </SortableContext>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        ))}
+                  <Badge variant="secondary" className="ml-2">
+                    {ticketsByStatus[status.documentId]?.length || 0}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex-1 pt-0">
+                <ScrollArea className="h-[calc(100vh-280px)]">
+                  <SortableContext
+                    id={status.documentId}
+                    items={ticketsByStatus[status.documentId]?.map(t => t.documentId) || []}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div 
+                      ref={setNodeRef}
+                      className={`space-y-2 pr-3 min-h-[200px] rounded-lg border-2 border-dashed transition-colors ${
+                        isOver ? 'border-primary/60 bg-primary/5' : 'border-border/40'
+                      }`}
+                    >
+                      {ticketsByStatus[status.documentId]?.length === 0 ? (
+                        <div className="text-center text-sm text-muted-foreground py-8 flex items-center justify-center">
+                          Arrastra tickets aquí
+                        </div>
+                      ) : (
+                        ticketsByStatus[status.documentId]?.map(ticket => (
+                          <TicketCard
+                            key={ticket.documentId}
+                            ticket={ticket}
+                            onView={onView}
+                            onEdit={onEdit}
+                            onDelete={onDelete}
+                            canEdit={canEdit}
+                            canDelete={canDelete}
+                            showStatus={false}
+                            showPriority={true}
+                            showType={true}
+                          />
+                        ))
+                      )}
+                    </div>
+                  </SortableContext>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          );
+        })}
 
         {/* Columna para tickets sin estado */}
         {ticketsByStatus['no-status']?.length > 0 && (
