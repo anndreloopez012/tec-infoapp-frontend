@@ -213,12 +213,22 @@ export default function TicketList() {
         ticket_status: statusId,
       });
       
+      // Actualizar el estado local inmediatamente
+      setData(prevData => 
+        prevData.map(ticket => 
+          ticket.documentId === ticketId 
+            ? { 
+                ...ticket, 
+                ticket_status: statuses.find(s => s.documentId === statusId) || ticket.ticket_status 
+              }
+            : ticket
+        )
+      );
+      
       toast({
         title: "Estado actualizado",
         description: "El estado del ticket ha sido actualizado correctamente",
       });
-      
-      fetchData();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -244,12 +254,22 @@ export default function TicketList() {
         ticket_priority: priorityId,
       });
       
+      // Actualizar el estado local inmediatamente
+      setData(prevData => 
+        prevData.map(ticket => 
+          ticket.documentId === ticketId 
+            ? { 
+                ...ticket, 
+                ticket_priority: priorities.find(p => p.documentId === priorityId) || ticket.ticket_priority 
+              }
+            : ticket
+        )
+      );
+      
       toast({
         title: "Prioridad actualizada",
         description: "La prioridad del ticket ha sido actualizada correctamente",
       });
-      
-      fetchData();
     } catch (error: any) {
       toast({
         title: "Error",
