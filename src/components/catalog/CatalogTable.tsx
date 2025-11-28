@@ -90,6 +90,14 @@ export const CatalogTable: React.FC<CatalogTableProps> = ({
   const [searchValue, setSearchValue] = useState('');
   const [sorting, setSorting] = useState<SortingState>([]);
 
+  // Debounce search with proper cleanup
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      onSearch(searchValue);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [searchValue, onSearch]);
+
   // Agregar columna de acciones si hay permisos
   const columns = useMemo(() => {
     if (!canEdit && !canDelete && !onView) return baseColumns;
@@ -151,13 +159,6 @@ export const CatalogTable: React.FC<CatalogTableProps> = ({
     pageCount: pagination?.pageCount || 1,
   });
 
-  const handleSearchChange = (value: string) => {
-    setSearchValue(value);
-    const timeoutId = setTimeout(() => {
-      onSearch(value);
-    }, 500);
-    return () => clearTimeout(timeoutId);
-  };
 
   if (loading) {
     return (
@@ -195,7 +196,7 @@ export const CatalogTable: React.FC<CatalogTableProps> = ({
           <Input
             placeholder="Buscar..."
             value={searchValue}
-            onChange={(e) => handleSearchChange(e.target.value)}
+            onChange={(e) => setSearchValue(e.target.value)}
             className="pl-9"
           />
         </div>
