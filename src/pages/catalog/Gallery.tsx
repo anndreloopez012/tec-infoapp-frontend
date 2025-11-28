@@ -66,6 +66,7 @@ const Gallery = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [tags, setTags] = useState<any[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [uploadedFilePreviews, setUploadedFilePreviews] = useState<string[]>([]);
   const [existingMedia, setExistingMedia] = useState<any[]>([]);
   const [selectedGallery, setSelectedGallery] = useState<GalleryData | null>(null);
   const pageSize = 12;
@@ -161,6 +162,7 @@ const Gallery = () => {
       tags_content: [],
     });
     setUploadedFiles([]);
+    setUploadedFilePreviews([]);
     setExistingMedia([]);
     setIsDialogOpen(true);
   };
@@ -178,6 +180,7 @@ const Gallery = () => {
       tags_content: tagIds,
     });
     setUploadedFiles([]);
+    setUploadedFilePreviews([]);
     setExistingMedia(item.media || []);
     setIsDialogOpen(true);
   };
@@ -216,8 +219,21 @@ const Gallery = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setUploadedFiles(Array.from(e.target.files));
+      const files = Array.from(e.target.files);
+      setUploadedFiles(files);
+      
+      // Crear previews de las imágenes seleccionadas
+      const previews = files.map(file => URL.createObjectURL(file));
+      setUploadedFilePreviews(previews);
     }
+  };
+
+  const handleRemoveUploadedFile = (index: number) => {
+    // Revocar la URL del preview para liberar memoria
+    URL.revokeObjectURL(uploadedFilePreviews[index]);
+    
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    setUploadedFilePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleRemoveExistingMedia = (mediaId: number) => {
@@ -585,29 +601,48 @@ const Gallery = () => {
                 multiple
                 onChange={handleFileChange}
               />
-              {uploadedFiles.length > 0 && (
-                <div className="text-sm text-muted-foreground">
-                  {uploadedFiles.length} archivo(s) seleccionado(s)
-                </div>
-              )}
               
               {existingMedia.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Imágenes actuales:</Label>
+                <div className="space-y-2 mt-4">
+                  <Label>Imágenes guardadas:</Label>
                   <div className="grid grid-cols-4 gap-2">
                     {existingMedia.map((img) => (
                       <div key={img.id} className="relative group">
                         <img
                           src={`${import.meta.env.VITE_API_URL || 'https://tec-adm.server-softplus.plus'}${img.url}`}
                           alt={img.name}
-                          className="w-full h-24 object-cover rounded"
+                          className="w-full h-24 object-cover rounded border"
                         />
                         <button
                           type="button"
                           onClick={() => handleRemoveExistingMedia(img.id)}
-                          className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                         >
-                          ✕
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {uploadedFiles.length > 0 && (
+                <div className="space-y-2 mt-4">
+                  <Label>Nuevas imágenes seleccionadas ({uploadedFiles.length}):</Label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {uploadedFilePreviews.map((preview, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={preview}
+                          alt={uploadedFiles[index].name}
+                          className="w-full h-24 object-cover rounded border border-primary"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveUploadedFile(index)}
+                          className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="h-4 w-4" />
                         </button>
                       </div>
                     ))}
