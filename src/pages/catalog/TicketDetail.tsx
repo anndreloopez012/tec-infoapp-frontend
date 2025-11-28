@@ -131,10 +131,11 @@ export default function TicketDetail() {
       });
 
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.API_PREFIX}/upload`, {
+
+      const response = await fetch(`${API_CONFIG.BASE_URL}/${API_CONFIG.API_PREFIX}/upload`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: formData,
       });
