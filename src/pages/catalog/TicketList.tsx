@@ -3,14 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { CatalogTable } from '@/components/catalog/CatalogTable';
 import { KanbanStatusView } from '@/components/tickets/KanbanStatusView';
 import { KanbanPriorityView } from '@/components/tickets/KanbanPriorityView';
+import { TicketCalendarView } from '@/components/tickets/TicketCalendarView';
 import { ticketService, ticketStatusService, ticketPriorityService } from '@/services/catalogServices';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, Columns3, Layers } from 'lucide-react';
+import { Table, Columns3, Layers, Calendar } from 'lucide-react';
 
-type ViewMode = 'table' | 'status' | 'priority';
+type ViewMode = 'table' | 'status' | 'priority' | 'calendar';
 
 export default function TicketList() {
   const [data, setData] = useState([]);
@@ -297,7 +298,7 @@ export default function TicketList() {
       </div>
 
       <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-3">
+        <TabsList className="grid w-full max-w-2xl grid-cols-4">
           <TabsTrigger value="table" className="flex items-center gap-2">
             <Table className="h-4 w-4" />
             <span>Tabla</span>
@@ -309,6 +310,10 @@ export default function TicketList() {
           <TabsTrigger value="priority" className="flex items-center gap-2">
             <Layers className="h-4 w-4" />
             <span>Por Prioridad</span>
+          </TabsTrigger>
+          <TabsTrigger value="calendar" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            <span>Calendario</span>
           </TabsTrigger>
         </TabsList>
       </Tabs>
@@ -357,6 +362,14 @@ export default function TicketList() {
           onDelete={handleDelete}
           canEdit={canEdit}
           canDelete={canDelete}
+        />
+      )}
+
+      {viewMode === 'calendar' && (
+        <TicketCalendarView
+          tickets={data}
+          loading={loading}
+          onView={handleView}
         />
       )}
     </div>
