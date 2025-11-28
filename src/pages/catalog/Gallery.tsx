@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2, Search, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, X, Presentation, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -69,6 +69,8 @@ const Gallery = () => {
   const [uploadedFilePreviews, setUploadedFilePreviews] = useState<string[]>([]);
   const [existingMedia, setExistingMedia] = useState<any[]>([]);
   const [selectedGallery, setSelectedGallery] = useState<GalleryData | null>(null);
+  const [isPresentationMode, setIsPresentationMode] = useState(false);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const pageSize = 12;
 
   const [formData, setFormData] = useState<GalleryData>({
@@ -339,6 +341,57 @@ const Gallery = () => {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
+
+  const startPresentation = () => {
+    setCurrentSlideIndex(0);
+    setIsPresentationMode(true);
+  };
+
+  const exitPresentation = () => {
+    setIsPresentationMode(false);
+    setCurrentSlideIndex(0);
+  };
+
+  const nextSlide = () => {
+    if (selectedGallery?.media) {
+      setCurrentSlideIndex((prev) => 
+        prev === selectedGallery.media.length - 1 ? 0 : prev + 1
+      );
+    }
+  };
+
+  const prevSlide = () => {
+    if (selectedGallery?.media) {
+      setCurrentSlideIndex((prev) => 
+        prev === 0 ? selectedGallery.media.length - 1 : prev - 1
+      );
+    }
+  };
+
+  // Auto-advance slides en modo presentación
+  useEffect(() => {
+    if (!isPresentationMode || !selectedGallery?.media) return;
+
+    const interval = setInterval(() => {
+      nextSlide();
+    }, 5000); // Cambiar cada 5 segundos
+
+    return () => clearInterval(interval);
+  }, [isPresentationMode, currentSlideIndex, selectedGallery]);
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    if (!isPresentationMode) return;
+
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') exitPresentation();
+      if (e.key === 'ArrowRight') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [isPresentationMode]);
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -670,10 +723,25 @@ const Gallery = () => {
       <Dialog open={!!selectedGallery} onOpenChange={() => setSelectedGallery(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{selectedGallery?.title}</DialogTitle>
-            {selectedGallery?.description && (
-              <DialogDescription>{selectedGallery.description}</DialogDescription>
-            )}
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle>{selectedGallery?.title}</DialogTitle>
+                {selectedGallery?.description && (
+                  <DialogDescription>{selectedGallery.description}</DialogDescription>
+                )}
+              </div>
+              {selectedGallery?.media && selectedGallery.media.length > 0 && (
+                <Button
+                  onClick={startPresentation}
+                  variant="outline"
+                  size="sm"
+                  className="ml-4"
+                >
+                  <Presentation className="h-4 w-4 mr-2" />
+                  Presentación
+                </Button>
+              )}
+            </div>
           </DialogHeader>
           
           {selectedGallery?.media && selectedGallery.media.length > 0 ? (
@@ -696,6 +764,58 @@ const Gallery = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Presentation Mode Fullscreen */}
+      {isPresentationMode && selectedGallery?.media && (
+        <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center">
+          <button
+            onClick={exitPresentation}
+            className="absolute top-4 right-4 z-10 text-white/80 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
+          >
+            <X className="h-8 w-8" />
+          </button>
+
+          <button
+            onClick={prevSlide}
+            className="absolute left-4 z-10 text-white/80 hover:text-white transition-colors p-3 rounded-full hover:bg-white/10"
+          >
+            <ChevronLeft className="h-10 w-10" />
+          </button>
+
+          <button
+            onClick={nextSlide}
+            className="absolute right-4 z-10 text-white/80 hover:text-white transition-colors p-3 rounded-full hover:bg-white/10"
+          >
+            <ChevronRight className="h-10 w-10" />
+          </button>
+
+          <div className="w-full h-full flex items-center justify-center p-8">
+            <img
+              src={`${import.meta.env.VITE_API_URL || 'https://tec-adm.server-softplus.plus'}${selectedGallery.media[currentSlideIndex].url}`}
+              alt={selectedGallery.media[currentSlideIndex].name}
+              className="max-w-full max-h-full object-contain animate-fade-in"
+            />
+          </div>
+
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2">
+            {selectedGallery.media.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlideIndex(index)}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  index === currentSlideIndex 
+                    ? 'bg-white w-8' 
+                    : 'bg-white/50 hover:bg-white/70'
+                }`}
+              />
+            ))}
+          </div>
+
+          <div className="absolute bottom-4 right-4 text-white/60 text-sm">
+            {currentSlideIndex + 1} / {selectedGallery.media.length}
+          </div>
+        </div>
+      )}
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
