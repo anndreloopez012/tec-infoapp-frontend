@@ -218,9 +218,21 @@ export const PermissionsProvider = ({ children }) => {
       "api::event-type": "/catalog/event-type",
     };
 
+    // Mapeo específico para módulos de tickets
+    const ticketRoutes = {
+      "api::ticket-status": "/ticket-status",
+      "api::ticket-priority": "/ticket-priority",
+      "api::ticket-type": "/ticket-type",
+    };
+
     // Si es un catálogo, usar la ruta específica
     if (catalogRoutes[endpoint]) {
       return catalogRoutes[endpoint];
+    }
+
+    // Si es un módulo de tickets, usar la ruta específica
+    if (ticketRoutes[endpoint]) {
+      return ticketRoutes[endpoint];
     }
 
     // Para otros módulos, usar la conversión estándar
@@ -240,7 +252,9 @@ export const PermissionsProvider = ({ children }) => {
       "api::sale": "Ventas",
       "api::sale-stage": "Etapas de Venta",
       "api::solution": "Soluciones",
-      "api::ticket-status": "Estados de Tickets",
+      "api::ticket-status": "Estados de Ticket",
+      "api::ticket-priority": "Prioridades de Ticket",
+      "api::ticket-type": "Tipos de Ticket",
       "api::type-user": "Tipos de Usuario",
       "api::gallery": "Galería",
       "api::event": "Eventos",
