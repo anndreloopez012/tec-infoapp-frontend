@@ -7,21 +7,15 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  useDroppable,
   DragStartEvent,
   DragOverEvent,
   DragEndEvent,
 } from '@dnd-kit/core';
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { TicketCard } from './TicketCard';
+import { KanbanColumn } from './KanbanColumn';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 interface KanbanPriorityViewProps {
   tickets: any[];
@@ -228,107 +222,38 @@ export function KanbanPriorityView({
       onDragEnd={handleDragEnd}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
-        {/* Columnas para cada prioridad */}
-        {priorities.map(priority => {
-          const { setNodeRef, isOver } = useDroppable({ id: priority.documentId });
+        {priorities.map(priority => (
+          <KanbanColumn
+            key={priority.documentId}
+            id={priority.documentId}
+            title={priority.name}
+            color={priority.color}
+            tickets={ticketsByPriority[priority.documentId] || []}
+            onView={onView}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            canEdit={canEdit}
+            canDelete={canDelete}
+            showStatus={true}
+            showPriority={false}
+            showType={true}
+          />
+        ))}
 
-          return (
-            <Card key={priority.documentId} className="flex flex-col">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center justify-between text-base">
-                  <div className="flex items-center gap-2">
-                    {priority.color && (
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: priority.color }}
-                      />
-                    )}
-                    <span>{priority.name}</span>
-                  </div>
-                  <Badge variant="secondary" className="ml-2">
-                    {ticketsByPriority[priority.documentId]?.length || 0}
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex-1 pt-0">
-                <ScrollArea className="h-[calc(100vh-280px)]">
-                  <SortableContext
-                    id={priority.documentId}
-                    items={ticketsByPriority[priority.documentId]?.map(t => t.documentId) || []}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    <div 
-                      ref={setNodeRef}
-                      className={`space-y-2 pr-3 min-h-[200px] rounded-lg border-2 border-dashed transition-colors ${
-                        isOver ? 'border-primary/60 bg-primary/5' : 'border-border/40'
-                      }`}
-                    >
-                      {ticketsByPriority[priority.documentId]?.length === 0 ? (
-                        <div className="text-center text-sm text-muted-foreground py-8 flex items-center justify-center">
-                          Arrastra tickets aquí
-                        </div>
-                      ) : (
-                        ticketsByPriority[priority.documentId]?.map(ticket => (
-                          <TicketCard
-                            key={ticket.documentId}
-                            ticket={ticket}
-                            onView={onView}
-                            onEdit={onEdit}
-                            onDelete={onDelete}
-                            canEdit={canEdit}
-                            canDelete={canDelete}
-                            showStatus={true}
-                            showPriority={false}
-                            showType={true}
-                          />
-                        ))
-                      )}
-                    </div>
-                  </SortableContext>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          );
-        })}
-
-        {/* Columna para tickets sin prioridad */}
         {ticketsByPriority['no-priority']?.length > 0 && (
-          <Card className="flex flex-col">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center justify-between text-base">
-                <span>Sin Prioridad</span>
-                <Badge variant="secondary" className="ml-2">
-                  {ticketsByPriority['no-priority'].length}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1 pt-0">
-              <ScrollArea className="h-[calc(100vh-280px)]">
-                <SortableContext
-                  id="no-priority"
-                  items={ticketsByPriority['no-priority'].map(t => t.documentId)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <div className="space-y-2 pr-3">
-                    {ticketsByPriority['no-priority'].map(ticket => (
-                      <TicketCard
-                        key={ticket.documentId}
-                        ticket={ticket}
-                        onView={onView}
-                        onEdit={onEdit}
-                        onDelete={onDelete}
-                        canEdit={canEdit}
-                        canDelete={canDelete}
-                        showStatus={true}
-                        showPriority={false}
-                        showType={true}
-                      />
-                    ))}
-                  </div>
-                </SortableContext>
-              </ScrollArea>
-            </CardContent>
-          </Card>
+          <KanbanColumn
+            id="no-priority"
+            title="Sin Prioridad"
+            tickets={ticketsByPriority['no-priority']}
+            onView={onView}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            canEdit={canEdit}
+            canDelete={canDelete}
+            showStatus={true}
+            showPriority={false}
+            showType={true}
+          />
         )}
       </div>
 

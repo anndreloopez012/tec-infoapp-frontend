@@ -7,21 +7,15 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  useDroppable,
   DragStartEvent,
   DragOverEvent,
   DragEndEvent,
 } from '@dnd-kit/core';
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { TicketCard } from './TicketCard';
+import { KanbanColumn } from './KanbanColumn';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 interface KanbanStatusViewProps {
   tickets: any[];
@@ -228,107 +222,38 @@ export function KanbanStatusView({
       onDragEnd={handleDragEnd}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
-        {/* Columnas para cada estado */}
-        {statuses.map(status => {
-          const { setNodeRef, isOver } = useDroppable({ id: status.documentId });
+        {statuses.map(status => (
+          <KanbanColumn
+            key={status.documentId}
+            id={status.documentId}
+            title={status.name}
+            color={status.color}
+            tickets={ticketsByStatus[status.documentId] || []}
+            onView={onView}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            canEdit={canEdit}
+            canDelete={canDelete}
+            showStatus={false}
+            showPriority={true}
+            showType={true}
+          />
+        ))}
 
-          return (
-            <Card key={status.documentId} className="flex flex-col">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center justify-between text-base">
-                  <div className="flex items-center gap-2">
-                    {status.color && (
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: status.color }}
-                      />
-                    )}
-                    <span>{status.name}</span>
-                  </div>
-                  <Badge variant="secondary" className="ml-2">
-                    {ticketsByStatus[status.documentId]?.length || 0}
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex-1 pt-0">
-                <ScrollArea className="h-[calc(100vh-280px)]">
-                  <SortableContext
-                    id={status.documentId}
-                    items={ticketsByStatus[status.documentId]?.map(t => t.documentId) || []}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    <div 
-                      ref={setNodeRef}
-                      className={`space-y-2 pr-3 min-h-[200px] rounded-lg border-2 border-dashed transition-colors ${
-                        isOver ? 'border-primary/60 bg-primary/5' : 'border-border/40'
-                      }`}
-                    >
-                      {ticketsByStatus[status.documentId]?.length === 0 ? (
-                        <div className="text-center text-sm text-muted-foreground py-8 flex items-center justify-center">
-                          Arrastra tickets aquí
-                        </div>
-                      ) : (
-                        ticketsByStatus[status.documentId]?.map(ticket => (
-                          <TicketCard
-                            key={ticket.documentId}
-                            ticket={ticket}
-                            onView={onView}
-                            onEdit={onEdit}
-                            onDelete={onDelete}
-                            canEdit={canEdit}
-                            canDelete={canDelete}
-                            showStatus={false}
-                            showPriority={true}
-                            showType={true}
-                          />
-                        ))
-                      )}
-                    </div>
-                  </SortableContext>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          );
-        })}
-
-        {/* Columna para tickets sin estado */}
         {ticketsByStatus['no-status']?.length > 0 && (
-          <Card className="flex flex-col">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center justify-between text-base">
-                <span>Sin Estado</span>
-                <Badge variant="secondary" className="ml-2">
-                  {ticketsByStatus['no-status'].length}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1 pt-0">
-              <ScrollArea className="h-[calc(100vh-280px)]">
-                <SortableContext
-                  id="no-status"
-                  items={ticketsByStatus['no-status'].map(t => t.documentId)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <div className="space-y-2 pr-3">
-                    {ticketsByStatus['no-status'].map(ticket => (
-                      <TicketCard
-                        key={ticket.documentId}
-                        ticket={ticket}
-                        onView={onView}
-                        onEdit={onEdit}
-                        onDelete={onDelete}
-                        canEdit={canEdit}
-                        canDelete={canDelete}
-                        showStatus={false}
-                        showPriority={true}
-                        showType={true}
-                      />
-                    ))}
-                  </div>
-                </SortableContext>
-              </ScrollArea>
-            </CardContent>
-          </Card>
+          <KanbanColumn
+            id="no-status"
+            title="Sin Estado"
+            tickets={ticketsByStatus['no-status']}
+            onView={onView}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            canEdit={canEdit}
+            canDelete={canDelete}
+            showStatus={false}
+            showPriority={true}
+            showType={true}
+          />
         )}
       </div>
 
