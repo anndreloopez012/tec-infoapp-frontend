@@ -544,5 +544,5 @@ class UserService {
 // Crear instancia singleton
 const userService = new UserService();
 
-export { userService as UserService };
+export { userService, userService as UserService };
 export default userService;
