@@ -38,6 +38,7 @@ import {
   Plus,
   Pencil,
   Trash2,
+  Eye,
   Filter
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -55,6 +56,7 @@ interface CatalogTableProps {
   onEdit: (item: any) => void;
   onDelete: (item: any) => void;
   onCreate: () => void;
+  onView?: (item: any) => void;
   showOwnRecordsToggle?: boolean;
   showOnlyOwn?: boolean;
   onToggleOwnRecords?: (value: boolean) => void;
@@ -75,6 +77,7 @@ export const CatalogTable: React.FC<CatalogTableProps> = ({
   onEdit,
   onDelete,
   onCreate,
+  onView,
   showOwnRecordsToggle = false,
   showOnlyOwn = false,
   onToggleOwnRecords,
@@ -89,13 +92,24 @@ export const CatalogTable: React.FC<CatalogTableProps> = ({
 
   // Agregar columna de acciones si hay permisos
   const columns = useMemo(() => {
-    if (!canEdit && !canDelete) return baseColumns;
+    if (!canEdit && !canDelete && !onView) return baseColumns;
 
     const actionsColumn: ColumnDef<any> = {
       id: 'actions',
       header: 'Acciones',
       cell: ({ row }) => (
         <div className="flex gap-2">
+          {onView && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onView(row.original)}
+              className="h-8 w-8 p-0"
+              title="Ver detalle"
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+          )}
           {canEdit && (
             <Button
               variant="ghost"
@@ -121,7 +135,7 @@ export const CatalogTable: React.FC<CatalogTableProps> = ({
     };
 
     return [...baseColumns, actionsColumn];
-  }, [baseColumns, canEdit, canDelete, onEdit, onDelete]);
+  }, [baseColumns, canEdit, canDelete, onView, onEdit, onDelete]);
 
   const table = useReactTable({
     data,

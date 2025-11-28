@@ -61,6 +61,8 @@ import ContentGlobal from '@/pages/ContentGlobal';
 import TicketStatus from '@/pages/catalog/TicketStatus';
 import TicketPriority from '@/pages/catalog/TicketPriority';
 import TicketType from '@/pages/catalog/TicketType';
+import TicketList from '@/pages/catalog/TicketList';
+import TicketDetail from '@/pages/catalog/TicketDetail';
 
 // Layout
 import ModernLayout from '@/components/layout/ModernLayout';
@@ -161,6 +163,8 @@ const AppRoutes = () => {
           <Route path="/ticket-status" element={<TicketStatus />} />
           <Route path="/ticket-priority" element={<TicketPriority />} />
           <Route path="/ticket-type" element={<TicketType />} />
+          <Route path="/ticket" element={<TicketList />} />
+          <Route path="/ticket/:id" element={<TicketDetail />} />
           
           {/* Rutas dinámicas para módulos */}
           <Route path="/:module" element={<ModulePage />} />

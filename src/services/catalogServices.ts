@@ -358,5 +358,6 @@ export const galleryService = new CatalogService('galleries', 'Galería');
 export const ticketStatusService = new CatalogService('ticket-statuses', 'Estados de Ticket');
 export const ticketPriorityService = new CatalogService('ticket-priorities', 'Prioridades de Ticket');
 export const ticketTypeService = new CatalogService('ticket-types', 'Tipos de Ticket');
+export const ticketService = new CatalogService('tickets', 'Tickets');
 
 export default CatalogService;
