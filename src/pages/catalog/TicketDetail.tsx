@@ -37,7 +37,7 @@ export default function TicketDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { checkPermission } = useAuth();
+  const { hasPermission } = useAuth();
   const isNew = id === 'new';
 
   const [loading, setLoading] = useState(!isNew);
@@ -50,8 +50,8 @@ export default function TicketDetail() {
   const [mediaFiles, setMediaFiles] = useState<any[]>([]);
   const [uploadingMedia, setUploadingMedia] = useState(false);
 
-  const canCreate = checkPermission('api::ticket.ticket', 'create');
-  const canUpdate = checkPermission('api::ticket.ticket', 'update');
+  const canCreate = hasPermission('api::ticket.ticket.create');
+  const canUpdate = hasPermission('api::ticket.ticket.update');
   const isReadOnly = isNew ? !canCreate : !canUpdate;
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<TicketFormData>({

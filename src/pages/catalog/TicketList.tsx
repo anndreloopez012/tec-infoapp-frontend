@@ -16,14 +16,14 @@ export default function TicketList() {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
-  const { checkPermission } = useAuth();
+  const { hasPermission } = useAuth();
   const navigate = useNavigate();
 
   // Permisos
-  const canCreate = checkPermission('api::ticket.ticket', 'create');
-  const canEdit = checkPermission('api::ticket.ticket', 'update');
-  const canDelete = checkPermission('api::ticket.ticket', 'delete');
-  const canView = checkPermission('api::ticket.ticket', 'find');
+  const canCreate = hasPermission('api::ticket.ticket.create');
+  const canEdit = hasPermission('api::ticket.ticket.update');
+  const canDelete = hasPermission('api::ticket.ticket.delete');
+  const canView = hasPermission('api::ticket.ticket.find');
 
   // Columnas para la tabla
   const columns = [
