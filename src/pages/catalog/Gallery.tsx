@@ -345,6 +345,7 @@ const Gallery = () => {
   const startPresentation = () => {
     setCurrentSlideIndex(0);
     setIsPresentationMode(true);
+    // El modal se mantiene abierto por debajo pero no visible
   };
 
   const exitPresentation = () => {
@@ -720,7 +721,7 @@ const Gallery = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!selectedGallery} onOpenChange={() => setSelectedGallery(null)}>
+      <Dialog open={!!selectedGallery && !isPresentationMode} onOpenChange={() => setSelectedGallery(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center justify-between">
