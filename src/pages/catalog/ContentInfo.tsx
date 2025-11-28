@@ -65,7 +65,12 @@ const ContentInfo = () => {
   const [existingAttachments, setExistingAttachments] = useState<any[]>([]);
   
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
+
+  // Permisos
+  const canCreate = hasPermission('api::content-info.content-info.create');
+  const canEdit = hasPermission('api::content-info.content-info.update');
+  const canDelete = hasPermission('api::content-info.content-info.delete');
 
   // Cargar categorías y compañías
   useEffect(() => {
@@ -368,9 +373,9 @@ const ContentInfo = () => {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onCreate={handleCreate}
-        canCreate={true}
-        canEdit={true}
-        canDelete={true}
+        canCreate={canCreate}
+        canEdit={canEdit}
+        canDelete={canDelete}
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

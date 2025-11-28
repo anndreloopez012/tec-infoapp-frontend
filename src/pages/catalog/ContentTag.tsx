@@ -40,11 +40,10 @@ export const ContentTag: React.FC = () => {
   const [itemToDelete, setItemToDelete] = useState<any>(null);
 
   // Permisos
-  // Permisos (temporalmente deshabilitados)
-  const canCreate = true;
-  const canEdit = true;
-  const canDelete = true;
-  const canViewAll = true;
+  const canCreate = hasPermission('api::content-tag.content-tag.create');
+  const canEdit = hasPermission('api::content-tag.content-tag.update');
+  const canDelete = hasPermission('api::content-tag.content-tag.delete');
+  const canViewAll = hasPermission('api::content-tag.content-tag.find');
 
   // Cargar datos
   const loadData = async () => {
