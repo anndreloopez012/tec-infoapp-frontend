@@ -362,8 +362,13 @@ export const AuthProvider = ({ children }) => {
   const hasPermission = (permission) => {
     if (!state.user || !state.user.role) return false;
     
-    // Super admin has all permissions
-    if (state.user.role.type === 'super_admin' || state.user.role.name === 'super_admin') return true;
+    // Super admin has all permissions - check both 'super' and 'super_admin'
+    const roleType = state.user.role.type;
+    const roleName = state.user.role.name;
+    if (roleType === 'super' || roleType === 'super_admin' || roleName === 'super' || roleName === 'super_admin') {
+      console.log('✅ Super user - all permissions granted');
+      return true;
+    }
     
     // Check specific permission in different possible structures
     const permissions = state.user.role.permissions;
@@ -386,7 +391,10 @@ export const AuthProvider = ({ children }) => {
 
   // Check if user has any of the specified roles
   const hasRole = (roles) => {
-    if (!state.user) return false;
+    if (!state.user) {
+      console.log('🔍 hasRole: No user found');
+      return false;
+    }
     
     console.log('🔍 Checking roles:', { 
       user: state.user, 
@@ -396,19 +404,27 @@ export const AuthProvider = ({ children }) => {
     
     // Check role.type from the new API structure
     const roleType = state.user.role?.type;
+    const roleName = state.user.role?.name;
     const typeUser = state.user.type_user?.Tipo;
     
     // For super users, allow access regardless
-    if (roleType === 'super' || typeUser === 'administrador') {
-      console.log('✅ Super user access granted');
+    if (roleType === 'super' || roleType === 'super_admin' || roleName === 'super' || roleName === 'super_admin' || typeUser === 'administrador') {
+      console.log('✅ Super user access granted', { roleType, roleName, typeUser });
       return true;
     }
     
-    // Check against role.type for admin
-    const userRole = roleType;
-    const hasAccess = Array.isArray(roles) ? roles.includes(userRole) : roles === userRole;
+    // Check against role.type or role.name for admin
+    const hasAccess = Array.isArray(roles) 
+      ? roles.some(r => r === roleType || r === roleName)
+      : (roles === roleType || roles === roleName);
     
-    console.log('🔍 Role check result:', { userRole, typeUser, requestedRoles: roles, hasAccess });
+    console.log('🔍 Role check result:', { 
+      roleType, 
+      roleName,
+      typeUser, 
+      requestedRoles: roles, 
+      hasAccess 
+    });
     
     return hasAccess;
   };

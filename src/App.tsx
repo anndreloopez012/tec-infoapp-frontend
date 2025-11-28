@@ -100,39 +100,39 @@ const AppRoutes = () => {
           <Route path="/content-global" element={<ContentGlobal />} />
           {/* Admin Routes */}
           <Route path="/admin/users" element={
-            <ProtectedRoute permissions={['api::user.user.find']}>
+            <ProtectedRoute roles={['super', 'admin', 'super_admin']}>
               <Users />
             </ProtectedRoute>
           } />
           <Route path="/admin/roles" element={
-            <ProtectedRoute roles={['super_admin', 'admin']}>
+            <ProtectedRoute roles={['super', 'admin', 'super_admin']}>
               <RoleManagement />
             </ProtectedRoute>
           } />
           <Route path="/admin/permissions" element={
-            <ProtectedRoute roles={['super_admin', 'admin']}>
+            <ProtectedRoute roles={['super', 'admin', 'super_admin']}>
               <PermissionManagement />
             </ProtectedRoute>
           } />
           <Route path="/admin/type-users" element={
-            <ProtectedRoute roles={['super_admin', 'admin']}>
+            <ProtectedRoute roles={['super', 'admin', 'super_admin']}>
               <TypeUser />
             </ProtectedRoute>
           } />
           <Route path="/settings" element={
-            <ProtectedRoute roles={['super_admin', 'admin']}>
+            <ProtectedRoute roles={['super', 'admin', 'super_admin']}>
               <GlobalSettings />
             </ProtectedRoute>
           } />
           <Route path="/admin/notifications" element={
-            <ProtectedRoute roles={['super_admin', 'admin']}>
+            <ProtectedRoute roles={['super', 'admin', 'super_admin']}>
               <AdminNotifications />
             </ProtectedRoute>
           } />
           <Route path="/admin/notifications/settings" element={<NotificationSettings />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/admin/bitacora" element={
-            <ProtectedRoute roles={['super_admin', 'admin']}>
+            <ProtectedRoute roles={['super', 'admin', 'super_admin']}>
               <Bitacora />
             </ProtectedRoute>
           } />
