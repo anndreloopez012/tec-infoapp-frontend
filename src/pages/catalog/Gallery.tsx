@@ -79,7 +79,7 @@ const Gallery = () => {
   });
 
   const { toast } = useToast();
-  const { hasPermission } = useAuth();
+  const { hasPermission, token } = useAuth();
 
   // Permisos
   const canCreate = hasPermission('api::gallery.gallery.create');
@@ -268,7 +268,7 @@ const Gallery = () => {
             {
               method: 'POST',
               headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Authorization': `Bearer ${token}`,
               },
               body: formDataUpload,
             }
