@@ -172,6 +172,61 @@ export default function TicketDetail() {
     setMediaFiles(prev => prev.filter(f => f.id !== fileId));
   };
 
+  const handleFollowUpMediaUpload = async (index: number, files: File[]) => {
+    try {
+      const formData = new FormData();
+      
+      files.forEach(file => {
+        formData.append('files', file);
+      });
+
+      const token = localStorage.getItem(API_CONFIG.STORAGE_KEYS.AUTH_TOKEN) || API_CONFIG.AUTH_TOKEN;
+
+      const response = await fetch(`${API_CONFIG.BASE_URL}/${API_CONFIG.API_PREFIX}/upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'Error al subir archivos');
+      }
+
+      const uploadedFiles = await response.json();
+      
+      // Actualizar adjuntos del followup específico
+      setFollowUps(prev => prev.map((item, i) => 
+        i === index 
+          ? { ...item, Adjuntos: [...(item.Adjuntos || []), ...uploadedFiles] }
+          : item
+      ));
+      
+      toast({
+        title: "Archivos subidos",
+        description: `${uploadedFiles.length} archivo(s) subido(s) correctamente`,
+      });
+    } catch (error: any) {
+      console.error('Error al subir archivos:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Error al subir los archivos",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const removeFollowUpMedia = (followUpIndex: number, fileId: number) => {
+    setFollowUps(prev => prev.map((item, i) => 
+      i === followUpIndex 
+        ? { ...item, Adjuntos: (item.Adjuntos || []).filter(f => f.id !== fileId) }
+        : item
+    ));
+  };
+
   const addFollowUp = () => {
     setFollowUps(prev => [...prev, { Comentario: '', Adjuntos: [] }]);
   };
@@ -203,7 +258,12 @@ export default function TicketDetail() {
         name: data.name,
         description: data.description,
         media: mediaFiles.map(f => f.id),
-        followup: followUps.filter(f => f.Comentario.trim()),
+        followup: followUps
+          .filter(f => f.Comentario.trim())
+          .map(f => ({
+            Comentario: f.Comentario,
+            Adjuntos: (f.Adjuntos || []).map(file => file.id)
+          })),
       };
 
       if (data.ticket_status) payload.ticket_status = data.ticket_status;
@@ -410,28 +470,54 @@ export default function TicketDetail() {
               <p className="text-sm text-muted-foreground">No hay seguimientos registrados</p>
             ) : (
               followUps.map((followUp, index) => (
-                <div key={index} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <Label>Comentario {index + 1}</Label>
-                    {!isReadOnly && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeFollowUp(index)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                  <Textarea
-                    value={followUp.Comentario}
-                    onChange={(e) => updateFollowUp(index, 'Comentario', e.target.value)}
-                    disabled={isReadOnly}
-                    placeholder="Escribir comentario..."
-                    rows={3}
-                  />
-                </div>
+                <Card key={index} className="border-2">
+                  <CardContent className="pt-6 space-y-4">
+                    <div className="flex items-start justify-between">
+                      <Label className="text-base font-semibold">Comentario {index + 1}</Label>
+                      {!isReadOnly && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFollowUp(index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <Textarea
+                      value={followUp.Comentario}
+                      onChange={(e) => updateFollowUp(index, 'Comentario', e.target.value)}
+                      disabled={isReadOnly}
+                      placeholder="Escribir comentario..."
+                      rows={3}
+                    />
+
+                    {/* Archivos adjuntos del seguimiento */}
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Archivos adjuntos</Label>
+                      
+                      {!isReadOnly && (
+                        <FileUploadWithPreview
+                          onUpload={(files) => handleFollowUpMediaUpload(index, files)}
+                          disabled={isReadOnly}
+                          maxFiles={10}
+                        />
+                      )}
+
+                      {followUp.Adjuntos && followUp.Adjuntos.length > 0 && (
+                        <div className="pt-2">
+                          <FileGallery
+                            files={followUp.Adjuntos}
+                            onRemove={!isReadOnly ? (fileId) => removeFollowUpMedia(index, fileId) : undefined}
+                            readOnly={isReadOnly}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
               ))
             )}
           </CardContent>
