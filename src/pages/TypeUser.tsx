@@ -75,6 +75,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
 
 import typeUserService from '@/services/typeUserService';
 
@@ -90,6 +91,7 @@ interface TypeUser {
 }
 
 const TypeUser: React.FC = () => {
+  const { hasPermission } = useAuth();
   const [typeUsers, setTypeUsers] = useState<TypeUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState('');
@@ -391,17 +393,21 @@ const TypeUser: React.FC = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => openEditDialog(typeUser)}>
-                    <Pencil className="mr-2 h-4 w-4" />
-                    Editar
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => openDeleteDialog(typeUser)}
-                    className="text-destructive"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Eliminar
-                  </DropdownMenuItem>
+                  {hasPermission('api::type-user.type-user.update') && (
+                    <DropdownMenuItem onClick={() => openEditDialog(typeUser)}>
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Editar
+                    </DropdownMenuItem>
+                  )}
+                  {hasPermission('api::type-user.type-user.delete') && (
+                    <DropdownMenuItem 
+                      onClick={() => openDeleteDialog(typeUser)}
+                      className="text-destructive"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Eliminar
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -480,13 +486,15 @@ const TypeUser: React.FC = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-foreground">Tipos de Usuario</h1>
           
-          <Button 
-            onClick={openCreateDialog}
-            className="bg-primary hover:bg-primary/90 fixed right-4 top-20 z-10 shadow-lg"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Crear Tipo
-          </Button>
+          {hasPermission('api::type-user.type-user.create') && (
+            <Button 
+              onClick={openCreateDialog}
+              className="bg-primary hover:bg-primary/90 fixed right-4 top-20 z-10 shadow-lg"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Crear Tipo
+            </Button>
+          )}
         </div>
       </motion.div>
 
