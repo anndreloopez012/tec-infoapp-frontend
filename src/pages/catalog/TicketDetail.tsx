@@ -32,6 +32,9 @@ interface FollowUp {
   id?: number;
   Comentario: string;
   Adjuntos?: any[];
+  createdBy?: any;
+  isSaved?: boolean;
+  isEditing?: boolean;
 }
 
 export default function TicketDetail() {
@@ -49,6 +52,7 @@ export default function TicketDetail() {
   const [companies, setCompanies] = useState([]);
   const [followUps, setFollowUps] = useState<FollowUp[]>([]);
   const [mediaFiles, setMediaFiles] = useState<any[]>([]);
+  const { user } = useAuth();
 
   const canCreate = hasPermission('api::ticket.ticket.create');
   const canUpdate = hasPermission('api::ticket.ticket.update');
@@ -107,7 +111,12 @@ export default function TicketDetail() {
         setValue('ticket_type', ticket.ticket_type?.documentId || '');
         setValue('companies', ticket.companies?.map((c: any) => c.documentId) || []);
         
-        setFollowUps(ticket.followup || []);
+        // Marcar seguimientos cargados como guardados
+        setFollowUps((ticket.followup || []).map((f: any) => ({
+          ...f,
+          isSaved: true,
+          isEditing: false
+        })));
         setMediaFiles(ticket.media || []);
       }
     } catch (error: any) {
@@ -228,11 +237,47 @@ export default function TicketDetail() {
   };
 
   const addFollowUp = () => {
-    setFollowUps(prev => [...prev, { Comentario: '', Adjuntos: [] }]);
+    setFollowUps(prev => [...prev, { 
+      Comentario: '', 
+      Adjuntos: [],
+      isSaved: false,
+      isEditing: true,
+      createdBy: user
+    }]);
   };
 
   const removeFollowUp = (index: number) => {
+    const followUp = followUps[index];
+    
+    // Solo permitir eliminar si no está guardado o si es el creador
+    if (followUp.isSaved && followUp.createdBy?.id !== user?.id) {
+      toast({
+        title: "Sin permisos",
+        description: "Solo el creador puede eliminar este seguimiento",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setFollowUps(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const toggleEditFollowUp = (index: number) => {
+    const followUp = followUps[index];
+    
+    // Validar que solo el creador pueda editar
+    if (followUp.isSaved && followUp.createdBy?.id !== user?.id) {
+      toast({
+        title: "Sin permisos",
+        description: "Solo el creador puede editar este seguimiento",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setFollowUps(prev => prev.map((item, i) => 
+      i === index ? { ...item, isEditing: !item.isEditing } : item
+    ));
   };
 
   const updateFollowUp = (index: number, field: keyof FollowUp, value: any) => {
@@ -274,19 +319,41 @@ export default function TicketDetail() {
     try {
       setSubmitting(true);
 
-      // Preparar todos los seguimientos incluyendo el que se está guardando
-      const allFollowUps = followUps
-        .filter(f => f.Comentario.trim())
-        .map(f => ({
-          Comentario: f.Comentario,
-          Adjuntos: (f.Adjuntos || []).map(file => file.id)
-        }));
+      // Preparar el seguimiento con el usuario creador
+      const followUpToSave = {
+        Comentario: followUp.Comentario,
+        Adjuntos: (followUp.Adjuntos || []).map(file => file.id),
+        createdBy: user?.id
+      };
+
+      // Preparar todos los seguimientos
+      const allFollowUps = followUps.map((f, i) => {
+        if (i === index) {
+          return followUpToSave;
+        }
+        // Mantener los seguimientos ya guardados
+        if (f.isSaved) {
+          return {
+            Comentario: f.Comentario,
+            Adjuntos: (f.Adjuntos || []).map(file => file.id),
+            createdBy: f.createdBy?.id
+          };
+        }
+        return null;
+      }).filter(Boolean);
 
       const payload = {
         followup: allFollowUps
       };
 
       await ticketService.update(id!, payload);
+      
+      // Marcar el seguimiento como guardado y en modo lectura
+      setFollowUps(prev => prev.map((item, i) => 
+        i === index 
+          ? { ...item, isSaved: true, isEditing: false, createdBy: user }
+          : item
+      ));
       
       toast({
         title: "Seguimiento guardado",
@@ -535,13 +602,35 @@ export default function TicketDetail() {
             {followUps.length === 0 ? (
               <p className="text-sm text-muted-foreground">No hay seguimientos registrados</p>
             ) : (
-              followUps.map((followUp, index) => (
-                 <Card key={index} className="border-2">
+              followUps.map((followUp, index) => {
+                const isOwner = followUp.createdBy?.id === user?.id;
+                const canEdit = !followUp.isSaved || isOwner;
+                const isInEditMode = followUp.isEditing !== false;
+                
+                return (
+                <Card key={index} className="border-2">
                   <CardContent className="pt-6 space-y-4">
                     <div className="flex items-start justify-between">
-                      <Label className="text-base font-semibold">Comentario {index + 1}</Label>
+                      <div>
+                        <Label className="text-base font-semibold">Comentario {index + 1}</Label>
+                        {followUp.isSaved && followUp.createdBy && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Creado por: {followUp.createdBy.username || followUp.createdBy.email}
+                          </p>
+                        )}
+                      </div>
                       <div className="flex gap-2">
-                        {!isReadOnly && !isNew && (
+                        {!isReadOnly && followUp.isSaved && isOwner && (
+                          <Button
+                            type="button"
+                            variant={isInEditMode ? "secondary" : "outline"}
+                            size="sm"
+                            onClick={() => toggleEditFollowUp(index)}
+                          >
+                            {isInEditMode ? "Cancelar" : "Editar"}
+                          </Button>
+                        )}
+                        {!isReadOnly && isInEditMode && (
                           <Button
                             type="button"
                             variant="default"
@@ -552,7 +641,7 @@ export default function TicketDetail() {
                             Guardar
                           </Button>
                         )}
-                        {!isReadOnly && (
+                        {!isReadOnly && canEdit && (
                           <Button
                             type="button"
                             variant="ghost"
@@ -568,7 +657,7 @@ export default function TicketDetail() {
                     <Textarea
                       value={followUp.Comentario}
                       onChange={(e) => updateFollowUp(index, 'Comentario', e.target.value)}
-                      disabled={isReadOnly}
+                      disabled={isReadOnly || (followUp.isSaved && !isInEditMode)}
                       placeholder="Escribir comentario..."
                       rows={3}
                     />
@@ -577,10 +666,10 @@ export default function TicketDetail() {
                     <div className="space-y-3">
                       <Label className="text-sm font-medium">Archivos adjuntos</Label>
                       
-                      {!isReadOnly && (
+                      {!isReadOnly && isInEditMode && (
                         <FileUploadWithPreview
                           onUpload={(files) => handleFollowUpMediaUpload(index, files)}
-                          disabled={isReadOnly}
+                          disabled={isReadOnly || (followUp.isSaved && !isInEditMode)}
                           maxFiles={10}
                         />
                       )}
@@ -589,15 +678,15 @@ export default function TicketDetail() {
                         <div className="pt-2">
                           <FileGallery
                             files={followUp.Adjuntos}
-                            onRemove={!isReadOnly ? (fileId) => removeFollowUpMedia(index, fileId) : undefined}
-                            readOnly={isReadOnly}
+                            onRemove={(!isReadOnly && isInEditMode) ? (fileId) => removeFollowUpMedia(index, fileId) : undefined}
+                            readOnly={isReadOnly || (followUp.isSaved && !isInEditMode)}
                           />
                         </div>
                       )}
                     </div>
                   </CardContent>
                 </Card>
-              ))
+              )})
             )}
           </CardContent>
         </Card>
