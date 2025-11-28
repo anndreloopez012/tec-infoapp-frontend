@@ -130,36 +130,65 @@ export function KanbanStatusView({
     if (!over) return;
 
     const ticketId = active.id as string;
-    const overId = over.id as string;
 
-    // Encontrar el nuevo estado
-    let newStatusId = overId;
-    if (!statuses.find(s => s.documentId === overId) && overId !== 'no-status') {
-      // Si no es un ID de estado directamente, buscar en qué columna está el ticket sobre el que soltamos
+    // Encontrar en qué columna está el ticket actualmente en el estado local
+    const currentStatusId = Object.keys(ticketsByStatus).find(statusId =>
+      ticketsByStatus[statusId].some(t => t.documentId === ticketId)
+    );
+
+    if (!currentStatusId) return;
+
+    // Determinar el ID de la nueva columna
+    let newStatusId = over.id as string;
+    
+    // Si soltamos sobre un ticket, encontrar su columna
+    const overTicket = tickets.find(t => t.documentId === newStatusId);
+    if (overTicket) {
       newStatusId = Object.keys(ticketsByStatus).find(statusId =>
-        ticketsByStatus[statusId].some(t => t.documentId === overId)
-      ) || '';
+        ticketsByStatus[statusId].some(t => t.documentId === overTicket.documentId)
+      ) || currentStatusId;
     }
 
-    if (newStatusId && newStatusId !== 'no-status') {
-      try {
-        await onUpdateStatus(ticketId, newStatusId);
-      } catch (error) {
-        console.error('Error al actualizar estado:', error);
-        // Revertir cambios si falla
-        const grouped: Record<string, any[]> = {};
-        statuses.forEach(status => {
-          grouped[status.documentId] = [];
-        });
-        grouped['no-status'] = [];
-        tickets.forEach(ticket => {
-          const statusId = ticket.ticket_status?.documentId || 'no-status';
-          if (grouped[statusId]) {
-            grouped[statusId].push(ticket);
-          }
-        });
-        setTicketsByStatus(grouped);
-      }
+    // No hacer nada si soltamos en la misma columna
+    if (newStatusId === currentStatusId) {
+      return;
+    }
+
+    // No actualizar si es "no-status"
+    if (newStatusId === 'no-status') {
+      // Revertir al estado original
+      const grouped: Record<string, any[]> = {};
+      statuses.forEach(status => {
+        grouped[status.documentId] = [];
+      });
+      grouped['no-status'] = [];
+      tickets.forEach(ticket => {
+        const statusId = ticket.ticket_status?.documentId || 'no-status';
+        if (grouped[statusId]) {
+          grouped[statusId].push(ticket);
+        }
+      });
+      setTicketsByStatus(grouped);
+      return;
+    }
+
+    try {
+      await onUpdateStatus(ticketId, newStatusId);
+    } catch (error) {
+      console.error('Error al actualizar estado:', error);
+      // Revertir cambios si falla
+      const grouped: Record<string, any[]> = {};
+      statuses.forEach(status => {
+        grouped[status.documentId] = [];
+      });
+      grouped['no-status'] = [];
+      tickets.forEach(ticket => {
+        const statusId = ticket.ticket_status?.documentId || 'no-status';
+        if (grouped[statusId]) {
+          grouped[statusId].push(ticket);
+        }
+      });
+      setTicketsByStatus(grouped);
     }
   };
 
@@ -222,9 +251,15 @@ export function KanbanStatusView({
                   items={ticketsByStatus[status.documentId]?.map(t => t.documentId) || []}
                   strategy={verticalListSortingStrategy}
                 >
-                  <div className="space-y-2 pr-3">
+                  <div 
+                    className="space-y-2 pr-3 min-h-[200px]"
+                    data-status-id={status.documentId}
+                  >
                     {ticketsByStatus[status.documentId]?.length === 0 ? (
-                      <div className="text-center text-sm text-muted-foreground py-8 border-2 border-dashed rounded-lg">
+                      <div 
+                        id={status.documentId}
+                        className="text-center text-sm text-muted-foreground py-8 border-2 border-dashed rounded-lg min-h-[150px] flex items-center justify-center"
+                      >
                         Arrastra tickets aquí
                       </div>
                     ) : (

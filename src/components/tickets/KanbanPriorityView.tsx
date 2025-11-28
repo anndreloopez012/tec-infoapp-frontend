@@ -130,36 +130,65 @@ export function KanbanPriorityView({
     if (!over) return;
 
     const ticketId = active.id as string;
-    const overId = over.id as string;
 
-    // Encontrar la nueva prioridad
-    let newPriorityId = overId;
-    if (!priorities.find(p => p.documentId === overId) && overId !== 'no-priority') {
-      // Si no es un ID de prioridad directamente, buscar en qué columna está el ticket sobre el que soltamos
+    // Encontrar en qué columna está el ticket actualmente en el estado local
+    const currentPriorityId = Object.keys(ticketsByPriority).find(priorityId =>
+      ticketsByPriority[priorityId].some(t => t.documentId === ticketId)
+    );
+
+    if (!currentPriorityId) return;
+
+    // Determinar el ID de la nueva columna
+    let newPriorityId = over.id as string;
+    
+    // Si soltamos sobre un ticket, encontrar su columna
+    const overTicket = tickets.find(t => t.documentId === newPriorityId);
+    if (overTicket) {
       newPriorityId = Object.keys(ticketsByPriority).find(priorityId =>
-        ticketsByPriority[priorityId].some(t => t.documentId === overId)
-      ) || '';
+        ticketsByPriority[priorityId].some(t => t.documentId === overTicket.documentId)
+      ) || currentPriorityId;
     }
 
-    if (newPriorityId && newPriorityId !== 'no-priority') {
-      try {
-        await onUpdatePriority(ticketId, newPriorityId);
-      } catch (error) {
-        console.error('Error al actualizar prioridad:', error);
-        // Revertir cambios si falla
-        const grouped: Record<string, any[]> = {};
-        priorities.forEach(priority => {
-          grouped[priority.documentId] = [];
-        });
-        grouped['no-priority'] = [];
-        tickets.forEach(ticket => {
-          const priorityId = ticket.ticket_priority?.documentId || 'no-priority';
-          if (grouped[priorityId]) {
-            grouped[priorityId].push(ticket);
-          }
-        });
-        setTicketsByPriority(grouped);
-      }
+    // No hacer nada si soltamos en la misma columna
+    if (newPriorityId === currentPriorityId) {
+      return;
+    }
+
+    // No actualizar si es "no-priority"
+    if (newPriorityId === 'no-priority') {
+      // Revertir al estado original
+      const grouped: Record<string, any[]> = {};
+      priorities.forEach(priority => {
+        grouped[priority.documentId] = [];
+      });
+      grouped['no-priority'] = [];
+      tickets.forEach(ticket => {
+        const priorityId = ticket.ticket_priority?.documentId || 'no-priority';
+        if (grouped[priorityId]) {
+          grouped[priorityId].push(ticket);
+        }
+      });
+      setTicketsByPriority(grouped);
+      return;
+    }
+
+    try {
+      await onUpdatePriority(ticketId, newPriorityId);
+    } catch (error) {
+      console.error('Error al actualizar prioridad:', error);
+      // Revertir cambios si falla
+      const grouped: Record<string, any[]> = {};
+      priorities.forEach(priority => {
+        grouped[priority.documentId] = [];
+      });
+      grouped['no-priority'] = [];
+      tickets.forEach(ticket => {
+        const priorityId = ticket.ticket_priority?.documentId || 'no-priority';
+        if (grouped[priorityId]) {
+          grouped[priorityId].push(ticket);
+        }
+      });
+      setTicketsByPriority(grouped);
     }
   };
 
@@ -222,9 +251,15 @@ export function KanbanPriorityView({
                   items={ticketsByPriority[priority.documentId]?.map(t => t.documentId) || []}
                   strategy={verticalListSortingStrategy}
                 >
-                  <div className="space-y-2 pr-3">
+                  <div 
+                    className="space-y-2 pr-3 min-h-[200px]"
+                    data-priority-id={priority.documentId}
+                  >
                     {ticketsByPriority[priority.documentId]?.length === 0 ? (
-                      <div className="text-center text-sm text-muted-foreground py-8 border-2 border-dashed rounded-lg">
+                      <div 
+                        id={priority.documentId}
+                        className="text-center text-sm text-muted-foreground py-8 border-2 border-dashed rounded-lg min-h-[150px] flex items-center justify-center"
+                      >
                         Arrastra tickets aquí
                       </div>
                     ) : (
