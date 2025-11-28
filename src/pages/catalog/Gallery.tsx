@@ -768,7 +768,7 @@ const Gallery = () => {
 
       {/* Presentation Mode Fullscreen */}
       {isPresentationMode && selectedGallery?.media && (
-        <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center">
+        <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 z-[9999] bg-black flex items-center justify-center w-screen h-screen">
           <button
             onClick={exitPresentation}
             className="absolute top-4 right-4 z-10 text-white/80 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
@@ -790,11 +790,11 @@ const Gallery = () => {
             <ChevronRight className="h-10 w-10" />
           </button>
 
-          <div className="w-full h-full flex items-center justify-center p-8">
+          <div className="w-full h-full flex items-center justify-center p-0">
             <img
               src={`${import.meta.env.VITE_API_URL || 'https://tec-adm.server-softplus.plus'}${selectedGallery.media[currentSlideIndex].url}`}
               alt={selectedGallery.media[currentSlideIndex].name}
-              className="max-w-full max-h-full object-contain animate-fade-in"
+              className="max-w-full max-h-full w-auto h-auto object-contain animate-fade-in"
             />
           </div>
 
