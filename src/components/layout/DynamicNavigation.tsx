@@ -45,6 +45,7 @@ const moduleIcons = {
   "api::content-tag": Tag,
   "api::event-type": Calendar,
   // Iconos para tickets
+  "api::ticket": Ticket,
   "api::ticket-status": AlertCircle,
   "api::ticket-priority": Flag,
   "api::ticket-type": FileType,
@@ -66,7 +67,7 @@ const DynamicNavigation: React.FC<DynamicNavigationProps> = ({ onNavigate, searc
   const systemModules = ["api::gallery", "api::event", "api::content-info", "api::event-calendar"];
 
   // Módulos Tickets: Gestión de tickets
-  const ticketModules = ["api::ticket-status", "api::ticket-priority", "api::ticket-type"];
+  const ticketModules = ["api::ticket", "api::ticket-status", "api::ticket-priority", "api::ticket-type"];
 
   // Módulos excluidos: módulos que no se mostrarán en el menú
   const excludedModules = ["api::customer"];
