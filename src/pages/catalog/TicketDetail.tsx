@@ -97,7 +97,16 @@ export default function TicketDetail() {
     try {
       setLoading(true);
       const params = {
-        populate: ['ticket_status', 'ticket_priority', 'ticket_type', 'companies', 'media', 'followup', 'followup.Adjuntos'],
+        populate: {
+          ticket_status: true,
+          ticket_priority: true,
+          ticket_type: true,
+          companies: true,
+          media: true,
+          followup: {
+            populate: ['Adjuntos']
+          }
+        }
       };
       
       const response = await ticketService.getById(ticketId);
@@ -111,12 +120,17 @@ export default function TicketDetail() {
         setValue('ticket_type', ticket.ticket_type?.documentId || '');
         setValue('companies', ticket.companies?.map((c: any) => c.documentId) || []);
         
+        console.log('Ticket followup data:', ticket.followup);
+        
         // Marcar seguimientos cargados como guardados
-        setFollowUps((ticket.followup || []).map((f: any) => ({
-          ...f,
-          isSaved: true,
-          isEditing: false
-        })));
+        setFollowUps((ticket.followup || []).map((f: any) => {
+          console.log('Followup item:', f);
+          return {
+            ...f,
+            isSaved: true,
+            isEditing: false
+          };
+        }));
         setMediaFiles(ticket.media || []);
       }
     } catch (error: any) {
@@ -675,6 +689,10 @@ export default function TicketDetail() {
                             readOnly={!isInEditMode}
                           />
                         </div>
+                      )}
+                      
+                      {!isInEditMode && (!followUp.Adjuntos || followUp.Adjuntos.length === 0) && (
+                        <p className="text-sm text-muted-foreground">Sin archivos adjuntos</p>
                       )}
                     </div>
                   </CardContent>
