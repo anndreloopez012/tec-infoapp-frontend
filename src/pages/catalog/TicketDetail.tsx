@@ -57,6 +57,7 @@ export default function TicketDetail() {
   const [ticketTypes, setTicketTypes] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
   const [followUps, setFollowUps] = useState<FollowUp[]>([]);
   const [mediaFiles, setMediaFiles] = useState<any[]>([]);
   const [companySearchOpen, setCompanySearchOpen] = useState(false);
@@ -78,6 +79,56 @@ export default function TicketDetail() {
       loadTicketData(id);
     }
   }, [id]);
+
+  // Filtrar usuarios cuando cambien las empresas seleccionadas
+  useEffect(() => {
+    const selectedCompanies = watch('companies') || [];
+    
+    if (selectedCompanies.length === 0) {
+      setFilteredUsers([]);
+      return;
+    }
+
+    // Hacer llamada al API con filtro de empresas
+    const fetchFilteredUsers = async () => {
+      try {
+        const queryParams = new URLSearchParams();
+        queryParams.append('pagination[pageSize]', '1000');
+        
+        // Agregar filtro por empresas seleccionadas
+        selectedCompanies.forEach((companyId: string, index: number) => {
+          queryParams.append(`filters[$or][${index}][company][documentId][$eq]`, companyId);
+          queryParams.append(`filters[$or][${index}][companies][documentId][$in]`, companyId);
+        });
+        
+        // Populate relations
+        queryParams.append('populate[0]', 'company');
+        queryParams.append('populate[1]', 'companies');
+
+        const response = await userService.getUsers({ pageSize: 1000 });
+        
+        // Filtrar manualmente ya que el API puede no soportar el filtro $or complejo
+        const filtered = (response.data || []).filter((u: any) => {
+          if (!u.company && !u.companies) return false;
+          
+          const userCompanyIds = u.companies 
+            ? u.companies.map((c: any) => c.documentId || c.id)
+            : u.company 
+              ? [u.company.documentId || u.company.id]
+              : [];
+          
+          return userCompanyIds.some((cId: string) => selectedCompanies.includes(cId));
+        });
+        
+        setFilteredUsers(filtered);
+      } catch (error) {
+        console.error('Error al filtrar usuarios:', error);
+        setFilteredUsers([]);
+      }
+    };
+
+    fetchFilteredUsers();
+  }, [watch('companies')]);
 
   const loadRelatedData = async () => {
     try {
@@ -619,22 +670,7 @@ export default function TicketDetail() {
                         <CommandList>
                           <CommandEmpty>No se encontró el miembro.</CommandEmpty>
                           <CommandGroup>
-                            {allUsers
-                              .filter((u: any) => {
-                                // Filtrar usuarios por las empresas seleccionadas
-                                const selectedCompanyIds = watch('companies') || [];
-                                if (!u.company && !u.companies) return false;
-                                
-                                // Soportar tanto company (singular) como companies (plural)
-                                const userCompanyIds = u.companies 
-                                  ? u.companies.map((c: any) => c.documentId || c.id)
-                                  : u.company 
-                                    ? [u.company.documentId || u.company.id]
-                                    : [];
-                                
-                                return userCompanyIds.some((cId: string) => selectedCompanyIds.includes(cId));
-                              })
-                              .map((userItem: any) => {
+                            {filteredUsers.map((userItem: any) => {
                                 const isSelected = watch('users_permissions_users')?.includes(String(userItem.id));
                                 return (
                                   <CommandItem
