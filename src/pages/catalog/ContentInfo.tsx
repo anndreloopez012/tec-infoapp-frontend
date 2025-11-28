@@ -72,10 +72,11 @@ const ContentInfo = () => {
   const canEdit = hasPermission('api::content-info.content-info.update');
   const canDelete = hasPermission('api::content-info.content-info.delete');
 
-  // Cargar categorías y compañías
+  // Cargar categorías y compañías solo una vez al montar
   useEffect(() => {
     loadCategories();
     loadCompanies();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadCategories = async () => {

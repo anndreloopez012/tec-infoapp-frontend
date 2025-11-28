@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { enhancedNotificationService } from '@/services/enhancedNotificationService';
 import { useCapacitorNotifications } from './useCapacitorNotifications';
@@ -10,9 +10,12 @@ import { useCapacitorNotifications } from './useCapacitorNotifications';
 export const useNotificationIntegration = () => {
   const { user, isAuthenticated } = useAuth();
   const { initializePushNotifications } = useCapacitorNotifications();
+  const hasInitializedRef = useRef(false);
 
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (isAuthenticated && user && !hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      
       // Inicializar notificaciones push cuando el usuario esté autenticado
       initializePushNotifications();
       
@@ -20,6 +23,11 @@ export const useNotificationIntegration = () => {
       if (user.id) {
         enhancedNotificationService.notifyLoginSuccess(user.id).catch(console.error);
       }
+    }
+    
+    // Reset cuando el usuario se desloguee
+    if (!isAuthenticated) {
+      hasInitializedRef.current = false;
     }
   }, [isAuthenticated, user?.id]);
 
