@@ -125,34 +125,46 @@ export function KanbanPriorityView({
     if (!over) return;
 
     const ticketId = active.id as string;
+    
+    // Buscar el ticket original en los datos del servidor
+    const originalTicket = tickets.find(t => t.documentId === ticketId);
+    if (!originalTicket) {
+      console.error('Ticket no encontrado:', ticketId);
+      return;
+    }
 
-    // Encontrar en qué columna está el ticket actualmente en el estado local
-    const currentPriorityId = Object.keys(ticketsByPriority).find(priorityId =>
-      ticketsByPriority[priorityId].some(t => t.documentId === ticketId)
-    );
+    // Obtener la prioridad original del ticket
+    const originalPriorityId = originalTicket.ticket_priority?.documentId || 'no-priority';
 
-    if (!currentPriorityId) return;
-
-    // Determinar el ID de la nueva columna
+    // Determinar el ID de la nueva columna donde se soltó
     let newPriorityId = over.id as string;
 
-    // Si soltamos sobre un ticket, encontrar su columna; si soltamos sobre la columna, over.id ya es el ID de columna
+    // Si soltamos sobre un ticket en lugar de la columna vacía, buscar la columna
     if (!ticketsByPriority[newPriorityId]) {
       const overTicket = tickets.find(t => t.documentId === newPriorityId);
       if (overTicket) {
         newPriorityId = Object.keys(ticketsByPriority).find(priorityId =>
           ticketsByPriority[priorityId].some(t => t.documentId === overTicket.documentId)
-        ) || currentPriorityId;
+        ) || originalPriorityId;
       }
     }
 
+    console.log('🎯 Drag End Priority:', {
+      ticketId,
+      originalPriorityId,
+      newPriorityId,
+      overId: over.id
+    });
+
     // No hacer nada si soltamos en la misma columna
-    if (newPriorityId === currentPriorityId) {
+    if (newPriorityId === originalPriorityId) {
+      console.log('⚠️ Misma columna, no actualizar');
       return;
     }
 
     // No actualizar si es "no-priority"
     if (newPriorityId === 'no-priority') {
+      console.log('⚠️ Columna no-priority, revertir');
       // Revertir al estado original
       const grouped: Record<string, any[]> = {};
       priorities.forEach(priority => {
@@ -169,10 +181,13 @@ export function KanbanPriorityView({
       return;
     }
 
+    console.log('✅ Actualizando prioridad en servidor:', { ticketId, newPriorityId });
+
     try {
       await onUpdatePriority(ticketId, newPriorityId);
+      console.log('✅ Prioridad actualizada exitosamente');
     } catch (error) {
-      console.error('Error al actualizar prioridad:', error);
+      console.error('❌ Error al actualizar prioridad:', error);
       // Revertir cambios si falla
       const grouped: Record<string, any[]> = {};
       priorities.forEach(priority => {

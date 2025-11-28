@@ -125,34 +125,46 @@ export function KanbanStatusView({
     if (!over) return;
 
     const ticketId = active.id as string;
+    
+    // Buscar el ticket original en los datos del servidor
+    const originalTicket = tickets.find(t => t.documentId === ticketId);
+    if (!originalTicket) {
+      console.error('Ticket no encontrado:', ticketId);
+      return;
+    }
 
-    // Encontrar en qué columna está el ticket actualmente en el estado local
-    const currentStatusId = Object.keys(ticketsByStatus).find(statusId =>
-      ticketsByStatus[statusId].some(t => t.documentId === ticketId)
-    );
+    // Obtener el estado original del ticket
+    const originalStatusId = originalTicket.ticket_status?.documentId || 'no-status';
 
-    if (!currentStatusId) return;
-
-    // Determinar el ID de la nueva columna
+    // Determinar el ID de la nueva columna donde se soltó
     let newStatusId = over.id as string;
 
-    // Si soltamos sobre un ticket, encontrar su columna; si soltamos sobre la columna, over.id ya es el ID de columna
+    // Si soltamos sobre un ticket en lugar de la columna vacía, buscar la columna
     if (!ticketsByStatus[newStatusId]) {
       const overTicket = tickets.find(t => t.documentId === newStatusId);
       if (overTicket) {
         newStatusId = Object.keys(ticketsByStatus).find(statusId =>
           ticketsByStatus[statusId].some(t => t.documentId === overTicket.documentId)
-        ) || currentStatusId;
+        ) || originalStatusId;
       }
     }
 
+    console.log('🎯 Drag End:', {
+      ticketId,
+      originalStatusId,
+      newStatusId,
+      overId: over.id
+    });
+
     // No hacer nada si soltamos en la misma columna
-    if (newStatusId === currentStatusId) {
+    if (newStatusId === originalStatusId) {
+      console.log('⚠️ Misma columna, no actualizar');
       return;
     }
 
     // No actualizar si es "no-status"
     if (newStatusId === 'no-status') {
+      console.log('⚠️ Columna no-status, revertir');
       // Revertir al estado original
       const grouped: Record<string, any[]> = {};
       statuses.forEach(status => {
@@ -169,10 +181,13 @@ export function KanbanStatusView({
       return;
     }
 
+    console.log('✅ Actualizando estado en servidor:', { ticketId, newStatusId });
+
     try {
       await onUpdateStatus(ticketId, newStatusId);
+      console.log('✅ Estado actualizado exitosamente');
     } catch (error) {
-      console.error('Error al actualizar estado:', error);
+      console.error('❌ Error al actualizar estado:', error);
       // Revertir cambios si falla
       const grouped: Record<string, any[]> = {};
       statuses.forEach(status => {
