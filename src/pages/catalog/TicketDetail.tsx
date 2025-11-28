@@ -241,6 +241,72 @@ export default function TicketDetail() {
     ));
   };
 
+  const saveFollowUp = async (index: number) => {
+    const followUp = followUps[index];
+    
+    if (!followUp.Comentario.trim()) {
+      toast({
+        title: "Error",
+        description: "El comentario no puede estar vacío",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isNew) {
+      toast({
+        title: "Información",
+        description: "Debes crear el ticket primero antes de guardar seguimientos",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!canUpdate) {
+      toast({
+        title: "Sin permisos",
+        description: "No tienes permisos para actualizar tickets",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      // Preparar todos los seguimientos incluyendo el que se está guardando
+      const allFollowUps = followUps
+        .filter(f => f.Comentario.trim())
+        .map(f => ({
+          Comentario: f.Comentario,
+          Adjuntos: (f.Adjuntos || []).map(file => file.id)
+        }));
+
+      const payload = {
+        followup: allFollowUps
+      };
+
+      await ticketService.update(id!, payload);
+      
+      toast({
+        title: "Seguimiento guardado",
+        description: "El seguimiento ha sido guardado correctamente",
+      });
+
+      // Recargar los datos del ticket para obtener el estado actualizado
+      await loadTicketData(id!);
+    } catch (error: any) {
+      console.error('Error al guardar seguimiento:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Error al guardar el seguimiento",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const onSubmit = async (data: TicketFormData) => {
     if (isReadOnly) {
       toast({
@@ -470,20 +536,33 @@ export default function TicketDetail() {
               <p className="text-sm text-muted-foreground">No hay seguimientos registrados</p>
             ) : (
               followUps.map((followUp, index) => (
-                <Card key={index} className="border-2">
+                 <Card key={index} className="border-2">
                   <CardContent className="pt-6 space-y-4">
                     <div className="flex items-start justify-between">
                       <Label className="text-base font-semibold">Comentario {index + 1}</Label>
-                      {!isReadOnly && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeFollowUp(index)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
+                      <div className="flex gap-2">
+                        {!isReadOnly && !isNew && (
+                          <Button
+                            type="button"
+                            variant="default"
+                            size="sm"
+                            onClick={() => saveFollowUp(index)}
+                            disabled={submitting}
+                          >
+                            Guardar
+                          </Button>
+                        )}
+                        {!isReadOnly && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeFollowUp(index)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                     
                     <Textarea
