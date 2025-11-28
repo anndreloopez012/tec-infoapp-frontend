@@ -652,6 +652,16 @@ export default function TicketDetail() {
                 </div>
               )}
 
+              {/* Mostrar nombre de empresa para usuarios no admin cuando está pre-seleccionada */}
+              {!isSuperAdmin && watch('companies')?.length > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  Empresa: {watch('companies')
+                    .map((companyId: string) => companies.find((c: any) => c.documentId === companyId)?.name)
+                    .filter(Boolean)
+                    .join(', ')}
+                </div>
+              )}
+
               {/* Mostrar input de TEC Member cuando haya empresas seleccionadas (automáticas o manuales) */}
               {watch('companies')?.length > 0 && (
                 <div>

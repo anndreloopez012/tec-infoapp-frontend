@@ -72,6 +72,8 @@ class UserService {
       // Populate relations
       queryParams.append('populate[0]', 'role');
       queryParams.append('populate[1]', 'type_user');
+      queryParams.append('populate[2]', 'company');
+      queryParams.append('populate[3]', 'companies');
       
       const response = await apiClient.get(
         `/${API_CONFIG.API_PREFIX}/${ENDPOINTS.USERS.BASE}?${queryParams.toString()}`
