@@ -1,23 +1,56 @@
 /* Lexical Editor Styles */
 .lexical-editor-container {
-  @apply w-full border border-border rounded-md overflow-hidden bg-background;
+  @apply w-full border border-border rounded-lg overflow-hidden bg-background shadow-sm;
+  transition: all 0.3s ease;
+}
+
+.lexical-fullscreen {
+  @apply fixed inset-0 z-50 rounded-none shadow-2xl;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
 }
 
 .editor-wrapper {
-  @apply relative;
+  @apply relative h-full flex flex-col;
 }
 
 .toolbar {
-  @apply flex items-center gap-1 p-2 border-b border-border bg-muted/30;
+  @apply border-b border-border bg-muted/30;
+  padding: 8px 12px;
+}
+
+.toolbar-row {
+  @apply flex items-center gap-1;
   flex-wrap: wrap;
 }
 
 .toolbar-item {
-  @apply h-8 w-8 p-0 hover:bg-accent;
+  @apply h-9 w-9 p-0 inline-flex items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: hsl(var(--foreground));
+}
+
+.toolbar-item:disabled {
+  @apply opacity-40 cursor-not-allowed;
 }
 
 .toolbar-item.active {
   @apply bg-accent text-accent-foreground;
+}
+
+.toolbar-select {
+  @apply h-9 w-[160px] text-sm;
+}
+
+.toolbar-select-small {
+  @apply h-9 w-[80px] text-sm;
+}
+
+.toolbar-spacer {
+  flex: 1;
 }
 
 .divider {
@@ -25,13 +58,25 @@
 }
 
 .editor-inner {
-  @apply relative bg-background;
+  @apply relative bg-background flex-1 overflow-auto;
   min-height: 400px;
 }
 
+.lexical-fullscreen .editor-inner {
+  height: calc(100vh - 60px);
+  min-height: calc(100vh - 60px);
+}
+
 .editor-input {
-  @apply min-h-[400px] resize-none text-sm outline-none p-4;
+  @apply min-h-[400px] resize-none outline-none p-6;
   caret-color: hsl(var(--primary));
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.lexical-fullscreen .editor-input {
+  @apply min-h-full;
+  font-size: 16px;
 }
 
 .editor-placeholder {
