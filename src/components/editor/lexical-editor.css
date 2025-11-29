@@ -16,37 +16,51 @@
 }
 
 .toolbar {
-  @apply border-b border-border bg-muted/30;
-  padding: 8px 12px;
+  @apply border-b border-border bg-muted/20;
+  padding: 10px 14px;
 }
 
 .toolbar-row {
-  @apply flex items-center gap-1;
-  flex-wrap: wrap;
+  @apply flex items-center gap-1 flex-wrap;
 }
 
 .toolbar-item {
-  @apply h-9 w-9 p-0 inline-flex items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors;
+  @apply h-9 min-w-[36px] px-2 inline-flex items-center justify-center rounded hover:bg-accent/50 transition-colors;
   background: transparent;
   border: none;
   cursor: pointer;
   color: hsl(var(--foreground));
+  font-size: 14px;
+}
+
+.toolbar-item-small {
+  @apply h-8 w-8 min-w-[32px];
 }
 
 .toolbar-item:disabled {
-  @apply opacity-40 cursor-not-allowed;
+  @apply opacity-30 cursor-not-allowed;
 }
 
 .toolbar-item.active {
-  @apply bg-accent text-accent-foreground;
+  @apply bg-accent;
+}
+
+.toolbar-dropdown {
+  @apply gap-1;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.toolbar-font-size-group {
+  @apply flex items-center gap-0;
 }
 
 .toolbar-select {
-  @apply h-9 w-[160px] text-sm;
+  @apply h-9 min-w-[140px] text-sm border-0 bg-transparent shadow-none;
 }
 
 .toolbar-select-small {
-  @apply h-9 w-[80px] text-sm;
+  @apply h-9 w-[70px] text-sm border-0 bg-transparent shadow-none;
 }
 
 .toolbar-spacer {
@@ -54,7 +68,7 @@
 }
 
 .divider {
-  @apply w-px h-6 bg-border mx-1;
+  @apply w-px h-6 bg-border mx-2;
 }
 
 .editor-inner {
@@ -68,21 +82,28 @@
 }
 
 .editor-input {
-  @apply min-h-[400px] resize-none outline-none p-6;
+  @apply min-h-[400px] resize-none outline-none p-8;
   caret-color: hsl(var(--primary));
   font-size: 15px;
-  line-height: 1.6;
+  line-height: 1.7;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .lexical-fullscreen .editor-input {
   @apply min-h-full;
   font-size: 16px;
+  padding: 60px 80px;
 }
 
 .editor-placeholder {
   @apply text-muted-foreground overflow-hidden absolute text-sm select-none inline-block pointer-events-none;
-  top: 16px;
-  left: 16px;
+  top: 32px;
+  left: 32px;
+}
+
+.lexical-fullscreen .editor-placeholder {
+  top: 60px;
+  left: 80px;
 }
 
 .editor-paragraph {
@@ -110,7 +131,7 @@
 }
 
 .editor-text-code {
-  @apply bg-muted px-1 py-0.5 rounded text-sm font-mono;
+  @apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono;
 }
 
 .editor-link {
@@ -122,43 +143,47 @@
 }
 
 .editor-code {
-  @apply bg-muted font-mono text-sm block my-2 p-2 leading-6 rounded overflow-x-auto;
+  @apply bg-muted font-mono text-sm block my-3 p-4 leading-6 rounded overflow-x-auto;
+  tab-size: 2;
 }
 
 .editor-heading-h1 {
-  @apply text-3xl font-bold my-4;
+  @apply text-4xl font-bold my-5;
+  line-height: 1.2;
 }
 
 .editor-heading-h2 {
-  @apply text-2xl font-bold my-3;
+  @apply text-3xl font-bold my-4;
+  line-height: 1.3;
 }
 
 .editor-heading-h3 {
-  @apply text-xl font-bold my-2;
+  @apply text-2xl font-bold my-3;
+  line-height: 1.4;
 }
 
 .editor-heading-h4 {
-  @apply text-lg font-bold my-2;
+  @apply text-xl font-bold my-3;
 }
 
 .editor-heading-h5 {
-  @apply text-base font-bold my-2;
+  @apply text-lg font-bold my-2;
 }
 
 .editor-quote {
-  @apply my-4 pl-4 border-l-4 border-muted-foreground/30 italic;
+  @apply my-4 pl-5 border-l-4 border-muted-foreground/40 italic text-muted-foreground;
 }
 
 .editor-list-ol {
-  @apply pl-4 my-2 list-decimal;
+  @apply pl-6 my-3 list-decimal;
 }
 
 .editor-list-ul {
-  @apply pl-4 my-2 list-disc;
+  @apply pl-6 my-3 list-disc;
 }
 
 .editor-listitem {
-  @apply my-2;
+  @apply my-1.5;
 }
 
 .editor-nested-listitem {
