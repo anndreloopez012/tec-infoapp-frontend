@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
@@ -15,7 +15,7 @@ import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin';
 import { TRANSFORMERS } from '@lexical/markdown';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
-import { $getRoot, EditorState } from 'lexical';
+import { EditorState } from 'lexical';
 import ToolbarPlugin from './ToolbarPlugin';
 
 const theme = {
@@ -95,6 +95,8 @@ interface LexicalEditorProps {
 }
 
 export default function LexicalEditor({ value, onChange, placeholder = 'Escribe tu contenido...' }: LexicalEditorProps) {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
   const initialConfig = {
     namespace: 'ContentEditor',
     theme,
@@ -120,11 +122,15 @@ export default function LexicalEditor({ value, onChange, placeholder = 'Escribe 
     onChange(json);
   };
 
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
   return (
-    <div className="lexical-editor-container">
+    <div className={`lexical-editor-container ${isFullscreen ? 'lexical-fullscreen' : ''}`}>
       <LexicalComposer initialConfig={initialConfig}>
         <div className="editor-wrapper">
-          <ToolbarPlugin />
+          <ToolbarPlugin isFullscreen={isFullscreen} onToggleFullscreen={toggleFullscreen} />
           <div className="editor-inner">
             <RichTextPlugin
               contentEditable={<ContentEditable className="editor-input" />}
