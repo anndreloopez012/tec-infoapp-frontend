@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import MDEditor from '@uiw/react-md-editor';
+import LexicalEditor from '@/components/editor/LexicalEditor';
 import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
@@ -414,15 +414,12 @@ const ContentInfo = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="content">Contenido (Markdown)</Label>
-              <div data-color-mode="light">
-                <MDEditor
-                  value={formData.content || ''}
-                  onChange={(value) => setFormData(prev => ({ ...prev, content: value || '' }))}
-                  height={400}
-                  preview="edit"
-                />
-              </div>
+              <Label htmlFor="content">Contenido</Label>
+              <LexicalEditor
+                value={formData.content || ''}
+                onChange={(value) => setFormData(prev => ({ ...prev, content: value }))}
+                placeholder="Escribe tu contenido aquí..."
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
