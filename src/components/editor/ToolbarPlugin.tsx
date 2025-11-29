@@ -1,5 +1,5 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   CAN_REDO_COMMAND,
   CAN_UNDO_COMMAND,
@@ -11,6 +11,7 @@ import {
   $getSelection,
   $isRangeSelection,
   $createParagraphNode,
+  $getNodeByKey,
 } from 'lexical';
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link';
 import {
@@ -20,9 +21,10 @@ import {
   $isListNode,
   ListNode,
 } from '@lexical/list';
-import { $isHeadingNode } from '@lexical/rich-text';
+import { $isHeadingNode, $createHeadingNode, $createQuoteNode } from '@lexical/rich-text';
 import { $setBlocksType } from '@lexical/selection';
 import { $findMatchingParent, mergeRegister } from '@lexical/utils';
+import { $isCodeNode, $createCodeNode } from '@lexical/code';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -48,23 +50,11 @@ import {
   ListOrdered,
   Maximize2,
   Minimize2,
+  Quote,
+  CodeSquare,
 } from 'lucide-react';
 
 const LowPriority = 1;
-
-const blockTypeToBlockName = {
-  paragraph: 'Normal',
-  h1: 'Heading 1',
-  h2: 'Heading 2',
-  h3: 'Heading 3',
-  h4: 'Heading 4',
-  h5: 'Heading 5',
-  h6: 'Heading 6',
-  bullet: 'Bullet List',
-  number: 'Numbered List',
-  quote: 'Quote',
-  code: 'Code Block',
-};
 
 interface ToolbarPluginProps {
   isFullscreen: boolean;
@@ -101,7 +91,11 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
           const type = parentList ? (parentList as ListNode).getListType() : element.getListType();
           setBlockType(type);
         } else {
-          const type = $isHeadingNode(element) ? element.getTag() : element.getType();
+          const type = $isHeadingNode(element)
+            ? element.getTag()
+            : $isCodeNode(element)
+            ? 'code'
+            : element.getType();
           setBlockType(type);
         }
       }
@@ -163,18 +157,43 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         $setBlocksType(selection, () => $createParagraphNode());
       }
     });
+    // Return focus to editor
+    setTimeout(() => editor.focus(), 0);
   };
 
   const formatHeading = (headingSize: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6') => {
     editor.update(() => {
       const selection = $getSelection();
       if ($isRangeSelection(selection)) {
-        $setBlocksType(selection, () => {
-          const { createHeadingNode } = require('@lexical/rich-text');
-          return createHeadingNode(headingSize);
-        });
+        $setBlocksType(selection, () => $createHeadingNode(headingSize));
       }
     });
+    // Return focus to editor
+    setTimeout(() => editor.focus(), 0);
+  };
+
+  const formatQuote = () => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        $setBlocksType(selection, () => $createQuoteNode());
+      }
+    });
+    setTimeout(() => editor.focus(), 0);
+  };
+
+  const formatCode = () => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        if (blockType === 'code') {
+          $setBlocksType(selection, () => $createParagraphNode());
+        } else {
+          $setBlocksType(selection, () => $createCodeNode());
+        }
+      }
+    });
+    setTimeout(() => editor.focus(), 0);
   };
 
   const formatBulletList = () => {
@@ -183,6 +202,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
     } else {
       editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
     }
+    setTimeout(() => editor.focus(), 0);
   };
 
   const formatNumberedList = () => {
@@ -191,6 +211,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
     } else {
       editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
     }
+    setTimeout(() => editor.focus(), 0);
   };
 
   const insertLink = useCallback(() => {
@@ -199,16 +220,19 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
     } else {
       editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
     }
+    setTimeout(() => editor.focus(), 0);
   }, [editor, isLink]);
 
   return (
-    <div className="flex flex-wrap items-center gap-2 p-2 border-b bg-background" ref={toolbarRef}>
+    <div className="flex flex-wrap items-center gap-2 p-2 border-b bg-background sticky top-0 z-10" ref={toolbarRef}>
       <Button
         variant="ghost"
         size="sm"
         disabled={!canUndo}
+        onMouseDown={(e) => e.preventDefault()}
         onClick={() => {
           editor.dispatchCommand(UNDO_COMMAND, undefined);
+          setTimeout(() => editor.focus(), 0);
         }}
         aria-label="Undo"
       >
@@ -218,8 +242,10 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         variant="ghost"
         size="sm"
         disabled={!canRedo}
+        onMouseDown={(e) => e.preventDefault()}
         onClick={() => {
           editor.dispatchCommand(REDO_COMMAND, undefined);
+          setTimeout(() => editor.focus(), 0);
         }}
         aria-label="Redo"
       >
@@ -235,10 +261,14 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
             formatParagraph();
           } else if (value.startsWith('h')) {
             formatHeading(value as any);
+          } else if (value === 'quote') {
+            formatQuote();
+          } else if (value === 'code') {
+            formatCode();
           }
         }}
       >
-        <SelectTrigger className="w-[140px] h-8">
+        <SelectTrigger className="w-[140px] h-8" onMouseDown={(e) => e.preventDefault()}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -249,6 +279,8 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
           <SelectItem value="h4">Heading 4</SelectItem>
           <SelectItem value="h5">Heading 5</SelectItem>
           <SelectItem value="h6">Heading 6</SelectItem>
+          <SelectItem value="quote">Quote</SelectItem>
+          <SelectItem value="code">Code Block</SelectItem>
         </SelectContent>
       </Select>
 
@@ -257,8 +289,10 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
       <Button
         variant="ghost"
         size="sm"
+        onMouseDown={(e) => e.preventDefault()}
         onClick={() => {
           editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
+          setTimeout(() => editor.focus(), 0);
         }}
         className={isBold ? 'bg-muted' : ''}
         aria-label="Format Bold"
@@ -268,8 +302,10 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
       <Button
         variant="ghost"
         size="sm"
+        onMouseDown={(e) => e.preventDefault()}
         onClick={() => {
           editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic');
+          setTimeout(() => editor.focus(), 0);
         }}
         className={isItalic ? 'bg-muted' : ''}
         aria-label="Format Italic"
@@ -279,8 +315,10 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
       <Button
         variant="ghost"
         size="sm"
+        onMouseDown={(e) => e.preventDefault()}
         onClick={() => {
           editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline');
+          setTimeout(() => editor.focus(), 0);
         }}
         className={isUnderline ? 'bg-muted' : ''}
         aria-label="Format Underline"
@@ -290,8 +328,10 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
       <Button
         variant="ghost"
         size="sm"
+        onMouseDown={(e) => e.preventDefault()}
         onClick={() => {
           editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough');
+          setTimeout(() => editor.focus(), 0);
         }}
         className={isStrikethrough ? 'bg-muted' : ''}
         aria-label="Format Strikethrough"
@@ -301,8 +341,10 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
       <Button
         variant="ghost"
         size="sm"
+        onMouseDown={(e) => e.preventDefault()}
         onClick={() => {
           editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'code');
+          setTimeout(() => editor.focus(), 0);
         }}
         className={isCode ? 'bg-muted' : ''}
         aria-label="Format Code"
@@ -312,6 +354,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
       <Button
         variant="ghost"
         size="sm"
+        onMouseDown={(e) => e.preventDefault()}
         onClick={insertLink}
         className={isLink ? 'bg-muted' : ''}
         aria-label="Insert Link"
@@ -324,8 +367,10 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
       <Button
         variant="ghost"
         size="sm"
+        onMouseDown={(e) => e.preventDefault()}
         onClick={() => {
           editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'left');
+          setTimeout(() => editor.focus(), 0);
         }}
         aria-label="Left Align"
       >
@@ -334,8 +379,10 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
       <Button
         variant="ghost"
         size="sm"
+        onMouseDown={(e) => e.preventDefault()}
         onClick={() => {
           editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'center');
+          setTimeout(() => editor.focus(), 0);
         }}
         aria-label="Center Align"
       >
@@ -344,8 +391,10 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
       <Button
         variant="ghost"
         size="sm"
+        onMouseDown={(e) => e.preventDefault()}
         onClick={() => {
           editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'right');
+          setTimeout(() => editor.focus(), 0);
         }}
         aria-label="Right Align"
       >
@@ -354,8 +403,10 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
       <Button
         variant="ghost"
         size="sm"
+        onMouseDown={(e) => e.preventDefault()}
         onClick={() => {
           editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'justify');
+          setTimeout(() => editor.focus(), 0);
         }}
         aria-label="Justify Align"
       >
@@ -367,6 +418,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
       <Button
         variant="ghost"
         size="sm"
+        onMouseDown={(e) => e.preventDefault()}
         onClick={formatBulletList}
         className={blockType === 'bullet' ? 'bg-muted' : ''}
         aria-label="Bullet List"
@@ -376,6 +428,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
       <Button
         variant="ghost"
         size="sm"
+        onMouseDown={(e) => e.preventDefault()}
         onClick={formatNumberedList}
         className={blockType === 'number' ? 'bg-muted' : ''}
         aria-label="Numbered List"
@@ -388,6 +441,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
       <Button
         variant="ghost"
         size="sm"
+        onMouseDown={(e) => e.preventDefault()}
         onClick={onToggleFullscreen}
         aria-label={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
       >
