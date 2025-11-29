@@ -27,7 +27,7 @@ import {
   TableNode,
 } from '@lexical/table';
 import { $isHeadingNode, $createHeadingNode, $createQuoteNode } from '@lexical/rich-text';
-import { $setBlocksType } from '@lexical/selection';
+import { $setBlocksType, $patchStyleText } from '@lexical/selection';
 import { $findMatchingParent, mergeRegister } from '@lexical/utils';
 import { $isCodeNode, $createCodeNode } from '@lexical/code';
 import { INSERT_IMAGE_COMMAND } from './plugins/ImagesPlugin';
@@ -72,12 +72,16 @@ import {
   ChevronDown,
   Video,
   Share2,
+  Palette,
+  Highlighter,
 } from 'lucide-react';
 import LinkDialog from './ui/LinkDialog';
 import ImageDialog from './ui/ImageDialog';
 import VideoDialog from './ui/VideoDialog';
 import EmbedDialog from './ui/EmbedDialog';
 import TableDialog from './ui/TableDialog';
+import ColorPicker from './ui/ColorPicker';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const LowPriority = 1;
 
@@ -103,6 +107,10 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
   const [showVideoDialog, setShowVideoDialog] = useState(false);
   const [showEmbedDialog, setShowEmbedDialog] = useState(false);
   const [showTableDialog, setShowTableDialog] = useState(false);
+  const [textColor, setTextColor] = useState('#000000');
+  const [bgColor, setBgColor] = useState('');
+  const [showTextColorPicker, setShowTextColorPicker] = useState(false);
+  const [showBgColorPicker, setShowBgColorPicker] = useState(false);
 
   const updateToolbar = useCallback(() => {
     const selection = $getSelection();
@@ -326,6 +334,28 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
     setTimeout(() => editor.focus(), 0);
   }, [editor]);
 
+  const applyTextColor = useCallback((color: string) => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        $patchStyleText(selection, { color: color || null });
+      }
+    });
+    setShowTextColorPicker(false);
+    setTimeout(() => editor.focus(), 0);
+  }, [editor]);
+
+  const applyBackgroundColor = useCallback((color: string) => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        $patchStyleText(selection, { 'background-color': color || null });
+      }
+    });
+    setShowBgColorPicker(false);
+    setTimeout(() => editor.focus(), 0);
+  }, [editor]);
+
   return (
     <div className="flex flex-wrap items-center gap-2 p-2 border-b bg-background sticky top-0 z-10" ref={toolbarRef}>
       <Button
@@ -523,6 +553,40 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
       >
         <Link className="h-4 w-4" />
       </Button>
+
+      <div className="w-px h-6 bg-border" />
+
+      <Popover open={showTextColorPicker} onOpenChange={setShowTextColorPicker}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            onMouseDown={(e) => e.preventDefault()}
+            aria-label="Text Color"
+          >
+            <Palette className="h-4 w-4" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <ColorPicker value={textColor} onChange={applyTextColor} />
+        </PopoverContent>
+      </Popover>
+
+      <Popover open={showBgColorPicker} onOpenChange={setShowBgColorPicker}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            onMouseDown={(e) => e.preventDefault()}
+            aria-label="Background Color"
+          >
+            <Highlighter className="h-4 w-4" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <ColorPicker value={bgColor} onChange={applyBackgroundColor} />
+        </PopoverContent>
+      </Popover>
 
       <div className="w-px h-6 bg-border" />
 
