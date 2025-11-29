@@ -19,8 +19,12 @@ import { TableCellNode, TableNode, TableRowNode } from '@lexical/table';
 import ToolbarPlugin from './ToolbarPlugin';
 import ImagesPlugin from './plugins/ImagesPlugin';
 import HorizontalRulePlugin from './plugins/HorizontalRulePlugin';
+import VideoPlugin from './plugins/VideoPlugin';
+import EmbedPlugin from './plugins/EmbedPlugin';
 import { ImageNode } from './nodes/ImageNode';
 import { HorizontalRuleNode } from './nodes/HorizontalRuleNode';
+import { VideoNode } from './nodes/VideoNode';
+import { EmbedNode } from './nodes/EmbedNode';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { useEffect, useState } from 'react';
 
@@ -119,6 +123,8 @@ export default function LexicalEditor({ value, onChange, placeholder = 'Enter so
       LinkNode,
       ImageNode,
       HorizontalRuleNode,
+      VideoNode,
+      EmbedNode,
       TableNode,
       TableCellNode,
       TableRowNode,
@@ -157,6 +163,8 @@ export default function LexicalEditor({ value, onChange, placeholder = 'Enter so
             <TablePlugin />
             <ImagesPlugin />
             <HorizontalRulePlugin />
+            <VideoPlugin />
+            <EmbedPlugin />
             <UpdatePlugin value={value} onChange={onChange} />
           </div>
         </div>

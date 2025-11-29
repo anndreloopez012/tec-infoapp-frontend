@@ -32,6 +32,8 @@ import { $findMatchingParent, mergeRegister } from '@lexical/utils';
 import { $isCodeNode, $createCodeNode } from '@lexical/code';
 import { INSERT_IMAGE_COMMAND } from './plugins/ImagesPlugin';
 import { INSERT_HORIZONTAL_RULE_COMMAND } from './plugins/HorizontalRulePlugin';
+import { INSERT_VIDEO_COMMAND } from './plugins/VideoPlugin';
+import { INSERT_EMBED_COMMAND } from './plugins/EmbedPlugin';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -68,9 +70,14 @@ import {
   Image,
   Table,
   ChevronDown,
+  Video,
+  Share2,
 } from 'lucide-react';
 import LinkDialog from './ui/LinkDialog';
 import ImageDialog from './ui/ImageDialog';
+import VideoDialog from './ui/VideoDialog';
+import EmbedDialog from './ui/EmbedDialog';
+import TableDialog from './ui/TableDialog';
 
 const LowPriority = 1;
 
@@ -93,6 +100,9 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
   const [isLink, setIsLink] = useState(false);
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [showImageDialog, setShowImageDialog] = useState(false);
+  const [showVideoDialog, setShowVideoDialog] = useState(false);
+  const [showEmbedDialog, setShowEmbedDialog] = useState(false);
+  const [showTableDialog, setShowTableDialog] = useState(false);
 
   const updateToolbar = useCallback(() => {
     const selection = $getSelection();
@@ -280,13 +290,39 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
     [editor]
   );
 
+  const handleVideoConfirm = useCallback(
+    (src: string, type: 'youtube' | 'upload', width: number, height: number) => {
+      editor.dispatchCommand(INSERT_VIDEO_COMMAND, {
+        src,
+        type,
+        width,
+        height,
+      });
+      setTimeout(() => editor.focus(), 0);
+    },
+    [editor]
+  );
+
+  const handleEmbedConfirm = useCallback(
+    (url: string, platform: 'instagram' | 'facebook' | 'twitter', width: number, height: number) => {
+      editor.dispatchCommand(INSERT_EMBED_COMMAND, {
+        url,
+        platform,
+        width,
+        height,
+      });
+      setTimeout(() => editor.focus(), 0);
+    },
+    [editor]
+  );
+
   const insertHorizontalRule = useCallback(() => {
     editor.dispatchCommand(INSERT_HORIZONTAL_RULE_COMMAND, undefined);
     setTimeout(() => editor.focus(), 0);
   }, [editor]);
 
-  const insertTable = useCallback(() => {
-    editor.dispatchCommand(INSERT_TABLE_COMMAND, { rows: '3', columns: '3' });
+  const handleTableConfirm = useCallback((rows: string, columns: string) => {
+    editor.dispatchCommand(INSERT_TABLE_COMMAND, { rows, columns });
     setTimeout(() => editor.focus(), 0);
   }, [editor]);
 
@@ -385,7 +421,23 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
           </DropdownMenuItem>
           <DropdownMenuItem
             onSelect={() => {
-              insertTable();
+              setShowVideoDialog(true);
+            }}
+          >
+            <Video className="h-4 w-4 mr-2" />
+            Video
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() => {
+              setShowEmbedDialog(true);
+            }}
+          >
+            <Share2 className="h-4 w-4 mr-2" />
+            Redes Sociales
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() => {
+              setShowTableDialog(true);
             }}
           >
             <Table className="h-4 w-4 mr-2" />
@@ -567,6 +619,21 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         open={showImageDialog}
         onClose={() => setShowImageDialog(false)}
         onConfirm={handleImageConfirm}
+      />
+      <VideoDialog
+        open={showVideoDialog}
+        onClose={() => setShowVideoDialog(false)}
+        onConfirm={handleVideoConfirm}
+      />
+      <EmbedDialog
+        open={showEmbedDialog}
+        onClose={() => setShowEmbedDialog(false)}
+        onConfirm={handleEmbedConfirm}
+      />
+      <TableDialog
+        open={showTableDialog}
+        onClose={() => setShowTableDialog(false)}
+        onConfirm={handleTableConfirm}
       />
     </div>
   );
