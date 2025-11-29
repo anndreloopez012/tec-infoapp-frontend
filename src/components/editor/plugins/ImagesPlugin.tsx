@@ -12,10 +12,6 @@ export default function ImagesPlugin(): JSX.Element | null {
   const [editor] = useLexicalComposerContext();
 
   useEffect(() => {
-    if (!editor.hasNodes([$createImageNode({ src: '', altText: '' }).constructor as any])) {
-      throw new Error('ImagesPlugin: ImageNode not registered on editor');
-    }
-
     return editor.registerCommand<ImagePayload>(
       INSERT_IMAGE_COMMAND,
       (payload) => {
