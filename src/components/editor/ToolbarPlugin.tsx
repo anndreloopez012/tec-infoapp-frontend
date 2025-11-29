@@ -88,6 +88,7 @@ import EmbedDialog from './ui/EmbedDialog';
 import TableDialog from './ui/TableDialog';
 import ColorPicker from './ui/ColorPicker';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const LowPriority = 1;
 
@@ -119,6 +120,8 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
   const [bgColor, setBgColor] = useState('');
   const [showTextColorPicker, setShowTextColorPicker] = useState(false);
   const [showBgColorPicker, setShowBgColorPicker] = useState(false);
+  const [fontFamily, setFontFamily] = useState('Arial');
+  const [fontSize, setFontSize] = useState('16px');
 
   const updateToolbar = useCallback(() => {
     const selection = $getSelection();
@@ -415,78 +418,156 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         if (selection.hasFormat('superscript')) {
           editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'superscript');
         }
-        // Remove colors
+        // Remove colors and font styles
         $patchStyleText(selection, { 
           color: null, 
-          'background-color': null 
+          'background-color': null,
+          'font-family': null,
+          'font-size': null
         });
       }
     });
     setTimeout(() => editor.focus(), 0);
   }, [editor]);
 
+  const applyFontFamily = useCallback((font: string) => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        $patchStyleText(selection, { 'font-family': font });
+      }
+    });
+    setFontFamily(font);
+    setTimeout(() => editor.focus(), 0);
+  }, [editor]);
+
+  const applyFontSize = useCallback((size: string) => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        $patchStyleText(selection, { 'font-size': size });
+      }
+    });
+    setFontSize(size);
+    setTimeout(() => editor.focus(), 0);
+  }, [editor]);
+
   return (
-    <div className="flex flex-wrap items-center gap-2 p-2 border-b bg-background sticky top-0 z-10" ref={toolbarRef}>
-      <Button
-        variant="ghost"
-        size="sm"
-        disabled={!canUndo}
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => {
-          editor.dispatchCommand(UNDO_COMMAND, undefined);
-          setTimeout(() => editor.focus(), 0);
-        }}
-        aria-label="Undo"
-      >
-        <Undo2 className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        disabled={!canRedo}
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => {
-          editor.dispatchCommand(REDO_COMMAND, undefined);
-          setTimeout(() => editor.focus(), 0);
-        }}
-        aria-label="Redo"
-      >
-        <Redo2 className="h-4 w-4" />
-      </Button>
+    <TooltipProvider>
+      <div className="flex flex-wrap items-center gap-2 p-2 border-b bg-background sticky top-0 z-10" ref={toolbarRef}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={!canUndo}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                editor.dispatchCommand(UNDO_COMMAND, undefined);
+                setTimeout(() => editor.focus(), 0);
+              }}
+              aria-label="Undo"
+            >
+              <Undo2 className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Deshacer</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={!canRedo}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                editor.dispatchCommand(REDO_COMMAND, undefined);
+                setTimeout(() => editor.focus(), 0);
+              }}
+              aria-label="Redo"
+            >
+              <Redo2 className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Rehacer</TooltipContent>
+        </Tooltip>
       
-      <div className="w-px h-6 bg-border" />
+        <div className="w-px h-6 bg-border" />
 
-      <Select
-        value={blockType}
-        onValueChange={(value) => {
-          if (value === 'paragraph') {
-            formatParagraph();
-          } else if (value.startsWith('h')) {
-            formatHeading(value as any);
-          } else if (value === 'quote') {
-            formatQuote();
-          } else if (value === 'code') {
-            formatCode();
-          }
-        }}
-      >
-        <SelectTrigger className="w-[140px] h-8" onMouseDown={(e) => e.preventDefault()}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="paragraph">Normal</SelectItem>
-          <SelectItem value="h1">Heading 1</SelectItem>
-          <SelectItem value="h2">Heading 2</SelectItem>
-          <SelectItem value="h3">Heading 3</SelectItem>
-          <SelectItem value="h4">Heading 4</SelectItem>
-          <SelectItem value="h5">Heading 5</SelectItem>
-          <SelectItem value="h6">Heading 6</SelectItem>
-          <SelectItem value="quote">Quote</SelectItem>
-          <SelectItem value="code">Code Block</SelectItem>
-        </SelectContent>
-      </Select>
+        <Select
+          value={fontFamily}
+          onValueChange={applyFontFamily}
+        >
+          <SelectTrigger className="w-[160px] h-8" onMouseDown={(e) => e.preventDefault()}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Arial">Arial</SelectItem>
+            <SelectItem value="Times New Roman">Times New Roman</SelectItem>
+            <SelectItem value="Courier New">Courier New</SelectItem>
+            <SelectItem value="Georgia">Georgia</SelectItem>
+            <SelectItem value="Verdana">Verdana</SelectItem>
+            <SelectItem value="Helvetica">Helvetica</SelectItem>
+            <SelectItem value="Palatino">Palatino</SelectItem>
+            <SelectItem value="Garamond">Garamond</SelectItem>
+          </SelectContent>
+        </Select>
 
-      <div className="w-px h-6 bg-border" />
+        <Select
+          value={fontSize}
+          onValueChange={applyFontSize}
+        >
+          <SelectTrigger className="w-[100px] h-8" onMouseDown={(e) => e.preventDefault()}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="8px">8px</SelectItem>
+            <SelectItem value="10px">10px</SelectItem>
+            <SelectItem value="12px">12px</SelectItem>
+            <SelectItem value="14px">14px</SelectItem>
+            <SelectItem value="16px">16px</SelectItem>
+            <SelectItem value="18px">18px</SelectItem>
+            <SelectItem value="20px">20px</SelectItem>
+            <SelectItem value="24px">24px</SelectItem>
+            <SelectItem value="30px">30px</SelectItem>
+            <SelectItem value="36px">36px</SelectItem>
+            <SelectItem value="48px">48px</SelectItem>
+            <SelectItem value="60px">60px</SelectItem>
+            <SelectItem value="72px">72px</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={blockType}
+          onValueChange={(value) => {
+            if (value === 'paragraph') {
+              formatParagraph();
+            } else if (value.startsWith('h')) {
+              formatHeading(value as any);
+            } else if (value === 'quote') {
+              formatQuote();
+            } else if (value === 'code') {
+              formatCode();
+            }
+          }}
+        >
+          <SelectTrigger className="w-[140px] h-8" onMouseDown={(e) => e.preventDefault()}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="paragraph">Normal</SelectItem>
+            <SelectItem value="h1">Heading 1</SelectItem>
+            <SelectItem value="h2">Heading 2</SelectItem>
+            <SelectItem value="h3">Heading 3</SelectItem>
+            <SelectItem value="h4">Heading 4</SelectItem>
+            <SelectItem value="h5">Heading 5</SelectItem>
+            <SelectItem value="h6">Heading 6</SelectItem>
+            <SelectItem value="quote">Quote</SelectItem>
+            <SelectItem value="code">Code Block</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <div className="w-px h-6 bg-border" />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -545,143 +626,193 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <div className="w-px h-6 bg-border" />
+        <div className="w-px h-6 bg-border" />
 
-      <Button
-        variant="ghost"
-        size="sm"
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => {
-          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
-          setTimeout(() => editor.focus(), 0);
-        }}
-        className={isBold ? 'bg-muted' : ''}
-        aria-label="Format Bold"
-      >
-        <Bold className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => {
-          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic');
-          setTimeout(() => editor.focus(), 0);
-        }}
-        className={isItalic ? 'bg-muted' : ''}
-        aria-label="Format Italic"
-      >
-        <Italic className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => {
-          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline');
-          setTimeout(() => editor.focus(), 0);
-        }}
-        className={isUnderline ? 'bg-muted' : ''}
-        aria-label="Format Underline"
-      >
-        <Underline className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => {
-          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough');
-          setTimeout(() => editor.focus(), 0);
-        }}
-        className={isStrikethrough ? 'bg-muted' : ''}
-        aria-label="Format Strikethrough"
-      >
-        <Strikethrough className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => {
-          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'code');
-          setTimeout(() => editor.focus(), 0);
-        }}
-        className={isCode ? 'bg-muted' : ''}
-        aria-label="Format Code"
-      >
-        <Code className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={insertLink}
-        className={isLink ? 'bg-muted' : ''}
-        aria-label="Insert Link"
-      >
-        <Link className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => {
-          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'subscript');
-          setTimeout(() => editor.focus(), 0);
-        }}
-        className={isSubscript ? 'bg-muted' : ''}
-        aria-label="Subscript"
-      >
-        <Subscript className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => {
-          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'superscript');
-          setTimeout(() => editor.focus(), 0);
-        }}
-        className={isSuperscript ? 'bg-muted' : ''}
-        aria-label="Superscript"
-      >
-        <Superscript className="h-4 w-4" />
-      </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
+                setTimeout(() => editor.focus(), 0);
+              }}
+              className={isBold ? 'bg-muted' : ''}
+              aria-label="Format Bold"
+            >
+              <Bold className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Negrita</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic');
+                setTimeout(() => editor.focus(), 0);
+              }}
+              className={isItalic ? 'bg-muted' : ''}
+              aria-label="Format Italic"
+            >
+              <Italic className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Cursiva</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline');
+                setTimeout(() => editor.focus(), 0);
+              }}
+              className={isUnderline ? 'bg-muted' : ''}
+              aria-label="Format Underline"
+            >
+              <Underline className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Subrayado</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough');
+                setTimeout(() => editor.focus(), 0);
+              }}
+              className={isStrikethrough ? 'bg-muted' : ''}
+              aria-label="Format Strikethrough"
+            >
+              <Strikethrough className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Tachado</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'code');
+                setTimeout(() => editor.focus(), 0);
+              }}
+              className={isCode ? 'bg-muted' : ''}
+              aria-label="Format Code"
+            >
+              <Code className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Código</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={insertLink}
+              className={isLink ? 'bg-muted' : ''}
+              aria-label="Insert Link"
+            >
+              <Link className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Insertar enlace</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'subscript');
+                setTimeout(() => editor.focus(), 0);
+              }}
+              className={isSubscript ? 'bg-muted' : ''}
+              aria-label="Subscript"
+            >
+              <Subscript className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Subíndice</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'superscript');
+                setTimeout(() => editor.focus(), 0);
+              }}
+              className={isSuperscript ? 'bg-muted' : ''}
+              aria-label="Superscript"
+            >
+              <Superscript className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Superíndice</TooltipContent>
+        </Tooltip>
 
-      <div className="w-px h-6 bg-border" />
+        <div className="w-px h-6 bg-border" />
 
-      <Popover open={showTextColorPicker} onOpenChange={setShowTextColorPicker}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            onMouseDown={(e) => e.preventDefault()}
-            aria-label="Text Color"
-          >
-            <Palette className="h-4 w-4" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <ColorPicker value={textColor} onChange={applyTextColor} />
-        </PopoverContent>
-      </Popover>
+        <Popover open={showTextColorPicker} onOpenChange={setShowTextColorPicker}>
+          <PopoverTrigger asChild>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onMouseDown={(e) => e.preventDefault()}
+                  aria-label="Text Color"
+                >
+                  <Palette className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Color de texto</TooltipContent>
+            </Tooltip>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <ColorPicker value={textColor} onChange={applyTextColor} />
+          </PopoverContent>
+        </Popover>
 
-      <Popover open={showBgColorPicker} onOpenChange={setShowBgColorPicker}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            onMouseDown={(e) => e.preventDefault()}
-            aria-label="Background Color"
-          >
-            <Highlighter className="h-4 w-4" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <ColorPicker value={bgColor} onChange={applyBackgroundColor} />
-        </PopoverContent>
-      </Popover>
+        <Popover open={showBgColorPicker} onOpenChange={setShowBgColorPicker}>
+          <PopoverTrigger asChild>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onMouseDown={(e) => e.preventDefault()}
+                  aria-label="Background Color"
+                >
+                  <Highlighter className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Color de fondo</TooltipContent>
+            </Tooltip>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <ColorPicker value={bgColor} onChange={applyBackgroundColor} />
+          </PopoverContent>
+        </Popover>
 
       <div className="w-px h-6 bg-border" />
 
@@ -725,91 +856,126 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <div className="w-px h-6 bg-border" />
+        <div className="w-px h-6 bg-border" />
 
-      <Button
-        variant="ghost"
-        size="sm"
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => {
-          editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'left');
-          setTimeout(() => editor.focus(), 0);
-        }}
-        aria-label="Left Align"
-      >
-        <AlignLeft className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => {
-          editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'center');
-          setTimeout(() => editor.focus(), 0);
-        }}
-        aria-label="Center Align"
-      >
-        <AlignCenter className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => {
-          editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'right');
-          setTimeout(() => editor.focus(), 0);
-        }}
-        aria-label="Right Align"
-      >
-        <AlignRight className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => {
-          editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'justify');
-          setTimeout(() => editor.focus(), 0);
-        }}
-        aria-label="Justify Align"
-      >
-        <AlignJustify className="h-4 w-4" />
-      </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'left');
+                setTimeout(() => editor.focus(), 0);
+              }}
+              aria-label="Left Align"
+            >
+              <AlignLeft className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Alinear izquierda</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'center');
+                setTimeout(() => editor.focus(), 0);
+              }}
+              aria-label="Center Align"
+            >
+              <AlignCenter className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Centrar</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'right');
+                setTimeout(() => editor.focus(), 0);
+              }}
+              aria-label="Right Align"
+            >
+              <AlignRight className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Alinear derecha</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'justify');
+                setTimeout(() => editor.focus(), 0);
+              }}
+              aria-label="Justify Align"
+            >
+              <AlignJustify className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Justificar</TooltipContent>
+        </Tooltip>
 
-      <div className="w-px h-6 bg-border" />
+        <div className="w-px h-6 bg-border" />
 
-      <Button
-        variant="ghost"
-        size="sm"
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={formatBulletList}
-        className={blockType === 'bullet' ? 'bg-muted' : ''}
-        aria-label="Bullet List"
-      >
-        <List className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={formatNumberedList}
-        className={blockType === 'number' ? 'bg-muted' : ''}
-        aria-label="Numbered List"
-      >
-        <ListOrdered className="h-4 w-4" />
-      </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={formatBulletList}
+              className={blockType === 'bullet' ? 'bg-muted' : ''}
+              aria-label="Bullet List"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Lista con viñetas</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={formatNumberedList}
+              className={blockType === 'number' ? 'bg-muted' : ''}
+              aria-label="Numbered List"
+            >
+              <ListOrdered className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Lista numerada</TooltipContent>
+        </Tooltip>
 
-      <div className="flex-1" />
+        <div className="flex-1" />
 
-      <Button
-        variant="ghost"
-        size="sm"
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={onToggleFullscreen}
-        aria-label={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-      >
-        {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-      </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={onToggleFullscreen}
+              aria-label={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+            >
+              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{isFullscreen ? 'Salir pantalla completa' : 'Pantalla completa'}</TooltipContent>
+        </Tooltip>
 
       <LinkDialog
         open={showLinkDialog}
@@ -831,11 +997,12 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         onClose={() => setShowEmbedDialog(false)}
         onConfirm={handleEmbedConfirm}
       />
-      <TableDialog
-        open={showTableDialog}
-        onClose={() => setShowTableDialog(false)}
-        onConfirm={handleTableConfirm}
-      />
-    </div>
+        <TableDialog
+          open={showTableDialog}
+          onClose={() => setShowTableDialog(false)}
+          onConfirm={handleTableConfirm}
+        />
+      </div>
+    </TooltipProvider>
   );
 }
