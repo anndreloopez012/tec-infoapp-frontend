@@ -9,6 +9,7 @@ import {
   type SerializedLexicalNode,
   type Spread,
 } from 'lexical';
+import * as React from 'react';
 
 export interface ImagePayload {
   altText: string;
@@ -147,21 +148,105 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
   }
 
   decorate(): JSX.Element {
-    return (
+    return <ImageComponent 
+      src={this.__src}
+      altText={this.__altText}
+      width={this.__width}
+      height={this.__height}
+      maxWidth={this.__maxWidth}
+      nodeKey={this.__key}
+    />;
+  }
+}
+
+function ImageComponent({
+  src,
+  altText,
+  width,
+  height,
+  maxWidth = 800,
+  nodeKey
+}: {
+  src: string;
+  altText: string;
+  width?: number;
+  height?: number;
+  maxWidth?: number;
+  nodeKey: NodeKey;
+}) {
+  const [isResizing, setIsResizing] = React.useState(false);
+  const [dimensions, setDimensions] = React.useState({ 
+    width: width || maxWidth, 
+    height: height || 0 
+  });
+
+  const handleResize = (e: React.MouseEvent, direction: 'width' | 'height' | 'both') => {
+    e.preventDefault();
+    setIsResizing(true);
+    
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startWidth = dimensions.width;
+    const startHeight = dimensions.height;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const deltaX = moveEvent.clientX - startX;
+      const deltaY = moveEvent.clientY - startY;
+      
+      setDimensions({
+        width: direction === 'width' || direction === 'both' ? Math.max(100, startWidth + deltaX) : startWidth,
+        height: direction === 'height' || direction === 'both' ? Math.max(50, startHeight + deltaY) : startHeight,
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  return (
+    <div 
+      className="relative inline-block group my-4"
+      style={{ 
+        maxWidth: maxWidth ? `${maxWidth}px` : '100%',
+        width: dimensions.width ? `${dimensions.width}px` : 'auto'
+      }}
+    >
       <img
-        src={this.__src}
-        alt={this.__altText}
+        src={src}
+        alt={altText}
         style={{
-          maxWidth: this.__maxWidth ? `${this.__maxWidth}px` : '100%',
-          width: this.__width ? `${this.__width}px` : 'auto',
-          height: this.__height ? `${this.__height}px` : 'auto',
+          width: '100%',
+          height: dimensions.height ? `${dimensions.height}px` : 'auto',
           display: 'block',
-          margin: '1rem 0',
           borderRadius: '0.5rem',
         }}
       />
-    );
-  }
+      
+      {/* Resize handles */}
+      <div className="absolute bottom-0 right-0 w-4 h-4 bg-primary rounded-tl cursor-nwse-resize opacity-0 group-hover:opacity-100 transition-opacity"
+        onMouseDown={(e) => handleResize(e, 'both')}
+      />
+      <div className="absolute bottom-0 left-1/2 w-8 h-2 bg-primary rounded-t cursor-ns-resize opacity-0 group-hover:opacity-100 transition-opacity -translate-x-1/2"
+        onMouseDown={(e) => handleResize(e, 'height')}
+      />
+      <div className="absolute right-0 top-1/2 w-2 h-8 bg-primary rounded-l cursor-ew-resize opacity-0 group-hover:opacity-100 transition-opacity -translate-y-1/2"
+        onMouseDown={(e) => handleResize(e, 'width')}
+      />
+      
+      {/* Dimensions display */}
+      {isResizing && (
+        <div className="absolute top-2 left-2 bg-black/75 text-white px-2 py-1 rounded text-xs z-10">
+          {dimensions.width} × {dimensions.height || 'auto'}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function $createImageNode({
