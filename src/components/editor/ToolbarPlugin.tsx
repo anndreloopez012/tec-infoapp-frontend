@@ -74,6 +74,12 @@ import {
   Share2,
   Palette,
   Highlighter,
+  CaseLower,
+  CaseUpper,
+  Type,
+  Subscript,
+  Superscript,
+  Eraser,
 } from 'lucide-react';
 import LinkDialog from './ui/LinkDialog';
 import ImageDialog from './ui/ImageDialog';
@@ -102,6 +108,8 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const [isCode, setIsCode] = useState(false);
   const [isLink, setIsLink] = useState(false);
+  const [isSubscript, setIsSubscript] = useState(false);
+  const [isSuperscript, setIsSuperscript] = useState(false);
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [showVideoDialog, setShowVideoDialog] = useState(false);
@@ -143,6 +151,8 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
       setIsUnderline(selection.hasFormat('underline'));
       setIsStrikethrough(selection.hasFormat('strikethrough'));
       setIsCode(selection.hasFormat('code'));
+      setIsSubscript(selection.hasFormat('subscript'));
+      setIsSuperscript(selection.hasFormat('superscript'));
 
       const node = selection.anchor.getNode();
       const parent = node.getParent();
@@ -356,6 +366,65 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
     setTimeout(() => editor.focus(), 0);
   }, [editor]);
 
+  const transformText = useCallback((transform: 'lowercase' | 'uppercase' | 'capitalize') => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        const text = selection.getTextContent();
+        let transformedText = text;
+        
+        if (transform === 'lowercase') {
+          transformedText = text.toLowerCase();
+        } else if (transform === 'uppercase') {
+          transformedText = text.toUpperCase();
+        } else if (transform === 'capitalize') {
+          transformedText = text.split(' ').map(word => 
+            word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+          ).join(' ');
+        }
+        
+        selection.insertText(transformedText);
+      }
+    });
+    setTimeout(() => editor.focus(), 0);
+  }, [editor]);
+
+  const clearFormatting = useCallback(() => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        // Remove all text formatting
+        if (selection.hasFormat('bold')) {
+          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
+        }
+        if (selection.hasFormat('italic')) {
+          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic');
+        }
+        if (selection.hasFormat('underline')) {
+          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline');
+        }
+        if (selection.hasFormat('strikethrough')) {
+          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough');
+        }
+        if (selection.hasFormat('code')) {
+          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'code');
+        }
+        if (selection.hasFormat('subscript')) {
+          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'subscript');
+        }
+        if (selection.hasFormat('superscript')) {
+          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'superscript');
+        }
+        // Remove colors
+        $patchStyleText(selection, { 
+          color: null, 
+          'background-color': null 
+        });
+      }
+    });
+    setTimeout(() => editor.focus(), 0);
+  }, [editor]);
+
   return (
     <div className="flex flex-wrap items-center gap-2 p-2 border-b bg-background sticky top-0 z-10" ref={toolbarRef}>
       <Button
@@ -553,6 +622,32 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
       >
         <Link className="h-4 w-4" />
       </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => {
+          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'subscript');
+          setTimeout(() => editor.focus(), 0);
+        }}
+        className={isSubscript ? 'bg-muted' : ''}
+        aria-label="Subscript"
+      >
+        <Subscript className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => {
+          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'superscript');
+          setTimeout(() => editor.focus(), 0);
+        }}
+        className={isSuperscript ? 'bg-muted' : ''}
+        aria-label="Superscript"
+      >
+        <Superscript className="h-4 w-4" />
+      </Button>
 
       <div className="w-px h-6 bg-border" />
 
@@ -587,6 +682,48 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
           <ColorPicker value={bgColor} onChange={applyBackgroundColor} />
         </PopoverContent>
       </Popover>
+
+      <div className="w-px h-6 bg-border" />
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            onMouseDown={(e) => e.preventDefault()}
+            aria-label="Text Transform"
+          >
+            <Type className="h-4 w-4" />
+            <ChevronDown className="h-3 w-3 ml-1" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-56">
+          <DropdownMenuItem
+            onSelect={() => transformText('lowercase')}
+          >
+            <CaseLower className="h-4 w-4 mr-2" />
+            Lowercase
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() => transformText('uppercase')}
+          >
+            <CaseUpper className="h-4 w-4 mr-2" />
+            Uppercase
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() => transformText('capitalize')}
+          >
+            <Type className="h-4 w-4 mr-2" />
+            Capitalize
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() => clearFormatting()}
+          >
+            <Eraser className="h-4 w-4 mr-2" />
+            Clear Formatting
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <div className="w-px h-6 bg-border" />
 
