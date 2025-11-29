@@ -52,6 +52,7 @@ import EventLocation from '@/pages/catalog/EventLocation';
 import ContentTag from '@/pages/catalog/ContentTag';
 import EventType from '@/pages/catalog/EventType';
 import ContentInfo from '@/pages/catalog/ContentInfo';
+import ContentInfoForm from '@/pages/catalog/ContentInfoForm';
 import Gallery from '@/pages/catalog/Gallery';
 import Event from '@/pages/Event';
 import EventCalendar from '@/pages/EventCalendar';
@@ -155,6 +156,8 @@ const AppRoutes = () => {
           
           {/* System Module Routes */}
           <Route path="/contentinfo" element={<ContentInfo />} />
+          <Route path="/contentinfo/new" element={<ContentInfoForm />} />
+          <Route path="/contentinfo/edit" element={<ContentInfoForm />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/event" element={<Event />} />
           <Route path="/calendar" element={<EventCalendar />} />

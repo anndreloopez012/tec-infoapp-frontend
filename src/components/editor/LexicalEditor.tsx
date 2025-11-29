@@ -6,17 +6,17 @@ import { AutoFocusPlugin } from '@lexical/react/LexicalAutoFocusPlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { HeadingNode, QuoteNode } from '@lexical/rich-text';
 import { ListItemNode, ListNode } from '@lexical/list';
-import { CodeNode } from '@lexical/code';
+import { CodeNode, CodeHighlightNode } from '@lexical/code';
 import { AutoLinkNode, LinkNode } from '@lexical/link';
 import { LinkPlugin } from '@lexical/react/LexicalLinkPlugin';
 import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin';
 import { TRANSFORMERS } from '@lexical/markdown';
+import { TabIndentationPlugin } from '@lexical/react/LexicalTabIndentationPlugin';
+import { CheckListPlugin } from '@lexical/react/LexicalCheckListPlugin';
 import ToolbarPlugin from './ToolbarPlugin';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { useEffect, useState } from 'react';
-import { $getRoot, $insertNodes } from 'lexical';
-import { $generateNodesFromDOM } from '@lexical/html';
 
 const theme = {
   paragraph: 'mb-2',
@@ -44,8 +44,8 @@ const theme = {
     strikethrough: 'line-through',
     code: 'bg-muted px-1 py-0.5 rounded font-mono text-sm',
   },
-  code: 'bg-muted p-4 rounded font-mono text-sm my-2 block',
-  link: 'text-primary underline hover:text-primary/80',
+  code: 'bg-muted p-4 rounded font-mono text-sm my-2 block overflow-x-auto',
+  link: 'text-primary underline hover:text-primary/80 cursor-pointer',
 };
 
 function onError(error: Error) {
@@ -104,6 +104,7 @@ export default function LexicalEditor({ value, onChange, placeholder = 'Enter so
       ListItemNode,
       QuoteNode,
       CodeNode,
+      CodeHighlightNode,
       AutoLinkNode,
       LinkNode,
     ],
@@ -121,7 +122,7 @@ export default function LexicalEditor({ value, onChange, placeholder = 'Enter so
             <RichTextPlugin
               contentEditable={
                 <ContentEditable 
-                  className={`outline-none p-4 ${isFullscreen ? 'min-h-screen' : 'min-h-[400px]'} prose prose-sm max-w-none`}
+                  className={`outline-none p-4 ${isFullscreen ? 'min-h-screen max-w-4xl mx-auto' : 'min-h-[500px]'} prose prose-sm max-w-none focus:outline-none`}
                 />
               }
               placeholder={
@@ -135,6 +136,8 @@ export default function LexicalEditor({ value, onChange, placeholder = 'Enter so
             <AutoFocusPlugin />
             <LinkPlugin />
             <ListPlugin />
+            <CheckListPlugin />
+            <TabIndentationPlugin />
             <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
             <UpdatePlugin value={value} onChange={onChange} />
           </div>
