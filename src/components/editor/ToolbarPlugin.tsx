@@ -11,9 +11,10 @@ import {
   $getSelection,
   $isRangeSelection,
   $createParagraphNode,
-  $getNodeByKey,
+  $createTextNode,
+  $insertNodes,
 } from 'lexical';
-import { $isLinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link';
+import { $isLinkNode, $createLinkNode } from '@lexical/link';
 import {
   INSERT_ORDERED_LIST_COMMAND,
   INSERT_UNORDERED_LIST_COMMAND,
@@ -21,10 +22,16 @@ import {
   $isListNode,
   ListNode,
 } from '@lexical/list';
+import {
+  INSERT_TABLE_COMMAND,
+  TableNode,
+} from '@lexical/table';
 import { $isHeadingNode, $createHeadingNode, $createQuoteNode } from '@lexical/rich-text';
 import { $setBlocksType } from '@lexical/selection';
 import { $findMatchingParent, mergeRegister } from '@lexical/utils';
 import { $isCodeNode, $createCodeNode } from '@lexical/code';
+import { INSERT_IMAGE_COMMAND } from './plugins/ImagesPlugin';
+import { INSERT_HORIZONTAL_RULE_COMMAND } from './plugins/HorizontalRulePlugin';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -33,6 +40,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Undo2,
   Redo2,
@@ -50,9 +63,14 @@ import {
   ListOrdered,
   Maximize2,
   Minimize2,
-  Quote,
-  CodeSquare,
+  Plus,
+  Minus,
+  Image,
+  Table,
+  ChevronDown,
 } from 'lucide-react';
+import LinkDialog from './ui/LinkDialog';
+import ImageDialog from './ui/ImageDialog';
 
 const LowPriority = 1;
 
@@ -73,6 +91,8 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const [isCode, setIsCode] = useState(false);
   const [isLink, setIsLink] = useState(false);
+  const [showLinkDialog, setShowLinkDialog] = useState(false);
+  const [showImageDialog, setShowImageDialog] = useState(false);
 
   const updateToolbar = useCallback(() => {
     const selection = $getSelection();
@@ -215,13 +235,60 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
   };
 
   const insertLink = useCallback(() => {
-    if (!isLink) {
-      editor.dispatchCommand(TOGGLE_LINK_COMMAND, 'https://');
-    } else {
-      editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
-    }
+    setShowLinkDialog(true);
+  }, []);
+
+  const handleLinkConfirm = useCallback(
+    (url: string, text?: string) => {
+      editor.update(() => {
+        const selection = $getSelection();
+        if ($isRangeSelection(selection)) {
+          if (text) {
+            // Create new link with text
+            const linkNode = $createLinkNode(url);
+            const textNode = $createTextNode(text);
+            linkNode.append(textNode);
+            selection.insertNodes([linkNode]);
+          } else {
+            // Convert selection to link
+            const node = selection.anchor.getNode();
+            const parent = node.getParent();
+            if ($isLinkNode(parent)) {
+              // Update existing link
+              parent.setURL(url);
+            } else if (selection.getTextContent()) {
+              // Create link from selected text
+              const linkNode = $createLinkNode(url);
+              selection.insertNodes([linkNode]);
+            }
+          }
+        }
+      });
+      setTimeout(() => editor.focus(), 0);
+    },
+    [editor]
+  );
+
+  const handleImageConfirm = useCallback(
+    (src: string, altText: string) => {
+      editor.dispatchCommand(INSERT_IMAGE_COMMAND, {
+        src,
+        altText,
+      });
+      setTimeout(() => editor.focus(), 0);
+    },
+    [editor]
+  );
+
+  const insertHorizontalRule = useCallback(() => {
+    editor.dispatchCommand(INSERT_HORIZONTAL_RULE_COMMAND, undefined);
     setTimeout(() => editor.focus(), 0);
-  }, [editor, isLink]);
+  }, [editor]);
+
+  const insertTable = useCallback(() => {
+    editor.dispatchCommand(INSERT_TABLE_COMMAND, { rows: '3', columns: '3' });
+    setTimeout(() => editor.focus(), 0);
+  }, [editor]);
 
   return (
     <div className="flex flex-wrap items-center gap-2 p-2 border-b bg-background sticky top-0 z-10" ref={toolbarRef}>
@@ -283,6 +350,49 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
           <SelectItem value="code">Code Block</SelectItem>
         </SelectContent>
       </Select>
+
+      <div className="w-px h-6 bg-border" />
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            onMouseDown={(e) => e.preventDefault()}
+            aria-label="Insert"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Insertar
+            <ChevronDown className="h-3 w-3 ml-1" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-56">
+          <DropdownMenuItem
+            onSelect={() => {
+              insertHorizontalRule();
+            }}
+          >
+            <Minus className="h-4 w-4 mr-2" />
+            Línea horizontal
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() => {
+              setShowImageDialog(true);
+            }}
+          >
+            <Image className="h-4 w-4 mr-2" />
+            Imagen
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() => {
+              insertTable();
+            }}
+          >
+            <Table className="h-4 w-4 mr-2" />
+            Tabla
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <div className="w-px h-6 bg-border" />
 
@@ -447,6 +557,17 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
       >
         {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
       </Button>
+
+      <LinkDialog
+        open={showLinkDialog}
+        onClose={() => setShowLinkDialog(false)}
+        onConfirm={handleLinkConfirm}
+      />
+      <ImageDialog
+        open={showImageDialog}
+        onClose={() => setShowImageDialog(false)}
+        onConfirm={handleImageConfirm}
+      />
     </div>
   );
 }

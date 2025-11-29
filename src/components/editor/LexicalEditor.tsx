@@ -14,7 +14,13 @@ import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPl
 import { TRANSFORMERS } from '@lexical/markdown';
 import { TabIndentationPlugin } from '@lexical/react/LexicalTabIndentationPlugin';
 import { CheckListPlugin } from '@lexical/react/LexicalCheckListPlugin';
+import { TablePlugin } from '@lexical/react/LexicalTablePlugin';
+import { TableCellNode, TableNode, TableRowNode } from '@lexical/table';
 import ToolbarPlugin from './ToolbarPlugin';
+import ImagesPlugin from './plugins/ImagesPlugin';
+import HorizontalRulePlugin from './plugins/HorizontalRulePlugin';
+import { ImageNode } from './nodes/ImageNode';
+import { HorizontalRuleNode } from './nodes/HorizontalRuleNode';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { useEffect, useState } from 'react';
 
@@ -46,6 +52,10 @@ const theme = {
   },
   code: 'bg-muted p-4 rounded font-mono text-sm my-2 block overflow-x-auto',
   link: 'text-primary underline hover:text-primary/80 cursor-pointer',
+  image: 'editor-image',
+  table: 'border-collapse border border-border my-4',
+  tableCell: 'border border-border p-2 min-w-[100px]',
+  tableCellHeader: 'border border-border p-2 min-w-[100px] bg-muted font-bold',
 };
 
 function onError(error: Error) {
@@ -107,6 +117,11 @@ export default function LexicalEditor({ value, onChange, placeholder = 'Enter so
       CodeHighlightNode,
       AutoLinkNode,
       LinkNode,
+      ImageNode,
+      HorizontalRuleNode,
+      TableNode,
+      TableCellNode,
+      TableRowNode,
     ],
   };
 
@@ -139,6 +154,9 @@ export default function LexicalEditor({ value, onChange, placeholder = 'Enter so
             <CheckListPlugin />
             <TabIndentationPlugin />
             <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
+            <TablePlugin />
+            <ImagesPlugin />
+            <HorizontalRulePlugin />
             <UpdatePlugin value={value} onChange={onChange} />
           </div>
         </div>
