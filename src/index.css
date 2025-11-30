@@ -501,4 +501,54 @@ All colors MUST be HSL.
     );
     background-size: 1000px 100%;
   }
+
+  /* Lexical Editor Table Styles */
+  .table-wrapper-with-resize {
+    position: relative;
+    display: inline-block;
+    margin: 20px 0;
+    max-width: 100%;
+  }
+
+  .table-wrapper-with-resize table {
+    border-collapse: collapse;
+    border: 1px solid hsl(var(--border));
+  }
+
+  .table-wrapper-with-resize td,
+  .table-wrapper-with-resize th {
+    border: 1px solid hsl(var(--border));
+    padding: 8px 12px;
+    min-width: 75px;
+    position: relative;
+  }
+
+  .table-wrapper-with-resize th {
+    background-color: hsl(var(--muted));
+    font-weight: 600;
+  }
+
+  .table-resize-handle {
+    transition: opacity 0.2s, transform 0.2s;
+  }
+
+  .table-resize-handle:hover {
+    transform: scale(1.2);
+  }
+
+  /* Editor Image Styles (mantiene compatibilidad) */
+  .editor-image {
+    cursor: default;
+    display: inline-block;
+    position: relative;
+    user-select: none;
+    max-width: 100%;
+  }
+
+  .editor-image img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
 }
+
