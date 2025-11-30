@@ -72,6 +72,17 @@ const ContentInfoForm = () => {
     loadCompanies();
     if (editId) {
       loadContentInfo(editId);
+    } else {
+      // Limpiar formulario si no hay editId
+      setFormData({
+        title: '',
+        slug: '',
+        content: '',
+        active: true,
+        status_content: 'draft',
+      });
+      setExistingAttachments([]);
+      setUploadedFiles([]);
     }
   }, [editId]);
 
