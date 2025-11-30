@@ -15,8 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Eye } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import ContentPreviewDialog from '@/components/catalog/ContentPreviewDialog';
 
 interface ContentInfoData {
   id?: number;
@@ -50,6 +51,7 @@ const ContentInfoForm = () => {
   const [companies, setCompanies] = useState<any[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [existingAttachments, setExistingAttachments] = useState<any[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
   
   const { toast } = useToast();
   const { user } = useAuth();
@@ -391,6 +393,14 @@ const ContentInfoForm = () => {
                 >
                   Cancelar
                 </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setShowPreview(true)}
+                >
+                  <Eye className="mr-2 h-4 w-4" />
+                  Vista Previa
+                </Button>
                 <Button type="submit" disabled={loading}>
                   <Save className="mr-2 h-4 w-4" />
                   {loading ? 'Guardando...' : (editId ? 'Actualizar' : 'Crear')}
@@ -400,6 +410,17 @@ const ContentInfoForm = () => {
           </CardContent>
         </Card>
       </div>
+
+      <ContentPreviewDialog
+        open={showPreview}
+        onOpenChange={setShowPreview}
+        data={{
+          ...formData,
+          attachments: existingAttachments,
+        }}
+        categories={categories}
+        companies={companies}
+      />
     </div>
   );
 };
