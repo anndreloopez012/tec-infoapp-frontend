@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import ReactMarkdown from "react-markdown";
 import { contentInfoService } from "@/services/catalogServices";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Tag, Building2, User, Download, ArrowLeft } from "lucide-react";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { API_CONFIG } from "@/config/api";
+import LexicalViewer from "@/components/editor/LexicalViewer";
 
 interface Attachment {
   id: number;
@@ -254,9 +254,7 @@ const ContentDetail: React.FC = () => {
             {/* Content body */}
             <section className="mb-8">
               <h2 className="sr-only">Contenido</h2>
-              <div className="prose prose-sm md:prose-base max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-a:text-primary prose-code:text-foreground prose-pre:bg-accent/50 prose-li:text-foreground">
-                <ReactMarkdown>{item.content || "Sin contenido"}</ReactMarkdown>
-              </div>
+              <LexicalViewer content={item.content} />
             </section>
 
             {/* Comment */}
