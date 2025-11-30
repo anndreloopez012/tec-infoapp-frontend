@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Calendar, Building2, User, Download } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Download } from 'lucide-react';
+import { ShareButtons } from '@/components/public/ShareButtons';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { API_CONFIG } from '@/config/api.js';
@@ -177,15 +178,22 @@ export default function PublicContentDetail() {
       <PublicHeader />
 
       <div className="container py-8 space-y-8 max-w-5xl animate-fade-in">
-        {/* Back Button */}
-        <Button
-          variant="ghost"
-          onClick={() => navigate(-1)}
-          className="gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Volver
-        </Button>
+        {/* Back Button and Share */}
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            onClick={() => navigate(-1)}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Volver
+          </Button>
+          <ShareButtons
+            url={`/public/content/${contentId}`}
+            title={item.title}
+            description={item.subtitle}
+          />
+        </div>
 
         {/* Hero Image */}
         {item.main_image && (
