@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Calendar, MapPin, Users, Grid3x3, List, CalendarDays, Search, Filter, X } from "lucide-react";
+import { Calendar, MapPin, Users, Grid3x3, List, Search, Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,7 +34,7 @@ interface EventData {
   main_image?: any;
 }
 
-type ViewMode = 'grid' | 'list' | 'calendar';
+type ViewMode = 'grid' | 'list';
 
 const EventList = () => {
   const navigate = useNavigate();
@@ -269,14 +269,6 @@ const EventList = () => {
     </div>
   );
 
-  const renderCalendarView = () => (
-    <div className="bg-card rounded-lg p-6">
-      <p className="text-center text-muted-foreground">
-        Vista de calendario en desarrollo. Por ahora, usa las vistas de cuadrícula o lista.
-      </p>
-    </div>
-  );
-
   if (loading) {
     return (
       <div className="container mx-auto py-6 space-y-6">
@@ -314,13 +306,6 @@ const EventList = () => {
             onClick={() => setViewMode('list')}
           >
             <List className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={viewMode === 'calendar' ? 'default' : 'outline'}
-            size="icon"
-            onClick={() => setViewMode('calendar')}
-          >
-            <CalendarDays className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -425,7 +410,6 @@ const EventList = () => {
         <>
           {viewMode === 'grid' && renderGridView()}
           {viewMode === 'list' && renderListView()}
-          {viewMode === 'calendar' && renderCalendarView()}
         </>
       )}
     </div>
