@@ -108,7 +108,7 @@ const ModernSidebar = () => {
     },
     {
       title: 'Eventos',
-      href: '/event',
+      href: '/event-list',
       icon: Calendar,
     },
     {
