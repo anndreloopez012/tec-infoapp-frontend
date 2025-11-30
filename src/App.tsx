@@ -33,6 +33,7 @@ import PublicLanding from '@/pages/PublicLanding';
 import PublicCalendar from '@/pages/public/PublicCalendar';
 import PublicEvents from '@/pages/public/PublicEvents';
 import CategoryContent from '@/pages/public/CategoryContent';
+import PublicContentDetail from '@/pages/public/PublicContentDetail';
 
 // Admin Pages
 import RoleManagement from '@/pages/admin/RoleManagement';
@@ -81,6 +82,7 @@ const AppRoutes = () => {
       <Route path="/public/calendar" element={<PublicCalendar />} />
       <Route path="/public/events" element={<PublicEvents />} />
       <Route path="/public/category/:categoryId" element={<CategoryContent />} />
+      <Route path="/public/content/:contentId" element={<PublicContentDetail />} />
         
         {/* Auth Routes */}
         <Route path="/login" element={<ModernLogin />} />
