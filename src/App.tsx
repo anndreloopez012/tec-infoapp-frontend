@@ -32,6 +32,7 @@ import NotificationsPage from '@/pages/NotificationsPage';
 import PublicLanding from '@/pages/PublicLanding';
 import PublicCalendar from '@/pages/public/PublicCalendar';
 import PublicEvents from '@/pages/public/PublicEvents';
+import PublicEventDetail from '@/pages/public/PublicEventDetail';
 import CategoryContent from '@/pages/public/CategoryContent';
 import PublicContentDetail from '@/pages/public/PublicContentDetail';
 
@@ -83,6 +84,7 @@ const AppRoutes = () => {
       <Route path="/" element={<PublicLanding />} />
       <Route path="/public/calendar" element={<PublicCalendar />} />
       <Route path="/public/events" element={<PublicEvents />} />
+      <Route path="/public/events/:eventId" element={<PublicEventDetail />} />
       <Route path="/public/category/:categoryId" element={<CategoryContent />} />
       <Route path="/public/content/:contentId" element={<PublicContentDetail />} />
         
