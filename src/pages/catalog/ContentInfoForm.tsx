@@ -18,6 +18,16 @@ import {
 import { ArrowLeft, Save, Eye } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import ContentPreviewDialog from '@/components/catalog/ContentPreviewDialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ContentInfoData {
   id?: number;
@@ -52,6 +62,7 @@ const ContentInfoForm = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [existingAttachments, setExistingAttachments] = useState<any[]>([]);
   const [showPreview, setShowPreview] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   
   const { toast } = useToast();
   const { user } = useAuth();
@@ -191,7 +202,7 @@ const ContentInfoForm = () => {
           title: "Éxito",
           description: result.message || `Información de contenido ${editId ? 'actualizada' : 'creada'} correctamente`,
         });
-        navigate('/contentinfo');
+        setShowSuccessDialog(true);
       } else {
         toast({
           title: "Error",
@@ -421,6 +432,25 @@ const ContentInfoForm = () => {
         categories={categories}
         companies={companies}
       />
+
+      <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Contenido guardado exitosamente</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Deseas regresar a la lista de contenidos o continuar editando?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowSuccessDialog(false)}>
+              Continuar editando
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => navigate('/contentinfo')}>
+              Regresar a la lista
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
