@@ -458,6 +458,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
+              type="button"
               variant="ghost"
               size="sm"
               disabled={!canUndo}
@@ -476,6 +477,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
+              type="button"
               variant="ghost"
               size="sm"
               disabled={!canRedo}
@@ -491,7 +493,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
           </TooltipTrigger>
           <TooltipContent>Rehacer</TooltipContent>
         </Tooltip>
-      
+
         <div className="w-px h-6 bg-border" />
 
         <Select
@@ -631,6 +633,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
+              type="button"
               variant="ghost"
               size="sm"
               onMouseDown={(e) => e.preventDefault()}
@@ -649,6 +652,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
+              type="button"
               variant="ghost"
               size="sm"
               onMouseDown={(e) => e.preventDefault()}
@@ -667,6 +671,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
+              type="button"
               variant="ghost"
               size="sm"
               onMouseDown={(e) => e.preventDefault()}
@@ -685,6 +690,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
+              type="button"
               variant="ghost"
               size="sm"
               onMouseDown={(e) => e.preventDefault()}
@@ -703,6 +709,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
+              type="button"
               variant="ghost"
               size="sm"
               onMouseDown={(e) => e.preventDefault()}
@@ -721,6 +728,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
+              type="button"
               variant="ghost"
               size="sm"
               onMouseDown={(e) => e.preventDefault()}
@@ -736,6 +744,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
+              type="button"
               variant="ghost"
               size="sm"
               onMouseDown={(e) => e.preventDefault()}
@@ -754,6 +763,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
+              type="button"
               variant="ghost"
               size="sm"
               onMouseDown={(e) => e.preventDefault()}
@@ -861,6 +871,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
+              type="button"
               variant="ghost"
               size="sm"
               onMouseDown={(e) => e.preventDefault()}
@@ -878,6 +889,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
+              type="button"
               variant="ghost"
               size="sm"
               onMouseDown={(e) => e.preventDefault()}
@@ -895,6 +907,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
+              type="button"
               variant="ghost"
               size="sm"
               onMouseDown={(e) => e.preventDefault()}
@@ -912,6 +925,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
+              type="button"
               variant="ghost"
               size="sm"
               onMouseDown={(e) => e.preventDefault()}
@@ -932,6 +946,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
+              type="button"
               variant="ghost"
               size="sm"
               onMouseDown={(e) => e.preventDefault()}
@@ -947,6 +962,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
+              type="button"
               variant="ghost"
               size="sm"
               onMouseDown={(e) => e.preventDefault()}
@@ -965,6 +981,7 @@ export default function ToolbarPlugin({ isFullscreen, onToggleFullscreen }: Tool
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
+              type="button"
               variant="ghost"
               size="sm"
               onMouseDown={(e) => e.preventDefault()}
