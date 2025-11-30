@@ -73,28 +73,32 @@ interface UpdatePluginProps {
 
 function UpdatePlugin({ value, onChange }: UpdatePluginProps) {
   const [editor] = useLexicalComposerContext();
-  const [isFirstRender, setIsFirstRender] = useState(true);
+  const [loadedValue, setLoadedValue] = useState<string>('');
 
+  // Load initial content when value changes
   useEffect(() => {
-    if (isFirstRender && value) {
+    if (value && value !== loadedValue) {
       editor.update(() => {
         try {
           const parsedState = editor.parseEditorState(value);
           editor.setEditorState(parsedState);
+          setLoadedValue(value);
         } catch (e) {
           console.error('Error parsing editor state:', e);
         }
       });
-      setIsFirstRender(false);
     }
-  }, [editor, value, isFirstRender]);
+  }, [editor, value, loadedValue]);
 
+  // Listen to editor changes
   useEffect(() => {
     return editor.registerUpdateListener(({ editorState }) => {
       const json = JSON.stringify(editorState.toJSON());
-      onChange(json);
+      if (json !== loadedValue) {
+        onChange(json);
+      }
     });
-  }, [editor, onChange]);
+  }, [editor, onChange, loadedValue]);
 
   return null;
 }
