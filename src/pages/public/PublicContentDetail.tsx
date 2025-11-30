@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { publicContentService } from '@/services/publicApiService';
-import { PublicHeader } from '@/components/public/PublicHeader';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -137,17 +136,14 @@ export default function PublicContentDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <PublicHeader />
-        <div className="container py-12">
-          <div className="animate-pulse space-y-8">
+      <div className="container py-12">
+        <div className="animate-pulse space-y-8">
             <div className="h-8 w-32 bg-muted rounded" />
             <div className="h-96 bg-muted rounded-xl" />
             <div className="space-y-4">
               <div className="h-12 bg-muted rounded w-3/4" />
               <div className="h-6 bg-muted rounded w-1/2" />
               <div className="h-40 bg-muted rounded" />
-            </div>
           </div>
         </div>
       </div>
@@ -156,9 +152,7 @@ export default function PublicContentDetail() {
 
   if (!item) {
     return (
-      <div className="min-h-screen bg-background">
-        <PublicHeader />
-        <div className="container py-12">
+      <div className="container py-12">
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <p className="text-lg text-muted-foreground">Contenido no encontrado</p>
@@ -167,17 +161,13 @@ export default function PublicContentDetail() {
                 Volver
               </Button>
             </CardContent>
-          </Card>
-        </div>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <PublicHeader />
-
-      <div className="container py-8 space-y-8 max-w-5xl animate-fade-in">
+    <div className="container py-8 space-y-8 max-w-5xl animate-fade-in">
         {/* Back Button and Share */}
         <div className="flex items-center justify-between">
           <Button
@@ -316,6 +306,5 @@ export default function PublicContentDetail() {
           </Card>
         )}
       </div>
-    </div>
-  );
-}
+    );
+  }

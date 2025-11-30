@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { publicContentService, publicCategoryService } from '@/services/publicApiService';
-import { PublicHeader } from '@/components/public/PublicHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -165,10 +164,7 @@ export default function CategoryContent() {
   const totalPages = Math.ceil(filteredContent.length / pageSize);
 
   return (
-    <div className="min-h-screen bg-background">
-      <PublicHeader />
-
-      <div className="container py-8 space-y-8 animate-fade-in">
+    <div className="container py-8 space-y-8 animate-fade-in">
         <div>
           <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
             <BookOpen className="h-10 w-10 text-primary" />
@@ -622,6 +618,5 @@ export default function CategoryContent() {
           </>
         )}
       </div>
-    </div>
-  );
-}
+    );
+  }
