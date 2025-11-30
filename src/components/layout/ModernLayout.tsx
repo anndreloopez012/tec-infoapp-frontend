@@ -4,6 +4,7 @@ import { Outlet } from 'react-router-dom';
 import ModernSidebar from './ModernSidebar';
 import ModernHeader from './ModernHeader';
 import MobileFloatingMenu from './MobileFloatingMenu';
+import { PageTransition } from '@/components/PageTransition';
 import { useAuth } from '@/context/AuthContext';
 import { useGlobal } from '@/context/GlobalContext';
 import { SearchProvider } from '@/context/SearchContext';
@@ -68,14 +69,9 @@ const ModernLayout = () => {
             
             {/* Contenido de la página */}
             <main className="flex-1 overflow-auto">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className="min-h-full w-full"
-              >
+              <PageTransition>
                 <Outlet />
-              </motion.div>
+              </PageTransition>
             </main>
           </div>
         </div>

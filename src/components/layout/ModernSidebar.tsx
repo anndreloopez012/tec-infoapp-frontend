@@ -356,23 +356,18 @@ const ModernSidebar = () => {
                 className="space-y-1"
               >
                 {/* Elemento padre */}
-                <div
-                  className={`
-                    group flex items-center space-x-2 sm:space-x-3 px-2 sm:px-4 py-3 sm:py-3.5 rounded-xl transition-all duration-300 relative overflow-hidden cursor-pointer
-                    ${parentActive 
-                      ? 'bg-gradient-primary text-white shadow-lg shadow-primary/30' 
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                    }
-                  `}
-                  onClick={() => {
-                    if (item.children && item.children.length > 0) {
-                      toggleExpanded(item.href);
-                    } else {
-                      // Navegar directamente para elementos sin hijos
-                      navigate(item.href);
-                    }
-                  }}
-                >
+                {item.children && item.children.length > 0 ? (
+                  <div
+                    className={`
+                      group flex items-center space-x-2 sm:space-x-3 px-2 sm:px-4 py-3 sm:py-3.5 rounded-xl transition-all duration-300 relative overflow-hidden cursor-pointer
+                      ${parentActive 
+                        ? 'bg-gradient-primary text-white shadow-lg shadow-primary/30' 
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                      }
+                    `}
+                    onClick={() => toggleExpanded(item.href)}
+                  >
+                
                   {parentActive && (
                     <motion.div
                       layoutId="activeIndicator"
@@ -396,23 +391,59 @@ const ModernSidebar = () => {
                       >
                         {item.badge}
                       </Badge>
-                    )}
+                  )}
                     
-                    {item.children && item.children.length > 0 && (
-                      <div className="ml-auto flex-shrink-0">
-                        {isExpanded ? (
-                          <ChevronDown className={`w-4 h-4 transition-transform ${
-                            parentActive ? 'text-white' : 'text-muted-foreground'
-                          }`} />
-                        ) : (
-                          <ChevronRight className={`w-4 h-4 transition-transform ${
-                            parentActive ? 'text-white' : 'text-muted-foreground'
-                          }`} />
-                        )}
-                      </div>
-                    )}
+                    <div className="ml-auto flex-shrink-0">
+                      {isExpanded ? (
+                        <ChevronDown className={`w-4 h-4 transition-transform ${
+                          parentActive ? 'text-white' : 'text-muted-foreground'
+                        }`} />
+                      ) : (
+                        <ChevronRight className={`w-4 h-4 transition-transform ${
+                          parentActive ? 'text-white' : 'text-muted-foreground'
+                        }`} />
+                      )}
+                    </div>
                   </div>
                 </div>
+                ) : (
+                  <NavLink
+                    to={item.href}
+                    className={`
+                      group flex items-center space-x-2 sm:space-x-3 px-2 sm:px-4 py-3 sm:py-3.5 rounded-xl transition-all duration-300 relative overflow-hidden
+                      ${parentActive 
+                        ? 'bg-gradient-primary text-white shadow-lg shadow-primary/30' 
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                      }
+                    `}
+                  >
+                    {parentActive && (
+                      <motion.div
+                        layoutId="activeIndicator"
+                        className="absolute inset-0 bg-gradient-primary rounded-xl"
+                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                      />
+                    )}
+                    
+                    <div className="relative z-10 flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+                      <Icon className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300 flex-shrink-0 ${
+                        parentActive ? 'scale-110 text-white' : 'group-hover:scale-105'
+                      }`} />
+                      <span className="font-medium text-sm sm:text-base truncate">{item.title}</span>
+                      
+                      {item.badge && (
+                        <Badge 
+                          variant="secondary" 
+                          className={`text-[10px] px-1.5 py-0.5 flex-shrink-0 hidden sm:flex ${
+                            parentActive ? 'bg-white/20 text-white border-white/30' : 'bg-muted text-muted-foreground'
+                          }`}
+                        >
+                          {item.badge}
+                        </Badge>
+                      )}
+                    </div>
+                  </NavLink>
+                )}
 
                 {/* Elementos hijos */}
                 {item.children && item.children.length > 0 && isExpanded && (
