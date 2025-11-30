@@ -31,24 +31,24 @@ export default function ColorPicker({ value, onChange }: ColorPickerProps) {
   };
 
   return (
-    <div className="w-64 p-4 space-y-4">
+    <div className="space-y-3">
       <div>
-        <label className="text-sm font-medium mb-2 block">Hex</label>
+        <label className="text-xs font-medium mb-1 block">Color Personalizado</label>
         <Input
           type="text"
           value={hexValue}
           onChange={handleHexChange}
           placeholder="#000000"
-          className="font-mono"
+          className="font-mono text-sm h-8"
         />
       </div>
       
-      <div className="grid grid-cols-8 gap-2">
+      <div className="grid grid-cols-8 gap-1.5">
         {PRESET_COLORS.map((color) => (
           <button
             key={color}
             onClick={() => handlePresetClick(color)}
-            className="w-8 h-8 rounded border-2 border-border hover:scale-110 transition-transform"
+            className="w-6 h-6 rounded border-2 border-border hover:scale-110 transition-transform"
             style={{ backgroundColor: color }}
             title={color}
           />
@@ -62,9 +62,9 @@ export default function ColorPicker({ value, onChange }: ColorPickerProps) {
           setHexValue('');
           onChange('');
         }}
-        className="w-full"
+        className="w-full h-7 text-xs"
       >
-        Limpiar Color
+        Limpiar
       </Button>
     </div>
   );

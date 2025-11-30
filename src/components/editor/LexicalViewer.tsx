@@ -69,6 +69,48 @@ function LoadContentPlugin({ content }: LoadContentPluginProps) {
       
       // Make editor read-only
       editor.setEditable(false);
+
+      // Restore table styles after content is loaded
+      setTimeout(() => {
+        const rootElement = editor.getRootElement();
+        if (!rootElement) return;
+
+        const tables = rootElement.querySelectorAll('table');
+        tables.forEach((table) => {
+          const htmlTable = table as HTMLTableElement;
+          
+          // Restore table dimensions
+          if (htmlTable.dataset.width) {
+            htmlTable.style.width = htmlTable.dataset.width;
+          }
+          if (htmlTable.dataset.height) {
+            htmlTable.style.height = htmlTable.dataset.height;
+          }
+          
+          // Restore table border
+          if (htmlTable.dataset.borderStyle && htmlTable.dataset.borderStyle !== 'none') {
+            const borderWidth = htmlTable.dataset.borderWidth || '1px';
+            htmlTable.style.border = `${borderWidth} ${htmlTable.dataset.borderStyle} hsl(var(--border))`;
+          }
+          
+          // Restore cell styles
+          const cells = htmlTable.querySelectorAll('td, th');
+          cells.forEach((cell) => {
+            const htmlCell = cell as HTMLTableCellElement;
+            
+            // Restore background color
+            if (htmlCell.dataset.bgColor) {
+              htmlCell.style.backgroundColor = htmlCell.dataset.bgColor;
+            }
+            
+            // Restore cell border
+            if (htmlCell.dataset.borderStyle && htmlCell.dataset.borderStyle !== 'none') {
+              const borderWidth = htmlCell.dataset.borderWidth || '1px';
+              htmlCell.style.border = `${borderWidth} ${htmlCell.dataset.borderStyle} hsl(var(--border))`;
+            }
+          });
+        });
+      }, 100);
     } catch (error) {
       console.error('Error loading content in viewer:', error);
       // If parsing fails, try to handle plain text

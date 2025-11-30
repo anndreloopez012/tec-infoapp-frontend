@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 
 export default function TableActionPlugin(): JSX.Element | null {
   const [editor] = useLexicalComposerContext();
-  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
   const [currentCell, setCurrentCell] = useState<HTMLTableCellElement | null>(null);
 
   useEffect(() => {
@@ -24,7 +24,7 @@ export default function TableActionPlugin(): JSX.Element | null {
       event.stopPropagation();
 
       setCurrentCell(cellElement);
-      setMenuAnchor(cellElement);
+      setMenuPosition({ x: event.clientX, y: event.clientY });
     };
 
     const editorElement = editor.getRootElement();
@@ -38,8 +38,10 @@ export default function TableActionPlugin(): JSX.Element | null {
 
   const paintCell = (color: string) => {
     if (!currentCell) return;
-    currentCell.style.backgroundColor = color;
-    currentCell.dataset.bgColor = color;
+    editor.update(() => {
+      currentCell.style.backgroundColor = color;
+      currentCell.dataset.bgColor = color;
+    });
     closeMenu();
   };
 
@@ -48,10 +50,12 @@ export default function TableActionPlugin(): JSX.Element | null {
     const row = currentCell.parentElement as HTMLTableRowElement;
     if (!row) return;
 
-    const cells = Array.from(row.cells);
-    cells.forEach((cell) => {
-      cell.style.backgroundColor = color;
-      cell.dataset.bgColor = color;
+    editor.update(() => {
+      const cells = Array.from(row.cells);
+      cells.forEach((cell) => {
+        cell.style.backgroundColor = color;
+        cell.dataset.bgColor = color;
+      });
     });
     closeMenu();
   };
@@ -64,20 +68,24 @@ export default function TableActionPlugin(): JSX.Element | null {
     const colIndex = currentCell.cellIndex;
     const rows = Array.from(table.rows);
     
-    rows.forEach((row) => {
-      const cell = row.cells[colIndex];
-      if (cell) {
-        cell.style.backgroundColor = color;
-        cell.dataset.bgColor = color;
-      }
+    editor.update(() => {
+      rows.forEach((row) => {
+        const cell = row.cells[colIndex];
+        if (cell) {
+          cell.style.backgroundColor = color;
+          cell.dataset.bgColor = color;
+        }
+      });
     });
     closeMenu();
   };
 
   const clearCell = () => {
     if (!currentCell) return;
-    currentCell.style.backgroundColor = '';
-    delete currentCell.dataset.bgColor;
+    editor.update(() => {
+      currentCell.style.backgroundColor = '';
+      delete currentCell.dataset.bgColor;
+    });
     closeMenu();
   };
 
@@ -86,10 +94,12 @@ export default function TableActionPlugin(): JSX.Element | null {
     const row = currentCell.parentElement as HTMLTableRowElement;
     if (!row) return;
 
-    const cells = Array.from(row.cells);
-    cells.forEach((cell) => {
-      cell.style.backgroundColor = '';
-      delete cell.dataset.bgColor;
+    editor.update(() => {
+      const cells = Array.from(row.cells);
+      cells.forEach((cell) => {
+        cell.style.backgroundColor = '';
+        delete cell.dataset.bgColor;
+      });
     });
     closeMenu();
   };
@@ -102,32 +112,76 @@ export default function TableActionPlugin(): JSX.Element | null {
     const colIndex = currentCell.cellIndex;
     const rows = Array.from(table.rows);
     
-    rows.forEach((row) => {
-      const cell = row.cells[colIndex];
-      if (cell) {
-        cell.style.backgroundColor = '';
-        delete cell.dataset.bgColor;
+    editor.update(() => {
+      rows.forEach((row) => {
+        const cell = row.cells[colIndex];
+        if (cell) {
+          cell.style.backgroundColor = '';
+          delete cell.dataset.bgColor;
+        }
+      });
+    });
+    closeMenu();
+  };
+
+  const setBorderStyle = (style: string, width: string) => {
+    if (!currentCell) return;
+    const table = currentCell.closest('table');
+    if (!table) return;
+
+    editor.update(() => {
+      if (style === 'none') {
+        table.style.border = 'none';
+        table.dataset.borderStyle = 'none';
+      } else {
+        table.style.border = `${width} ${style} hsl(var(--border))`;
+        table.dataset.borderStyle = style;
+        table.dataset.borderWidth = width;
       }
     });
     closeMenu();
   };
 
+  const setInnerBorderStyle = (style: string, width: string) => {
+    if (!currentCell) return;
+    const table = currentCell.closest('table');
+    if (!table) return;
+
+    editor.update(() => {
+      const cells = table.querySelectorAll('td, th');
+      cells.forEach((cell) => {
+        const htmlCell = cell as HTMLTableCellElement;
+        if (style === 'none') {
+          htmlCell.style.border = 'none';
+          htmlCell.dataset.borderStyle = 'none';
+        } else {
+          htmlCell.style.border = `${width} ${style} hsl(var(--border))`;
+          htmlCell.dataset.borderStyle = style;
+          htmlCell.dataset.borderWidth = width;
+        }
+      });
+    });
+    closeMenu();
+  };
+
   const closeMenu = () => {
-    setMenuAnchor(null);
+    setMenuPosition(null);
     setCurrentCell(null);
   };
 
-  if (!menuAnchor) return null;
+  if (!menuPosition) return null;
 
   return createPortal(
     <TableActionMenu
-      anchorElement={menuAnchor}
+      position={menuPosition}
       onPaintCell={paintCell}
       onPaintRow={paintRow}
       onPaintColumn={paintColumn}
       onClearCell={clearCell}
       onClearRow={clearRow}
       onClearColumn={clearColumn}
+      onSetBorderStyle={setBorderStyle}
+      onSetInnerBorderStyle={setInnerBorderStyle}
       onClose={closeMenu}
     />,
     document.body
