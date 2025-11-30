@@ -26,7 +26,7 @@ import { HorizontalRuleNode } from './nodes/HorizontalRuleNode';
 import { VideoNode } from './nodes/VideoNode';
 import { EmbedNode } from './nodes/EmbedNode';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 const theme = {
   paragraph: 'mb-2',
@@ -73,28 +73,33 @@ interface UpdatePluginProps {
 
 function UpdatePlugin({ value, onChange }: UpdatePluginProps) {
   const [editor] = useLexicalComposerContext();
-  const [hasInitialized, setHasInitialized] = useState(false);
+  const isInternalUpdate = useRef(false);
+  const initialValue = useRef(value);
 
-  // Load initial content only once
+  // Load initial or updated external content
   useEffect(() => {
-    if (!hasInitialized && value) {
+    if (value && value !== initialValue.current && !isInternalUpdate.current) {
       editor.update(() => {
         try {
           const parsedState = editor.parseEditorState(value);
           editor.setEditorState(parsedState);
+          initialValue.current = value;
         } catch (e) {
           console.error('Error parsing editor state:', e);
         }
       });
-      setHasInitialized(true);
     }
-  }, [editor, value, hasInitialized]);
+  }, [editor, value]);
 
   // Listen to editor changes
   useEffect(() => {
     return editor.registerUpdateListener(({ editorState }) => {
+      isInternalUpdate.current = true;
       const json = JSON.stringify(editorState.toJSON());
       onChange(json);
+      setTimeout(() => {
+        isInternalUpdate.current = false;
+      }, 0);
     });
   }, [editor, onChange]);
 
