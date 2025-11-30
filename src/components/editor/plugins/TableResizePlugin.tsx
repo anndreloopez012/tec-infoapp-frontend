@@ -53,11 +53,36 @@ function addResizeHandles(
   tableElement.parentNode?.insertBefore(wrapper, tableElement);
   wrapper.appendChild(tableElement);
 
-  // Store dimensions if not set
-  if (!tableElement.style.width) {
+  // Restore saved styles
+  if (tableElement.dataset.width) {
+    tableElement.style.width = tableElement.dataset.width;
+  } else if (!tableElement.style.width) {
     const rect = tableElement.getBoundingClientRect();
     tableElement.style.width = `${rect.width}px`;
   }
+  
+  if (tableElement.dataset.height) {
+    tableElement.style.height = tableElement.dataset.height;
+  }
+
+  // Restore border styles
+  if (tableElement.dataset.borderStyle && tableElement.dataset.borderStyle !== 'none') {
+    const borderWidth = tableElement.dataset.borderWidth || '1px';
+    tableElement.style.border = `${borderWidth} ${tableElement.dataset.borderStyle} hsl(var(--border))`;
+  }
+
+  // Restore cell colors and borders
+  const cells = tableElement.querySelectorAll('td, th');
+  cells.forEach((cell) => {
+    const htmlCell = cell as HTMLTableCellElement;
+    if (htmlCell.dataset.bgColor) {
+      htmlCell.style.backgroundColor = htmlCell.dataset.bgColor;
+    }
+    if (htmlCell.dataset.borderStyle && htmlCell.dataset.borderStyle !== 'none') {
+      const borderWidth = htmlCell.dataset.borderWidth || '1px';
+      htmlCell.style.border = `${borderWidth} ${htmlCell.dataset.borderStyle} hsl(var(--border))`;
+    }
+  });
 
   // Create resize handles
   const positions = [
@@ -130,9 +155,11 @@ function addResizeHandles(
         document.removeEventListener('mouseup', onMouseUp);
         document.body.style.cursor = '';
         
-        // Save dimensions to dataset
-        tableElement.dataset.width = tableElement.style.width;
-        tableElement.dataset.height = tableElement.style.height || '';
+        // Save dimensions to dataset in an editor update
+        editor.update(() => {
+          tableElement.dataset.width = tableElement.style.width;
+          tableElement.dataset.height = tableElement.style.height || '';
+        });
       };
 
       document.addEventListener('mousemove', onMouseMove);
@@ -157,12 +184,4 @@ function addResizeHandles(
 
   wrapper.addEventListener('mouseenter', showHandles);
   wrapper.addEventListener('mouseleave', hideHandles);
-
-  // Apply saved dimensions if any
-  if (tableElement.dataset.width) {
-    tableElement.style.width = tableElement.dataset.width;
-  }
-  if (tableElement.dataset.height) {
-    tableElement.style.height = tableElement.dataset.height;
-  }
 }
