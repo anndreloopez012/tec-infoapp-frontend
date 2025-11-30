@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ColumnDef } from '@tanstack/react-table';
 import CatalogTable from '@/components/catalog/CatalogTable';
@@ -140,15 +140,16 @@ const ContentInfo = () => {
     loadData(1, pagination.pageSize, query);
   };
 
-  const handleCreate = () => {
+  const handleCreate = useCallback(() => {
     navigate('/contentinfo/new');
-  };
+  }, [navigate]);
 
-  const handleEdit = (item: any) => {
+  const handleEdit = useCallback((item: any) => {
+    console.log('Editando item:', item);
     navigate(`/contentinfo/edit?id=${item.documentId}`);
-  };
+  }, [navigate]);
 
-  const handleDelete = async (item: any) => {
+  const handleDelete = useCallback(async (item: any) => {
     if (!window.confirm('¿Está seguro de eliminar esta información de contenido?')) return;
 
     const result = await contentInfoService.delete(item.documentId);
@@ -166,7 +167,7 @@ const ContentInfo = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [toast, pagination.page, pagination.pageSize, searchQuery]);
 
 
   return (
