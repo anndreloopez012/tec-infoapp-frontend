@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useCallback } from "react";
 import { PermissionService } from "../services/permissionService.js";
+import { useAuth } from "./AuthContext";
 
 // Initial state
 const initialState = {
@@ -82,6 +83,7 @@ export const usePermissions = () => {
 // PermissionsProvider component
 export const PermissionsProvider = ({ children }) => {
   const [state, dispatch] = useReducer(permissionsReducer, initialState);
+  const { user } = useAuth();
 
   // Load user permissions based on role
   const loadUserPermissions = useCallback(
@@ -283,17 +285,27 @@ export const PermissionsProvider = ({ children }) => {
     (permission) => {
       console.log('🔍 Checking permission:', permission, 'Available:', state.userPermissions);
       
+      // Verificar si el usuario es super admin - SIEMPRE tiene todos los permisos
+      if (user?.role) {
+        const roleType = user.role.type;
+        const roleName = user.role.name;
+        if (roleType === 'super' || roleType === 'super_admin' || roleName === 'super' || roleName === 'super_admin') {
+          console.log('✅ Super admin user - all permissions granted');
+          return true;
+        }
+      }
+      
       // Verificar diferentes formatos de permisos
       if (state.userPermissions[permission]) return true;
 
-      // Verificar si es super admin
+      // Verificar si es super admin por permisos
       if (state.userPermissions["plugin::users-permissions.role.find"]) {
         return true; // Super admin tiene todos los permisos
       }
 
       return false;
     },
-    [state.userPermissions],
+    [state.userPermissions, user],
   );
 
   // Check if user can access a specific menu/module
