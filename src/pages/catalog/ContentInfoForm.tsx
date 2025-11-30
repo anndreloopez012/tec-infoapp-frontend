@@ -50,6 +50,7 @@ const ContentInfoForm = () => {
   const editId = searchParams.get('id');
   
   const [loading, setLoading] = useState(false);
+  const [currentEditId, setCurrentEditId] = useState<string | null>(null);
   const [formData, setFormData] = useState<ContentInfoData>({
     title: '',
     slug: '',
@@ -67,13 +68,22 @@ const ContentInfoForm = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // Cargar categorías y empresas solo una vez
   useEffect(() => {
     loadCategories();
     loadCompanies();
-    if (editId) {
+  }, []);
+
+  // Detectar cambios en editId y cargar el contenido correspondiente
+  useEffect(() => {
+    if (editId && editId !== currentEditId) {
+      console.log('Cargando contenido para ID:', editId);
+      setCurrentEditId(editId);
       loadContentInfo(editId);
-    } else {
+    } else if (!editId && currentEditId !== null) {
       // Limpiar formulario si no hay editId
+      console.log('Limpiando formulario');
+      setCurrentEditId(null);
       setFormData({
         title: '',
         slug: '',
@@ -84,7 +94,7 @@ const ContentInfoForm = () => {
       setExistingAttachments([]);
       setUploadedFiles([]);
     }
-  }, [editId]);
+  }, [editId, currentEditId]);
 
   const loadCategories = async () => {
     const result = await contentCategoryService.getAll({ pageSize: 100 });
@@ -102,6 +112,8 @@ const ContentInfoForm = () => {
 
   const loadContentInfo = async (documentId: string) => {
     setLoading(true);
+    // Limpiar archivos subidos antes de cargar nuevo contenido
+    setUploadedFiles([]);
     try {
       const result = await contentInfoService.getAll({
         filters: { documentId },
