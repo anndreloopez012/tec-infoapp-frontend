@@ -57,6 +57,7 @@ import Gallery from '@/pages/catalog/Gallery';
 import Event from '@/pages/Event';
 import EventCalendar from '@/pages/EventCalendar';
 import ContentGlobal from '@/pages/ContentGlobal';
+import ContentDetail from '@/pages/ContentDetail';
 
 // Ticket Pages
 import TicketStatus from '@/pages/catalog/TicketStatus';
@@ -106,7 +107,7 @@ const AppRoutes = () => {
         }>
           <Route path="/dashboard" element={<ModernDashboard />} />
           <Route path="/content-global" element={<ContentGlobal />} />
-          {/* Admin Routes */}
+          <Route path="/content-global/:slug" element={<ContentDetail />} />
           <Route path="/admin/users" element={
             <ProtectedRoute roles={['super', 'admin', 'super_admin']}>
               <Users />
