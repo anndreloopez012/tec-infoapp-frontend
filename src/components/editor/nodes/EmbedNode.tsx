@@ -58,8 +58,10 @@ function EmbedComponent({
   const [isResizing, setIsResizing] = useState(false);
   const [dimensions, setDimensions] = useState({ width, height });
   const [editor] = useLexicalComposerContext();
+  const isEditable = editor.isEditable();
 
   const handleResize = (e: React.MouseEvent, direction: 'width' | 'height' | 'both') => {
+    if (!editor.isEditable()) return;
     e.preventDefault();
     setIsResizing(true);
     
@@ -111,23 +113,29 @@ function EmbedComponent({
         dangerouslySetInnerHTML={{ __html: embedCode }}
         style={{ width: dimensions.width, height: dimensions.height }}
       />
-      
-      {/* Resize handles */}
-      <div className="absolute bottom-0 right-0 w-4 h-4 bg-primary rounded-tl cursor-nwse-resize opacity-0 group-hover:opacity-100 transition-opacity"
-        onMouseDown={(e) => handleResize(e, 'both')}
-      />
-      <div className="absolute bottom-0 left-1/2 w-8 h-2 bg-primary rounded-t cursor-ns-resize opacity-0 group-hover:opacity-100 transition-opacity -translate-x-1/2"
-        onMouseDown={(e) => handleResize(e, 'height')}
-      />
-      <div className="absolute right-0 top-1/2 w-2 h-8 bg-primary rounded-l cursor-ew-resize opacity-0 group-hover:opacity-100 transition-opacity -translate-y-1/2"
-        onMouseDown={(e) => handleResize(e, 'width')}
-      />
-      
-      {/* Dimensions display */}
-      {isResizing && (
-        <div className="absolute top-2 left-2 bg-black/75 text-white px-2 py-1 rounded text-xs z-10">
-          {dimensions.width} × {dimensions.height}
-        </div>
+      {isEditable && (
+        <>
+          {/* Resize handles */}
+          <div
+            className="absolute bottom-0 right-0 w-4 h-4 bg-primary rounded-tl cursor-nwse-resize opacity-0 group-hover:opacity-100 transition-opacity"
+            onMouseDown={(e) => handleResize(e, 'both')}
+          />
+          <div
+            className="absolute bottom-0 left-1/2 w-8 h-2 bg-primary rounded-t cursor-ns-resize opacity-0 group-hover:opacity-100 transition-opacity -translate-x-1/2"
+            onMouseDown={(e) => handleResize(e, 'height')}
+          />
+          <div
+            className="absolute right-0 top-1/2 w-2 h-8 bg-primary rounded-l cursor-ew-resize opacity-0 group-hover:opacity-100 transition-opacity -translate-y-1/2"
+            onMouseDown={(e) => handleResize(e, 'width')}
+          />
+
+          {/* Dimensions display */}
+          {isResizing && (
+            <div className="absolute top-2 left-2 bg-black/75 text-white px-2 py-1 rounded text-xs z-10">
+              {dimensions.width} × {dimensions.height}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
