@@ -58,11 +58,11 @@ export const PublicHeader = () => {
         <div className="hidden md:block">
           <Button
             variant="outline"
+            size="icon"
             onClick={() => setSearchOpen(true)}
-            className="rounded-full px-6 hover-scale gap-2"
+            className="rounded-full hover-scale"
           >
             <Search className="h-4 w-4" />
-            Buscar contenido, eventos...
           </Button>
         </div>
 
