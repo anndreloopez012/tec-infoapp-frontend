@@ -5,7 +5,6 @@ import 'moment/locale/es';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import '@/styles/calendar.css';
 import { publicEventService } from '@/services/publicApiService';
-import { PublicHeader } from '@/components/public/PublicHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -177,18 +176,14 @@ END:VCALENDAR`;
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <PublicHeader />
+      <div className="container py-8">
         <LoadingSpinner />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <PublicHeader />
-      
-      <div className="container py-8 animate-fade-in">
+    <div className="container py-8 animate-fade-in">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Calendario de Eventos</h1>
           <p className="text-muted-foreground text-lg">
@@ -441,7 +436,6 @@ END:VCALENDAR`;
             </div>
           </DialogContent>
         </Dialog>
-      </div>
     </div>
   );
 }

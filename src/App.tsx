@@ -71,6 +71,7 @@ import TicketDetail from '@/pages/catalog/TicketDetail';
 
 // Layout
 import ModernLayout from '@/components/layout/ModernLayout';
+import { PublicLayout } from '@/components/layout/PublicLayout';
 import NotificationIntegration from '@/components/NotificationIntegration';
 
 const queryClient = new QueryClient();
@@ -80,13 +81,15 @@ const AppRoutes = () => {
 
   return (
     <Routes location={location}>
-      {/* Public Landing */}
-      <Route path="/" element={<PublicLanding />} />
-      <Route path="/public/calendar" element={<PublicCalendar />} />
-      <Route path="/public/events" element={<PublicEvents />} />
-      <Route path="/public/events/:eventId" element={<PublicEventDetail />} />
-      <Route path="/public/category/:categoryId" element={<CategoryContent />} />
-      <Route path="/public/content/:contentId" element={<PublicContentDetail />} />
+      {/* Public Routes with Public Layout */}
+      <Route element={<PublicLayout />}>
+        <Route path="/" element={<PublicLanding />} />
+        <Route path="/public/calendar" element={<PublicCalendar />} />
+        <Route path="/public/events" element={<PublicEvents />} />
+        <Route path="/public/events/:eventId" element={<PublicEventDetail />} />
+        <Route path="/public/category/:categoryId" element={<CategoryContent />} />
+        <Route path="/public/content/:contentId" element={<PublicContentDetail />} />
+      </Route>
         
         {/* Auth Routes */}
         <Route path="/login" element={<ModernLogin />} />

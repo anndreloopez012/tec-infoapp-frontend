@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { PublicHeader } from '@/components/public/PublicHeader';
 import { Calendar, MapPin, Users, ArrowLeft, Download, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -125,37 +124,28 @@ export default function PublicEventDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <PublicHeader />
-        <div className="container mx-auto py-6 space-y-6 max-w-4xl">
+      <div className="container mx-auto py-6 space-y-6 max-w-4xl">
           <Skeleton className="h-12 w-32" />
           <Skeleton className="h-64 w-full" />
           <Skeleton className="h-96 w-full" />
         </div>
-      </div>
     );
   }
 
   if (!event) {
     return (
-      <div className="min-h-screen bg-background">
-        <PublicHeader />
-        <div className="container mx-auto py-6">
+      <div className="container mx-auto py-6">
           <Card>
             <CardContent className="py-12 text-center">
               <p className="text-muted-foreground">Evento no encontrado</p>
             </CardContent>
-          </Card>
-        </div>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <PublicHeader />
-
-      <div className="container mx-auto py-6 space-y-6 max-w-4xl animate-fade-in">
+    <div className="container mx-auto py-6 space-y-6 max-w-4xl animate-fade-in">
         <Button variant="ghost" onClick={() => navigate('/public/events')} className="mb-4">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Volver a eventos
@@ -288,6 +278,5 @@ export default function PublicEventDetail() {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
-}
+    );
+  }

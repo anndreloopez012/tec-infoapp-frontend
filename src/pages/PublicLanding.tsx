@@ -1,4 +1,3 @@
-import { PublicHeader } from "@/components/public/PublicHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -53,9 +52,7 @@ export default function PublicLanding() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <PublicHeader />
-
+    <>
       {/* Floating Tech Icons Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         {techIcons.map(({ Icon, delay }, index) => (
@@ -460,6 +457,6 @@ export default function PublicLanding() {
           </div>
         </div>
       </footer>
-    </div>
+    </>
   );
 }
