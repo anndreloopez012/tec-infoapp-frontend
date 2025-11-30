@@ -5,7 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
-import { PageTransition } from "@/components/PageTransition";
 
 // Context Providers  
 import { AuthProvider } from '@/context/AuthContext';
@@ -74,26 +73,14 @@ const queryClient = new QueryClient();
 
 const AppRoutes = () => {
   const location = useLocation();
-  
-  useEffect(() => {
-    // Implement View Transitions API for smooth page changes
-    if (!document.startViewTransition) {
-      return;
-    }
-
-    document.startViewTransition(() => {
-      // The browser will handle the transition
-    });
-  }, [location.pathname]);
 
   return (
-    <PageTransition>
-      <Routes>
-        {/* Public Landing */}
-        <Route path="/" element={<PublicLanding />} />
-        <Route path="/public/calendar" element={<PublicCalendar />} />
-        <Route path="/public/events" element={<PublicEvents />} />
-        <Route path="/public/category/:categoryId" element={<CategoryContent />} />
+    <Routes location={location}>
+      {/* Public Landing */}
+      <Route path="/" element={<PublicLanding />} />
+      <Route path="/public/calendar" element={<PublicCalendar />} />
+      <Route path="/public/events" element={<PublicEvents />} />
+      <Route path="/public/category/:categoryId" element={<CategoryContent />} />
         
         {/* Auth Routes */}
         <Route path="/login" element={<ModernLogin />} />
@@ -177,7 +164,6 @@ const AppRoutes = () => {
         {/* Catch-all route */}
         <Route path="*" element={<NotFound />} />
       </Routes>
-    </PageTransition>
   );
 };
 
