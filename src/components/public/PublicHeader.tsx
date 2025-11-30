@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Moon, Sun, LogIn, Menu, X, Calendar, Users, BookOpen } from 'lucide-react';
+import { Moon, Sun, LogIn, Menu, X, Calendar, Users, BookOpen, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
 import { publicCategoryService } from '@/services/publicApiService';
@@ -18,6 +18,7 @@ export const PublicHeader = () => {
   const { theme, setTheme } = useTheme();
   const [categories, setCategories] = useState<Category[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -53,9 +54,16 @@ export const PublicHeader = () => {
           </div>
         </Link>
 
-        {/* Desktop Search */}
-        <div className="hidden md:block flex-1 max-w-xl mx-8">
-          <GlobalSearch />
+        {/* Desktop Search Button */}
+        <div className="hidden md:block">
+          <Button
+            variant="outline"
+            onClick={() => setSearchOpen(true)}
+            className="rounded-full px-6 hover-scale gap-2"
+          >
+            <Search className="h-4 w-4" />
+            Buscar contenido, eventos...
+          </Button>
         </div>
 
         {/* Desktop Navigation */}
@@ -120,15 +128,26 @@ export const PublicHeader = () => {
         </div>
 
         {/* Mobile Menu Button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </Button>
+        <div className="flex md:hidden items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSearchOpen(true)}
+          >
+            <Search className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
+        </div>
       </div>
+
+      {/* Search Modal */}
+      <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
