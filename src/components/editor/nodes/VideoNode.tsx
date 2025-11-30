@@ -181,6 +181,12 @@ export class VideoNode extends DecoratorNode<JSX.Element> {
     this.__height = height;
   }
 
+  setDimensions(width: number, height: number): void {
+    const writable = this.getWritable();
+    writable.__width = width;
+    writable.__height = height;
+  }
+
   createDOM(config: EditorConfig): HTMLElement {
     const div = document.createElement('div');
     div.style.display = 'inline-block';
