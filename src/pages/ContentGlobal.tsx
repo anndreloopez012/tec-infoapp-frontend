@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
+import { useNavigate } from "react-router-dom";
 import { contentInfoService } from "@/services/catalogServices";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -77,6 +78,7 @@ interface Category {
 type ViewMode = "grid" | "list" | "masonry" | "compact";
 
 const ContentGlobal = () => {
+  const navigate = useNavigate();
   const [content, setContent] = useState<ContentItem[]>([]);
   const [filteredContent, setFilteredContent] = useState<ContentItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -356,7 +358,7 @@ const ContentGlobal = () => {
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => setSelectedContent(item)}
+                  onClick={() => navigate(`/content-global/${item.slug || item.documentId}`)}
                   className="group-hover:bg-primary group-hover:text-primary-foreground transition-colors flex-shrink-0"
                 >
                   <Eye className="w-4 h-4 mr-1" />

@@ -115,13 +115,11 @@ const ContentInfoForm = () => {
     // Limpiar archivos subidos antes de cargar nuevo contenido
     setUploadedFiles([]);
     try {
-      const result = await contentInfoService.getAll({
-        filters: { documentId },
-        populate: 'category_content,company,author,attachments',
-      });
+      // Usar getById porque el endpoint está basado en documentId
+      const result = await contentInfoService.getById(documentId);
 
-      if (result.success && result.data.length > 0) {
-        const item = result.data[0];
+      if (result.success && result.data) {
+        const item = result.data;
         const categoryId = item.category_content?.documentId || item.category_content?.id;
         const companyId = item.company?.documentId || item.company?.id;
 
