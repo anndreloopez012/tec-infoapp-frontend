@@ -21,6 +21,8 @@ import ImagesPlugin from './plugins/ImagesPlugin';
 import HorizontalRulePlugin from './plugins/HorizontalRulePlugin';
 import VideoPlugin from './plugins/VideoPlugin';
 import EmbedPlugin from './plugins/EmbedPlugin';
+import TableResizePlugin from './plugins/TableResizePlugin';
+import TableActionPlugin from './plugins/TableActionPlugin';
 import { ImageNode } from './nodes/ImageNode';
 import { HorizontalRuleNode } from './nodes/HorizontalRuleNode';
 import { VideoNode } from './nodes/VideoNode';
@@ -168,6 +170,8 @@ export default function LexicalEditor({ value, onChange, placeholder = 'Enter so
             <TabIndentationPlugin />
             <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
             <TablePlugin />
+            <TableResizePlugin />
+            <TableActionPlugin />
             <ImagesPlugin />
             <HorizontalRulePlugin />
             <VideoPlugin />
