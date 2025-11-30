@@ -1,6 +1,8 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { useEffect, useState } from 'react';
-import { $getSelection, $isRangeSelection } from 'lexical';
+import { $getSelection, $isRangeSelection, $getNodeByKey } from 'lexical';
+
+import { TableCellNode } from '@lexical/table';
 import TableActionMenu from '../ui/TableActionMenu';
 import { createPortal } from 'react-dom';
 
@@ -41,6 +43,14 @@ export default function TableActionPlugin(): JSX.Element | null {
     editor.update(() => {
       currentCell.style.backgroundColor = color;
       currentCell.dataset.bgColor = color;
+
+      const key = currentCell.getAttribute('data-lexical-node');
+      if (key) {
+        const cellNode = $getNodeByKey(key);
+        if (cellNode instanceof TableCellNode) {
+          (cellNode as any).__backgroundColor = color;
+        }
+      }
     });
     closeMenu();
   };
@@ -53,8 +63,17 @@ export default function TableActionPlugin(): JSX.Element | null {
     editor.update(() => {
       const cells = Array.from(row.cells);
       cells.forEach((cell) => {
-        cell.style.backgroundColor = color;
-        cell.dataset.bgColor = color;
+        const htmlCell = cell as HTMLTableCellElement;
+        htmlCell.style.backgroundColor = color;
+        htmlCell.dataset.bgColor = color;
+
+        const key = htmlCell.getAttribute('data-lexical-node');
+        if (key) {
+          const cellNode = $getNodeByKey(key);
+          if (cellNode instanceof TableCellNode) {
+            (cellNode as any).__backgroundColor = color;
+          }
+        }
       });
     });
     closeMenu();
@@ -70,10 +89,18 @@ export default function TableActionPlugin(): JSX.Element | null {
     
     editor.update(() => {
       rows.forEach((row) => {
-        const cell = row.cells[colIndex];
+        const cell = row.cells[colIndex] as HTMLTableCellElement | undefined;
         if (cell) {
           cell.style.backgroundColor = color;
           cell.dataset.bgColor = color;
+
+          const key = cell.getAttribute('data-lexical-node');
+          if (key) {
+            const cellNode = $getNodeByKey(key);
+            if (cellNode instanceof TableCellNode) {
+              (cellNode as any).__backgroundColor = color;
+            }
+          }
         }
       });
     });
@@ -85,6 +112,14 @@ export default function TableActionPlugin(): JSX.Element | null {
     editor.update(() => {
       currentCell.style.backgroundColor = '';
       delete currentCell.dataset.bgColor;
+
+      const key = currentCell.getAttribute('data-lexical-node');
+      if (key) {
+        const cellNode = $getNodeByKey(key);
+        if (cellNode instanceof TableCellNode) {
+          (cellNode as any).__backgroundColor = '';
+        }
+      }
     });
     closeMenu();
   };
@@ -97,8 +132,17 @@ export default function TableActionPlugin(): JSX.Element | null {
     editor.update(() => {
       const cells = Array.from(row.cells);
       cells.forEach((cell) => {
-        cell.style.backgroundColor = '';
-        delete cell.dataset.bgColor;
+        const htmlCell = cell as HTMLTableCellElement;
+        htmlCell.style.backgroundColor = '';
+        delete htmlCell.dataset.bgColor;
+
+        const key = htmlCell.getAttribute('data-lexical-node');
+        if (key) {
+          const cellNode = $getNodeByKey(key);
+          if (cellNode instanceof TableCellNode) {
+            (cellNode as any).__backgroundColor = '';
+          }
+        }
       });
     });
     closeMenu();
@@ -114,10 +158,18 @@ export default function TableActionPlugin(): JSX.Element | null {
     
     editor.update(() => {
       rows.forEach((row) => {
-        const cell = row.cells[colIndex];
+        const cell = row.cells[colIndex] as HTMLTableCellElement | undefined;
         if (cell) {
           cell.style.backgroundColor = '';
           delete cell.dataset.bgColor;
+
+          const key = cell.getAttribute('data-lexical-node');
+          if (key) {
+            const cellNode = $getNodeByKey(key);
+            if (cellNode instanceof TableCellNode) {
+              (cellNode as any).__backgroundColor = '';
+            }
+          }
         }
       });
     });

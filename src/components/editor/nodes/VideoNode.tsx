@@ -8,7 +8,9 @@ import {
   type NodeKey,
   type SerializedLexicalNode,
   type Spread,
+  $getNodeByKey,
 } from 'lexical';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { useState } from 'react';
 
 export interface VideoPayload {
@@ -51,6 +53,7 @@ function VideoComponent({
 }) {
   const [isResizing, setIsResizing] = useState(false);
   const [dimensions, setDimensions] = useState({ width, height });
+  const [editor] = useLexicalComposerContext();
 
   const handleResize = (e: React.MouseEvent, direction: 'width' | 'height' | 'both') => {
     e.preventDefault();
@@ -60,14 +63,19 @@ function VideoComponent({
     const startY = e.clientY;
     const startWidth = dimensions.width;
     const startHeight = dimensions.height;
+    let newWidth = startWidth;
+    let newHeight = startHeight;
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const deltaX = moveEvent.clientX - startX;
       const deltaY = moveEvent.clientY - startY;
       
+      newWidth = direction === 'width' || direction === 'both' ? Math.max(200, startWidth + deltaX) : startWidth;
+      newHeight = direction === 'height' || direction === 'both' ? Math.max(150, startHeight + deltaY) : startHeight;
+
       setDimensions({
-        width: direction === 'width' || direction === 'both' ? Math.max(200, startWidth + deltaX) : startWidth,
-        height: direction === 'height' || direction === 'both' ? Math.max(150, startHeight + deltaY) : startHeight,
+        width: newWidth,
+        height: newHeight,
       });
     };
 
@@ -75,6 +83,13 @@ function VideoComponent({
       setIsResizing(false);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+
+      editor.update(() => {
+        const node = $getNodeByKey(nodeKey);
+        if (node instanceof VideoNode) {
+          node.setDimensions(newWidth, newHeight);
+        }
+      });
     };
 
     document.addEventListener('mousemove', handleMouseMove);
