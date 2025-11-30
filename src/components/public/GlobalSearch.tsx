@@ -122,7 +122,6 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Command className="h-5 w-5 text-primary" />
-            Buscar en todas las categorías
           </DialogTitle>
         </DialogHeader>
 
