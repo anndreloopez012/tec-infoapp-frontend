@@ -47,6 +47,7 @@ export default function ColorPicker({ value, onChange }: ColorPickerProps) {
         {PRESET_COLORS.map((color) => (
           <button
             key={color}
+            type="button"
             onClick={() => handlePresetClick(color)}
             className="w-6 h-6 rounded border-2 border-border hover:scale-110 transition-transform"
             style={{ backgroundColor: color }}

@@ -7,6 +7,17 @@ export default function TableResizePlugin(): null {
   const [editor] = useLexicalComposerContext();
 
   useEffect(() => {
+    // Initial pass for existing tables when content is loaded
+    setTimeout(() => {
+      const root = editor.getRootElement();
+      if (!root) return;
+      const tables = root.querySelectorAll('table');
+      tables.forEach((table) => {
+        addResizeHandles(table as HTMLTableElement, '', editor);
+      });
+    }, 0);
+
+    // Listen for new/updated tables
     return editor.registerMutationListener(TableNode, (mutatedNodes) => {
       for (const [nodeKey, mutation] of mutatedNodes) {
         if (mutation === 'created' || mutation === 'updated') {
@@ -31,7 +42,7 @@ export default function TableResizePlugin(): null {
 
 function addResizeHandles(
   tableElement: HTMLTableElement,
-  nodeKey: string,
+  nodeKey: string | '',
   editor: LexicalEditor
 ): void {
   // Check if already wrapped

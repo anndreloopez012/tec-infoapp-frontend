@@ -8,7 +8,9 @@ import {
   type NodeKey,
   type SerializedLexicalNode,
   type Spread,
+  $getNodeByKey,
 } from 'lexical';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import * as React from 'react';
 
 export interface ImagePayload {
@@ -179,6 +181,7 @@ function ImageComponent({
     width: width || maxWidth, 
     height: height || 0 
   });
+  const [editor] = useLexicalComposerContext();
 
   const handleResize = (e: React.MouseEvent, direction: 'width' | 'height' | 'both') => {
     e.preventDefault();
@@ -188,14 +191,19 @@ function ImageComponent({
     const startY = e.clientY;
     const startWidth = dimensions.width;
     const startHeight = dimensions.height;
+    let newWidth = startWidth;
+    let newHeight = startHeight;
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const deltaX = moveEvent.clientX - startX;
       const deltaY = moveEvent.clientY - startY;
       
+      newWidth = direction === 'width' || direction === 'both' ? Math.max(100, startWidth + deltaX) : startWidth;
+      newHeight = direction === 'height' || direction === 'both' ? Math.max(50, startHeight + deltaY) : startHeight;
+
       setDimensions({
-        width: direction === 'width' || direction === 'both' ? Math.max(100, startWidth + deltaX) : startWidth,
-        height: direction === 'height' || direction === 'both' ? Math.max(50, startHeight + deltaY) : startHeight,
+        width: newWidth,
+        height: newHeight,
       });
     };
 
@@ -203,6 +211,14 @@ function ImageComponent({
       setIsResizing(false);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+
+      // Persist dimensions into Lexical node
+      editor.update(() => {
+        const node = $getNodeByKey(nodeKey);
+        if (node instanceof ImageNode) {
+          node.setWidthAndHeight(newWidth, newHeight || 0);
+        }
+      });
     };
 
     document.addEventListener('mousemove', handleMouseMove);
