@@ -150,14 +150,16 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
   }
 
   decorate(): JSX.Element {
-    return <ImageComponent 
-      src={this.__src}
-      altText={this.__altText}
-      width={this.__width}
-      height={this.__height}
-      maxWidth={this.__maxWidth}
-      nodeKey={this.__key}
-    />;
+    return (
+      <ImageComponent
+        src={this.__src}
+        altText={this.__altText}
+        width={this.__width}
+        height={this.__height}
+        maxWidth={this.__maxWidth}
+        nodeKey={this.__key}
+      />
+    );
   }
 }
 
@@ -167,7 +169,7 @@ function ImageComponent({
   width,
   height,
   maxWidth = 800,
-  nodeKey
+  nodeKey,
 }: {
   src: string;
   altText: string;
@@ -177,16 +179,21 @@ function ImageComponent({
   nodeKey: NodeKey;
 }) {
   const [isResizing, setIsResizing] = React.useState(false);
-  const [dimensions, setDimensions] = React.useState({ 
-    width: width || maxWidth, 
-    height: height || 0 
+  const [dimensions, setDimensions] = React.useState({
+    width: width || maxWidth,
+    height: height || 0,
   });
   const [editor] = useLexicalComposerContext();
+  const isEditable = editor.isEditable();
 
-  const handleResize = (e: React.MouseEvent, direction: 'width' | 'height' | 'both') => {
+  const handleResize = (
+    e: React.MouseEvent,
+    direction: 'width' | 'height' | 'both'
+  ) => {
+    if (!editor.isEditable()) return;
     e.preventDefault();
     setIsResizing(true);
-    
+
     const startX = e.clientX;
     const startY = e.clientY;
     const startWidth = dimensions.width;
@@ -197,9 +204,15 @@ function ImageComponent({
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const deltaX = moveEvent.clientX - startX;
       const deltaY = moveEvent.clientY - startY;
-      
-      newWidth = direction === 'width' || direction === 'both' ? Math.max(100, startWidth + deltaX) : startWidth;
-      newHeight = direction === 'height' || direction === 'both' ? Math.max(50, startHeight + deltaY) : startHeight;
+
+      newWidth =
+        direction === 'width' || direction === 'both'
+          ? Math.max(100, startWidth + deltaX)
+          : startWidth;
+      newHeight =
+        direction === 'height' || direction === 'both'
+          ? Math.max(50, startHeight + deltaY)
+          : startHeight;
 
       setDimensions({
         width: newWidth,
@@ -226,11 +239,11 @@ function ImageComponent({
   };
 
   return (
-    <div 
+    <div
       className="relative inline-block group my-4"
-      style={{ 
+      style={{
         maxWidth: maxWidth ? `${maxWidth}px` : '100%',
-        width: dimensions.width ? `${dimensions.width}px` : 'auto'
+        width: dimensions.width ? `${dimensions.width}px` : 'auto',
       }}
     >
       <img
@@ -243,23 +256,29 @@ function ImageComponent({
           borderRadius: '0.5rem',
         }}
       />
-      
-      {/* Resize handles */}
-      <div className="absolute bottom-0 right-0 w-4 h-4 bg-primary rounded-tl cursor-nwse-resize opacity-0 group-hover:opacity-100 transition-opacity"
-        onMouseDown={(e) => handleResize(e, 'both')}
-      />
-      <div className="absolute bottom-0 left-1/2 w-8 h-2 bg-primary rounded-t cursor-ns-resize opacity-0 group-hover:opacity-100 transition-opacity -translate-x-1/2"
-        onMouseDown={(e) => handleResize(e, 'height')}
-      />
-      <div className="absolute right-0 top-1/2 w-2 h-8 bg-primary rounded-l cursor-ew-resize opacity-0 group-hover:opacity-100 transition-opacity -translate-y-1/2"
-        onMouseDown={(e) => handleResize(e, 'width')}
-      />
-      
-      {/* Dimensions display */}
-      {isResizing && (
-        <div className="absolute top-2 left-2 bg-black/75 text-white px-2 py-1 rounded text-xs z-10">
-          {dimensions.width} × {dimensions.height || 'auto'}
-        </div>
+      {isEditable && (
+        <>
+          {/* Resize handles */}
+          <div
+            className="absolute bottom-0 right-0 w-4 h-4 bg-primary rounded-tl cursor-nwse-resize opacity-0 group-hover:opacity-100 transition-opacity"
+            onMouseDown={(e) => handleResize(e, 'both')}
+          />
+          <div
+            className="absolute bottom-0 left-1/2 w-8 h-2 bg-primary rounded-t cursor-ns-resize opacity-0 group-hover:opacity-100 transition-opacity -translate-x-1/2"
+            onMouseDown={(e) => handleResize(e, 'height')}
+          />
+          <div
+            className="absolute right-0 top-1/2 w-2 h-8 bg-primary rounded-l cursor-ew-resize opacity-0 group-hover:opacity-100 transition-opacity -translate-y-1/2"
+            onMouseDown={(e) => handleResize(e, 'width')}
+          />
+
+          {/* Dimensions display */}
+          {isResizing && (
+            <div className="absolute top-2 left-2 bg-black/75 text-white px-2 py-1 rounded text-xs z-10">
+              {dimensions.width} × {dimensions.height}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -276,8 +295,6 @@ export function $createImageNode({
   return new ImageNode(src, altText, width, height, maxWidth, key);
 }
 
-export function $isImageNode(
-  node: LexicalNode | null | undefined
-): node is ImageNode {
+export function $isImageNode(node: LexicalNode | null | undefined): node is ImageNode {
   return node instanceof ImageNode;
 }
