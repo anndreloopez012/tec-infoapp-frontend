@@ -181,7 +181,14 @@ export default function LexicalViewer({ content, className = '' }: LexicalViewer
                 prose-blockquote:text-muted-foreground
                 prose-blockquote:border-primary
                 prose-img:rounded-lg
-                prose-img:shadow-md"
+                prose-img:shadow-md
+                [&_.image-resizer]:hidden
+                [&_.video-resizer]:hidden
+                [&_.embed-resizer]:hidden
+                [&_button]:pointer-events-none
+                [&_button]:hidden
+                select-text"
+              style={{ userSelect: 'text' }}
             />
           }
           placeholder={null}
