@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { CatalogTable } from '@/components/catalog/CatalogTable';
 import { CatalogFormDialog } from '@/components/catalog/CatalogFormDialog';
 import { ticketTypeService } from '@/services/catalogServices';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthPermissions } from '@/hooks/useAuthPermissions';
 import { toast } from 'sonner';
 
 const TicketType = () => {
-  const { hasPermission } = useAuth();
+  const { hasPermission } = useAuthPermissions();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
