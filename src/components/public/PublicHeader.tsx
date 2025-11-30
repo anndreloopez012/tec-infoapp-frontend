@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
 import { publicCategoryService } from '@/services/publicApiService';
 import { cn } from '@/lib/utils';
+import { GlobalSearch } from './GlobalSearch';
 
 interface Category {
   id: number;
@@ -52,8 +53,13 @@ export const PublicHeader = () => {
           </div>
         </Link>
 
+        {/* Desktop Search */}
+        <div className="hidden md:block flex-1 max-w-xl mx-8">
+          <GlobalSearch />
+        </div>
+
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-3">
+        <nav className="hidden lg:flex items-center gap-3">
           <Button
             variant={isActive('/public/calendar') ? 'default' : 'ghost'}
             size="sm"
