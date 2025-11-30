@@ -56,6 +56,8 @@ import ContentInfoForm from '@/pages/catalog/ContentInfoForm';
 import Gallery from '@/pages/catalog/Gallery';
 import Event from '@/pages/Event';
 import EventCalendar from '@/pages/EventCalendar';
+import EventList from '@/pages/EventList';
+import EventDetail from '@/pages/EventDetail';
 import ContentGlobal from '@/pages/ContentGlobal';
 import ContentDetail from '@/pages/ContentDetail';
 
@@ -151,6 +153,8 @@ const AppRoutes = () => {
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/event" element={<Event />} />
           <Route path="/calendar" element={<EventCalendar />} />
+          <Route path="/event-list" element={<EventList />} />
+          <Route path="/event-detail/:eventId" element={<EventDetail />} />
           
           {/* Ticket Routes */}
           <Route path="/ticket-status" element={<TicketStatus />} />
