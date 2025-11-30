@@ -295,6 +295,7 @@ const ContentInfoForm = () => {
               <div className="space-y-2">
                 <Label htmlFor="content">Contenido</Label>
                 <LexicalEditor
+                  key={editId || 'new'}
                   value={formData.content || ''}
                   onChange={(value) => setFormData(prev => ({ ...prev, content: value }))}
                   placeholder="Ingrese el contenido..."
