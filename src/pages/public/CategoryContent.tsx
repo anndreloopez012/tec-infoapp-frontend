@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { publicContentService, publicCategoryService } from '@/services/publicApiService';
 import { PublicHeader } from '@/components/public/PublicHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { BookOpen, Search, Calendar } from 'lucide-react';
+import { BookOpen, Search, Calendar, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { API_CONFIG } from '@/config/api.js';
 import { Skeleton } from '@/components/ui/skeleton';
-import ReactMarkdown from 'react-markdown';
+import { Badge } from '@/components/ui/badge';
 import {
   Pagination,
   PaginationContent,
@@ -28,17 +28,20 @@ interface ContentData {
   publish_date?: string;
   main_image?: any;
   category_content?: any;
+  companies?: any[];
+  author_content?: any;
 }
 
 export default function CategoryContent() {
   const { categoryId } = useParams<{ categoryId: string }>();
+  const navigate = useNavigate();
   const [category, setCategory] = useState<any>(null);
   const [content, setContent] = useState<ContentData[]>([]);
   const [filteredContent, setFilteredContent] = useState<ContentData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 6;
+  const pageSize = 9;
 
   useEffect(() => {
     if (categoryId) {
@@ -74,8 +77,12 @@ export default function CategoryContent() {
       });
 
       if (result.success) {
-        setContent(result.data);
-        setFilteredContent(result.data);
+        // Filter out content that has companies assigned (private content)
+        const publicContent = result.data.filter(
+          (item: ContentData) => !item.companies || item.companies.length === 0
+        );
+        setContent(publicContent);
+        setFilteredContent(publicContent);
       }
     } catch (error) {
       console.error('Error loading content:', error);
@@ -94,11 +101,21 @@ export default function CategoryContent() {
     const filtered = content.filter(
       (item) =>
         item.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.subtitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.content?.toLowerCase().includes(searchQuery.toLowerCase())
+        item.subtitle?.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredContent(filtered);
     setCurrentPage(1);
+  };
+
+  const getImageUrl = (imageData: any) => {
+    if (!imageData?.url) return null;
+    return imageData.url.startsWith('http')
+      ? imageData.url
+      : `${API_CONFIG.BASE_URL}${imageData.url}`;
+  };
+
+  const handleContentClick = (documentId: string) => {
+    navigate(`/public/content/${documentId}`);
   };
 
   const paginatedContent = filteredContent.slice(
@@ -133,9 +150,9 @@ export default function CategoryContent() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-96 rounded-lg" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-[420px] rounded-xl" />
             ))}
           </div>
         ) : paginatedContent.length === 0 ? (
@@ -143,54 +160,89 @@ export default function CategoryContent() {
             <CardContent className="flex flex-col items-center justify-center py-12">
               <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground text-lg">
-                No se encontró contenido en esta categoría
+                No se encontró contenido público en esta categoría
               </p>
             </CardContent>
           </Card>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {paginatedContent.map((item) => (
                 <Card
                   key={item.id}
-                  className="hover:shadow-lg transition-all duration-300 hover-scale border-primary/20 flex flex-col"
+                  onClick={() => handleContentClick(item.documentId)}
+                  className="group cursor-pointer overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-border/50 hover:border-primary/50 flex flex-col"
                 >
-                  {item.main_image && (
-                    <div className="overflow-hidden rounded-t-lg">
+                  {/* Image Preview */}
+                  <div className="relative h-56 overflow-hidden bg-gradient-to-br from-primary/5 to-accent/5">
+                    {item.main_image ? (
                       <img
-                        src={
-                          item.main_image.url?.startsWith('http')
-                            ? item.main_image.url
-                            : `${API_CONFIG.BASE_URL}${item.main_image.url}`
-                        }
+                        src={getImageUrl(item.main_image)}
                         alt={item.title}
-                        className="w-full h-56 object-cover transition-transform duration-300 hover:scale-105"
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
-                    </div>
-                  )}
-                  <CardHeader className="flex-grow">
-                    <CardTitle className="text-xl">{item.title}</CardTitle>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <BookOpen className="h-16 w-16 text-muted-foreground/30" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    
+                    {/* Floating Category Badge */}
+                    {item.category_content?.name && (
+                      <Badge 
+                        className="absolute top-4 left-4 shadow-lg backdrop-blur-sm"
+                        style={{
+                          backgroundColor: item.category_content?.color 
+                            ? `${item.category_content.color}40`
+                            : 'hsl(var(--primary) / 0.2)',
+                          borderColor: item.category_content?.color || 'hsl(var(--primary))',
+                          color: item.category_content?.color || 'hsl(var(--primary))'
+                        }}
+                      >
+                        {item.category_content.name}
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <CardHeader className="flex-grow space-y-3 pb-4">
+                    <CardTitle className="text-xl leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+                      {item.title}
+                    </CardTitle>
                     {item.subtitle && (
-                      <CardDescription className="text-base">
+                      <CardDescription className="text-sm line-clamp-2 leading-relaxed">
                         {item.subtitle}
                       </CardDescription>
                     )}
-                    {item.publish_date && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
-                        <Calendar className="h-4 w-4" />
-                        {format(new Date(item.publish_date), "dd 'de' MMMM, yyyy", {
-                          locale: es,
-                        })}
-                      </div>
-                    )}
                   </CardHeader>
-                  {item.content && (
-                    <CardContent>
-                      <div className="prose prose-sm dark:prose-invert max-w-none line-clamp-3">
-                        <ReactMarkdown>{item.content.substring(0, 200) + '...'}</ReactMarkdown>
-                      </div>
-                    </CardContent>
-                  )}
+
+                  {/* Footer */}
+                  <CardContent className="pt-0 space-y-3">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-border/50 pt-3">
+                      {item.publish_date && (
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="h-3.5 w-3.5" />
+                          <span>
+                            {format(new Date(item.publish_date), "dd MMM yyyy", {
+                              locale: es,
+                            })}
+                          </span>
+                        </div>
+                      )}
+                      {item.author_content?.name && (
+                        <span className="text-xs">
+                          {item.author_content.name}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Read More Button */}
+                    <div className="flex items-center gap-2 text-sm font-medium text-primary group-hover:gap-3 transition-all">
+                      <span>Leer más</span>
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </div>
+                  </CardContent>
                 </Card>
               ))}
             </div>
