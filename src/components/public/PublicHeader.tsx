@@ -66,28 +66,28 @@ export const PublicHeader = () => {
           </Button>
         </div>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-3">
+        {/* Desktop/Tablet Navigation */}
+        <nav className="hidden md:flex items-center gap-2 overflow-x-auto max-w-[calc(100vw-600px)] px-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
           <Button
             variant={isActive('/public/calendar') ? 'default' : 'ghost'}
             size="sm"
             onClick={() => navigate('/public/calendar')}
-            className="rounded-full px-4 hover-scale"
+            className="rounded-full px-3 hover-scale whitespace-nowrap flex-shrink-0"
           >
-            <Calendar className="h-4 w-4 mr-2" />
-            Calendario
+            <Calendar className="h-4 w-4 md:mr-2" />
+            <span className="hidden lg:inline">Calendario</span>
           </Button>
           <Button
             variant={isActive('/public/events') ? 'default' : 'ghost'}
             size="sm"
             onClick={() => navigate('/public/events')}
-            className="rounded-full px-4 hover-scale"
+            className="rounded-full px-3 hover-scale whitespace-nowrap flex-shrink-0"
           >
-            <Users className="h-4 w-4 mr-2" />
-            Eventos
+            <Users className="h-4 w-4 md:mr-2" />
+            <span className="hidden lg:inline">Eventos</span>
           </Button>
           
-          <div className="h-6 w-px bg-border mx-2" />
+          <div className="h-6 w-px bg-border mx-1 flex-shrink-0" />
           
           {categories.map((category) => (
             <Button
@@ -96,12 +96,12 @@ export const PublicHeader = () => {
               size="sm"
               onClick={() => navigate(`/public/category/${category.documentId}`)}
               className={cn(
-                "rounded-full px-4 hover-scale transition-all duration-300",
+                "rounded-full px-3 hover-scale transition-all duration-300 whitespace-nowrap flex-shrink-0",
                 category.color && `hover:bg-[${category.color}]/10`
               )}
             >
-              <BookOpen className="h-4 w-4 mr-2" />
-              {category.name}
+              <BookOpen className="h-4 w-4 md:mr-2" />
+              <span className="hidden lg:inline">{category.name}</span>
             </Button>
           ))}
         </nav>
