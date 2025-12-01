@@ -10,6 +10,14 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
+  preview: {
+    host: "::",
+    port: 8080,
+    allowedHosts: [
+      "tec.server-softplus.plus",
+      ".lovableproject.com"
+    ]
+  },
   plugins: [
     react(), 
     mode === "development" && componentTagger(),
