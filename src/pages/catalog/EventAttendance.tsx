@@ -7,7 +7,7 @@ import { useAuthPermissions } from '@/hooks/useAuthPermissions';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Download, Filter, FileSpreadsheet, FileText, Calendar, User, CheckCircle, X, BarChart3, Table2 } from 'lucide-react';
+import { Download, Filter, FileSpreadsheet, FileText, Calendar, User, CheckCircle, X } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   Dialog,
@@ -33,8 +33,6 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import axios from 'axios';
 import { API_CONFIG } from '@/config/api.js';
 
@@ -55,22 +53,19 @@ export const EventAttendance: React.FC = () => {
   });
   
   // Filtros
-  const [eventFilter, setEventFilter] = useState('all');
-  const [userFilter, setUserFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [eventFilter, setEventFilter] = useState('');
+  const [userFilter, setUserFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [startDateFilter, setStartDateFilter] = useState('');
   const [endDateFilter, setEndDateFilter] = useState('');
   const [filterPopoverOpen, setFilterPopoverOpen] = useState(false);
   
   // Export modal
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
-  const [exportEventFilter, setExportEventFilter] = useState('all');
-  const [exportUserFilter, setExportUserFilter] = useState('all');
+  const [exportEventFilter, setExportEventFilter] = useState('');
+  const [exportUserFilter, setExportUserFilter] = useState('');
   const [exportStartDate, setExportStartDate] = useState('');
   const [exportEndDate, setExportEndDate] = useState('');
-  
-  // View mode
-  const [viewMode, setViewMode] = useState<'table' | 'stats'>('table');
   
   // Listas para filtros
   const [events, setEvents] = useState<any[]>([]);
@@ -112,9 +107,9 @@ export const EventAttendance: React.FC = () => {
         pageSize: pagination.pageSize,
       };
 
-      if (eventFilter && eventFilter !== 'all') params.eventId = eventFilter;
-      if (userFilter && userFilter !== 'all') params.userId = userFilter;
-      if (statusFilter && statusFilter !== 'all') params.status = statusFilter;
+      if (eventFilter) params.eventId = eventFilter;
+      if (userFilter) params.userId = userFilter;
+      if (statusFilter) params.status = statusFilter;
       if (startDateFilter) params.startDate = startDateFilter;
       if (endDateFilter) params.endDate = endDateFilter;
 
@@ -209,8 +204,8 @@ export const EventAttendance: React.FC = () => {
       toast.loading(`Exportando a ${type.toUpperCase()}...`);
       
       const params: any = {};
-      if (exportEventFilter && exportEventFilter !== 'all') params.eventId = exportEventFilter;
-      if (exportUserFilter && exportUserFilter !== 'all') params.userId = exportUserFilter;
+      if (exportEventFilter) params.eventId = exportEventFilter;
+      if (exportUserFilter) params.userId = exportUserFilter;
       if (exportStartDate) params.startDate = exportStartDate;
       if (exportEndDate) params.endDate = exportEndDate;
 
@@ -314,55 +309,21 @@ export const EventAttendance: React.FC = () => {
 
   // Limpiar filtros
   const clearFilters = () => {
-    setEventFilter('all');
-    setUserFilter('all');
-    setStatusFilter('all');
+    setEventFilter('');
+    setUserFilter('');
+    setStatusFilter('');
     setStartDateFilter('');
     setEndDateFilter('');
   };
 
   const clearExportFilters = () => {
-    setExportEventFilter('all');
-    setExportUserFilter('all');
+    setExportEventFilter('');
+    setExportUserFilter('');
     setExportStartDate('');
     setExportEndDate('');
   };
 
-  const activeFiltersCount = [
-    eventFilter !== 'all' ? eventFilter : null,
-    userFilter !== 'all' ? userFilter : null,
-    statusFilter !== 'all' ? statusFilter : null,
-    startDateFilter,
-    endDateFilter
-  ].filter(Boolean).length;
-
-  // Calcular estadísticas
-  const stats = useMemo(() => {
-    const confirmed = data.filter(d => d.status_attendance === 'confirmed').length;
-    const pending = data.filter(d => d.status_attendance === 'pending').length;
-    const canceled = data.filter(d => d.status_attendance === 'canceled').length;
-    
-    // Asistencias por evento
-    const eventStats = data.reduce((acc: any, item) => {
-      const eventName = item.event?.title || item.event?.name || 'Sin evento';
-      if (!acc[eventName]) {
-        acc[eventName] = { confirmed: 0, pending: 0, canceled: 0 };
-      }
-      acc[eventName][item.status_attendance]++;
-      return acc;
-    }, {});
-    
-    return {
-      total: data.length,
-      confirmed,
-      pending,
-      canceled,
-      eventStats: Object.entries(eventStats).map(([name, stats]: [string, any]) => ({
-        name,
-        ...stats
-      }))
-    };
-  }, [data]);
+  const activeFiltersCount = [eventFilter, userFilter, statusFilter, startDateFilter, endDateFilter].filter(Boolean).length;
 
   return (
     <div className="space-y-6 p-6">
@@ -374,20 +335,6 @@ export const EventAttendance: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-3">
-          {/* Toggle de vista */}
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'table' | 'stats')}>
-            <TabsList>
-              <TabsTrigger value="table" className="gap-2">
-                <Table2 className="h-4 w-4" />
-                <span className="hidden sm:inline">Tabla</span>
-              </TabsTrigger>
-              <TabsTrigger value="stats" className="gap-2">
-                <BarChart3 className="h-4 w-4" />
-                <span className="hidden sm:inline">Estadísticas</span>
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-
           {/* Filtros Popover */}
           <Popover open={filterPopoverOpen} onOpenChange={setFilterPopoverOpen}>
             <PopoverTrigger asChild>
@@ -430,7 +377,7 @@ export const EventAttendance: React.FC = () => {
                         <SelectValue placeholder="Todos" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Todos los eventos</SelectItem>
+                        <SelectItem value="">Todos los eventos</SelectItem>
                         {events.map((event) => (
                           <SelectItem key={event.documentId} value={event.documentId}>
                             {event.title || event.name}
@@ -450,7 +397,7 @@ export const EventAttendance: React.FC = () => {
                         <SelectValue placeholder="Todos" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Todos los usuarios</SelectItem>
+                        <SelectItem value="">Todos los usuarios</SelectItem>
                         {users.map((user) => (
                           <SelectItem key={user.documentId} value={user.documentId}>
                             {user.username}
@@ -470,7 +417,7 @@ export const EventAttendance: React.FC = () => {
                         <SelectValue placeholder="Todos" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="">Todos</SelectItem>
                         <SelectItem value="confirmed">Confirmado</SelectItem>
                         <SelectItem value="pending">Pendiente</SelectItem>
                         <SelectItem value="canceled">Cancelado</SelectItem>
@@ -558,7 +505,7 @@ export const EventAttendance: React.FC = () => {
                             <SelectValue placeholder="Todos los eventos" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="all">Todos los eventos</SelectItem>
+                            <SelectItem value="">Todos los eventos</SelectItem>
                             {events.map((event) => (
                               <SelectItem key={event.documentId} value={event.documentId}>
                                 {event.title || event.name}
@@ -575,7 +522,7 @@ export const EventAttendance: React.FC = () => {
                             <SelectValue placeholder="Todos los usuarios" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="all">Todos los usuarios</SelectItem>
+                            <SelectItem value="">Todos los usuarios</SelectItem>
                             {users.map((user) => (
                               <SelectItem key={user.documentId} value={user.documentId}>
                                 {user.username} ({user.email})
@@ -656,30 +603,30 @@ export const EventAttendance: React.FC = () => {
       {activeFiltersCount > 0 && (
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm text-muted-foreground">Filtros activos:</span>
-          {eventFilter !== 'all' && (
+          {eventFilter && (
             <Badge variant="secondary" className="gap-1">
               Evento
               <X 
                 className="h-3 w-3 cursor-pointer" 
-                onClick={() => setEventFilter('all')}
+                onClick={() => setEventFilter('')}
               />
             </Badge>
           )}
-          {userFilter !== 'all' && (
+          {userFilter && (
             <Badge variant="secondary" className="gap-1">
               Usuario
               <X 
                 className="h-3 w-3 cursor-pointer" 
-                onClick={() => setUserFilter('all')}
+                onClick={() => setUserFilter('')}
               />
             </Badge>
           )}
-          {statusFilter !== 'all' && (
+          {statusFilter && (
             <Badge variant="secondary" className="gap-1">
               Estado: {statusFilter === 'confirmed' ? 'Confirmado' : statusFilter === 'pending' ? 'Pendiente' : 'Cancelado'}
               <X 
                 className="h-3 w-3 cursor-pointer" 
-                onClick={() => setStatusFilter('all')}
+                onClick={() => setStatusFilter('')}
               />
             </Badge>
           )}
@@ -704,141 +651,22 @@ export const EventAttendance: React.FC = () => {
         </div>
       )}
 
-      {/* Contenido según modo de vista */}
-      {viewMode === 'table' ? (
-        <CatalogTable
-          data={data}
-          columns={columns}
-          loading={loading}
-          pagination={pagination}
-          onPageChange={(page) => setPagination({ ...pagination, page })}
-          onPageSizeChange={(pageSize) => setPagination({ ...pagination, pageSize, page: 1 })}
-          onSearch={() => {}}
-          onEdit={() => {}}
-          onDelete={() => {}}
-          canCreate={false}
-          canEdit={false}
-          canDelete={false}
-          title=""
-        />
-      ) : (
-        <div className="space-y-6">
-          {/* Cards de resumen */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Total</p>
-                    <h3 className="text-2xl font-bold mt-1">{stats.total}</h3>
-                  </div>
-                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <CheckCircle className="h-6 w-6 text-primary" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Confirmados</p>
-                    <h3 className="text-2xl font-bold mt-1 text-green-600">{stats.confirmed}</h3>
-                  </div>
-                  <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
-                    <CheckCircle className="h-6 w-6 text-green-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Pendientes</p>
-                    <h3 className="text-2xl font-bold mt-1 text-yellow-600">{stats.pending}</h3>
-                  </div>
-                  <div className="h-12 w-12 rounded-full bg-yellow-100 dark:bg-yellow-900/20 flex items-center justify-center">
-                    <Calendar className="h-6 w-6 text-yellow-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Cancelados</p>
-                    <h3 className="text-2xl font-bold mt-1 text-red-600">{stats.canceled}</h3>
-                  </div>
-                  <div className="h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
-                    <X className="h-6 w-6 text-red-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Gráficos */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Gráfico de barras por evento */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Asistencias por Evento</h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={stats.eventStats}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="confirmed" fill="#22c55e" name="Confirmados" />
-                    <Bar dataKey="pending" fill="#eab308" name="Pendientes" />
-                    <Bar dataKey="canceled" fill="#ef4444" name="Cancelados" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            {/* Gráfico circular de estados */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Distribución por Estado</h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={[
-                        { name: 'Confirmados', value: stats.confirmed, color: '#22c55e' },
-                        { name: 'Pendientes', value: stats.pending, color: '#eab308' },
-                        { name: 'Cancelados', value: stats.canceled, color: '#ef4444' }
-                      ]}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {[
-                        { name: 'Confirmados', value: stats.confirmed, color: '#22c55e' },
-                        { name: 'Pendientes', value: stats.pending, color: '#eab308' },
-                        { name: 'Cancelados', value: stats.canceled, color: '#ef4444' }
-                      ].map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      )}
+      {/* Tabla */}
+      <CatalogTable
+        data={data}
+        columns={columns}
+        loading={loading}
+        pagination={pagination}
+        onPageChange={(page) => setPagination({ ...pagination, page })}
+        onPageSizeChange={(pageSize) => setPagination({ ...pagination, pageSize, page: 1 })}
+        onSearch={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        canCreate={false}
+        canEdit={false}
+        canDelete={false}
+        title=""
+      />
     </div>
   );
 };
