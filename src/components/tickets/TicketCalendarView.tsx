@@ -37,14 +37,15 @@ export function TicketCalendarView({ tickets, loading, onView }: TicketCalendarV
   }
 
   return (
-    <Card className="p-6">
-      <Calendar
-        localizer={localizer}
-        events={events}
-        startAccessor="start"
-        endAccessor="end"
-        style={{ height: 600 }}
-        onSelectEvent={handleSelectEvent}
+    <Card className="p-2 md:p-6">
+      <div className="h-[500px] md:h-[600px]">
+        <Calendar
+          localizer={localizer}
+          events={events}
+          startAccessor="start"
+          endAccessor="end"
+          style={{ height: '100%' }}
+          onSelectEvent={handleSelectEvent}
         views={['month', 'week', 'day']}
         defaultView="month"
         messages={{
@@ -85,6 +86,7 @@ export function TicketCalendarView({ tickets, loading, onView }: TicketCalendarV
           };
         }}
       />
+      </div>
     </Card>
   );
 }
