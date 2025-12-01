@@ -9,7 +9,10 @@
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "es-ES",
+  "dir": "ltr",
   "categories": ["business", "productivity", "utilities"],
+  "prefer_related_applications": false,
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "icons": [
     {
       "src": "/icon-192x192.png",
@@ -41,7 +44,7 @@
       "name": "Empresas",
       "short_name": "Empresas", 
       "description": "Gestionar empresas tech",
-      "url": "/companies",
+      "url": "/catalog/company",
       "icons": [
         {
           "src": "/icon-192x192.png",
@@ -64,19 +67,18 @@
   ],
   "screenshots": [
     {
-      "src": "/screenshot-desktop.png",
-      "sizes": "1280x720",
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
       "type": "image/png",
       "form_factor": "wide",
       "label": "TechOffice Hub Desktop"
     },
     {
-      "src": "/screenshot-mobile.png", 
-      "sizes": "375x667",
+      "src": "/icon-512x512.png", 
+      "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "TechOffice Hub Mobile"
     }
-  ],
-  "prefer_related_applications": false
+  ]
 }
