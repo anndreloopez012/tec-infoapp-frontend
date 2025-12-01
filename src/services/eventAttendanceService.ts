@@ -18,6 +18,87 @@ apiClient.interceptors.request.use(
 );
 
 export const eventAttendanceService = {
+  // Obtener todas las asistencias con filtros
+  async getAll(params: any = {}) {
+    try {
+      const { page = 1, pageSize = 10, eventId, userId, status, startDate, endDate } = params;
+      
+      let url = `/${API_CONFIG.API_PREFIX}/event-attendances?pagination[page]=${page}&pagination[pageSize]=${pageSize}&populate[event][fields][0]=title&populate[event][fields][1]=name&populate[user][fields][0]=username&populate[user][fields][1]=email`;
+      
+      // Filtros
+      if (eventId) {
+        url += `&filters[event][documentId][$eq]=${eventId}`;
+      }
+      if (userId) {
+        url += `&filters[user][documentId][$eq]=${userId}`;
+      }
+      if (status) {
+        url += `&filters[status_attendance][$eq]=${status}`;
+      }
+      if (startDate) {
+        url += `&filters[createdAt][$gte]=${startDate}`;
+      }
+      if (endDate) {
+        url += `&filters[createdAt][$lte]=${endDate}`;
+      }
+      
+      const response = await apiClient.get(url);
+      
+      return {
+        success: true,
+        data: response.data.data || [],
+        pagination: response.data.meta?.pagination || null,
+      };
+    } catch (error: any) {
+      console.error('Error fetching attendances:', error);
+      return {
+        success: false,
+        error: error.message,
+        data: [],
+      };
+    }
+  },
+
+  // Exportar datos de asistencias
+  async exportData(params: any = {}) {
+    try {
+      const { eventId, userId, status, startDate, endDate } = params;
+      
+      // Obtener todos los datos sin paginación
+      let url = `/${API_CONFIG.API_PREFIX}/event-attendances?pagination[pageSize]=1000&populate[event][fields][0]=title&populate[event][fields][1]=name&populate[user][fields][0]=username&populate[user][fields][1]=email`;
+      
+      if (eventId) {
+        url += `&filters[event][documentId][$eq]=${eventId}`;
+      }
+      if (userId) {
+        url += `&filters[user][documentId][$eq]=${userId}`;
+      }
+      if (status) {
+        url += `&filters[status_attendance][$eq]=${status}`;
+      }
+      if (startDate) {
+        url += `&filters[createdAt][$gte]=${startDate}`;
+      }
+      if (endDate) {
+        url += `&filters[createdAt][$lte]=${endDate}`;
+      }
+      
+      const response = await apiClient.get(url);
+      
+      return {
+        success: true,
+        data: response.data.data || [],
+      };
+    } catch (error: any) {
+      console.error('Error exporting attendances:', error);
+      return {
+        success: false,
+        error: error.message,
+        data: [],
+      };
+    }
+  },
+
   // Verificar si el usuario ya está registrado en un evento
   async checkAttendance(eventId: string, userId: string) {
     try {
