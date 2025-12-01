@@ -302,8 +302,8 @@ END:VCALENDAR`;
 
       {/* Main Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
-        {/* Sidebar */}
-        <div className="space-y-6">
+        {/* Sidebar - Hidden on mobile */}
+        <div className="hidden lg:block space-y-6">
           {/* Mini Calendar */}
           <div className="bg-card rounded-lg border shadow-sm p-4">
             <MiniCalendar
@@ -345,12 +345,13 @@ END:VCALENDAR`;
 
         {/* Calendar */}
         <div className="bg-card rounded-lg border shadow-sm">
-          <div className="p-4 border-b flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
+          <div className="p-2 md:p-4 border-b flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-4">
+            <div className="flex items-center gap-2 md:gap-4 w-full md:w-auto">
+              <div className="flex items-center gap-1 md:gap-2">
                 <Button
                   variant="outline"
                   size="icon"
+                  className="h-8 w-8 md:h-10 md:w-10"
                   onClick={() => {
                     const newDate = new Date(currentDate);
                     if (currentView === "month") {
@@ -368,12 +369,14 @@ END:VCALENDAR`;
                 <Button
                   variant="outline"
                   onClick={() => setCurrentDate(new Date())}
+                  className="h-8 md:h-10 text-xs md:text-sm"
                 >
                   Hoy
                 </Button>
                 <Button
                   variant="outline"
                   size="icon"
+                  className="h-8 w-8 md:h-10 md:w-10"
                   onClick={() => {
                     const newDate = new Date(currentDate);
                     if (currentView === "month") {
@@ -389,44 +392,52 @@ END:VCALENDAR`;
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
-              <h2 className="text-lg font-semibold">
+              <h2 className="text-sm md:text-lg font-semibold">
                 {format(currentDate, "MMMM yyyy", { locale: es })}
               </h2>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-1 md:gap-2 w-full md:w-auto justify-end">
               <Button
                 variant={currentView === "day" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setCurrentView("day")}
+                className="text-xs px-2 md:px-3"
               >
-                Día
+                <span className="hidden sm:inline">Día</span>
+                <span className="sm:hidden">D</span>
               </Button>
               <Button
                 variant={currentView === "week" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setCurrentView("week")}
+                className="text-xs px-2 md:px-3"
               >
-                Semana
+                <span className="hidden sm:inline">Semana</span>
+                <span className="sm:hidden">S</span>
               </Button>
               <Button
                 variant={currentView === "month" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setCurrentView("month")}
+                className="text-xs px-2 md:px-3"
               >
-                Mes
+                <span className="hidden sm:inline">Mes</span>
+                <span className="sm:hidden">M</span>
               </Button>
               <Button
                 variant={currentView === "agenda" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setCurrentView("agenda")}
+                className="text-xs px-2 md:px-3"
               >
-                Agenda
+                <span className="hidden sm:inline">Agenda</span>
+                <span className="sm:hidden">A</span>
               </Button>
             </div>
           </div>
 
-          <div className="p-4" style={{ height: "700px" }}>
+          <div className="p-2 md:p-4 h-[500px] md:h-[700px]">
             <Calendar
               localizer={localizer}
               events={calendarEvents}

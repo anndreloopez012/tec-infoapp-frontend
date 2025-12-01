@@ -199,3 +199,43 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
   }
 }
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .modern-calendar .rbc-header {
+    padding: 8px 4px;
+    font-size: 0.75rem;
+  }
+
+  .modern-calendar .rbc-date-cell {
+    padding: 4px;
+  }
+
+  .modern-calendar .rbc-event {
+    padding: 2px 4px;
+    font-size: 0.75rem;
+  }
+
+  .modern-calendar .rbc-time-slot {
+    min-height: 30px;
+  }
+
+  .modern-calendar .rbc-label {
+    font-size: 0.75rem;
+  }
+
+  .modern-calendar .rbc-agenda-view table tbody > tr > td {
+    padding: 8px;
+    font-size: 0.875rem;
+  }
+
+  .modern-calendar .rbc-show-more {
+    font-size: 0.75rem;
+    padding: 2px 4px;
+  }
+
+  /* Force month view on very small screens for better UX */
+  .modern-calendar .rbc-time-view .rbc-time-content {
+    min-height: 400px;
+  }
+}
