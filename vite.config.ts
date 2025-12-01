@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => ({
     port: 3000,
     strictPort: true,
     allowedHosts: [
-      "tec.server-softplus.plus",
+      "*",
       "localhost",
       "127.0.0.1"
     ]
