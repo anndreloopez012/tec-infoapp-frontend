@@ -3,6 +3,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { CatalogTable } from '@/components/catalog/CatalogTable';
 import { eventAttendanceService } from '@/services/eventAttendanceService';
 import { useAuth } from '@/context/AuthContext';
+import { useAuthPermissions } from '@/hooks/useAuthPermissions';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,10 @@ import { API_CONFIG } from '@/config/api.js';
 
 export const EventAttendance: React.FC = () => {
   const { user } = useAuth();
+  const { hasPermission } = useAuthPermissions();
+  
+  // Permisos
+  const canCreate = hasPermission('api::event-attendance.event-attendance.create');
   
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -349,10 +354,12 @@ export const EventAttendance: React.FC = () => {
             </DialogContent>
           </Dialog>
 
-          <Button onClick={handleExport} className="gap-2">
-            <Download className="h-4 w-4" />
-            Exportar
-          </Button>
+          {canCreate && (
+            <Button onClick={handleExport} className="gap-2">
+              <Download className="h-4 w-4" />
+              Exportar
+            </Button>
+          )}
         </div>
       </div>
 

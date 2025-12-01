@@ -23,7 +23,7 @@ export const eventAttendanceService = {
     try {
       const { page = 1, pageSize = 10, eventId, userId, status, startDate, endDate } = params;
       
-      let url = `/${API_CONFIG.API_PREFIX}/event-attendances?pagination[page]=${page}&pagination[pageSize]=${pageSize}&populate[event][fields][0]=title&populate[event][fields][1]=name&populate[user][fields][0]=username&populate[user][fields][1]=email`;
+      let url = `/${API_CONFIG.API_PREFIX}/event-attendances?pagination[page]=${page}&pagination[pageSize]=${pageSize}&populate[event]=true&populate[user]=true`;
       
       // Filtros
       if (eventId) {
@@ -65,7 +65,7 @@ export const eventAttendanceService = {
       const { eventId, userId, status, startDate, endDate } = params;
       
       // Obtener todos los datos sin paginación
-      let url = `/${API_CONFIG.API_PREFIX}/event-attendances?pagination[pageSize]=1000&populate[event][fields][0]=title&populate[event][fields][1]=name&populate[user][fields][0]=username&populate[user][fields][1]=email`;
+      let url = `/${API_CONFIG.API_PREFIX}/event-attendances?pagination[pageSize]=1000&populate[event]=true&populate[user]=true`;
       
       if (eventId) {
         url += `&filters[event][documentId][$eq]=${eventId}`;
