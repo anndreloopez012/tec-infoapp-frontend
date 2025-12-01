@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { PWAInstallButton } from "@/components/PWAInstallButton";
 
 export default function PublicLanding() {
   const navigate = useNavigate();
@@ -140,6 +141,11 @@ export default function PublicLanding() {
                 <Globe className="mr-2 h-5 w-5" />
                 Explorar Calendario
               </Button>
+            </div>
+
+            {/* PWA Install Button */}
+            <div className="flex justify-center pt-6">
+              <PWAInstallButton />
             </div>
           </div>
         </div>
