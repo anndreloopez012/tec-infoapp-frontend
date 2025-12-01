@@ -2,7 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- PWA: Viewport optimization for mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
     <!-- Meta tags dinámicos - serán actualizados por globalService -->
     <title id="dynamic-title">TechOffice Hub - Gestión de Espacios Tech</title>
     <meta id="dynamic-description" name="description" content="Plataforma de gestión integral para edificios de oficinas tech - Administración de espacios, empresas y servicios" />
@@ -17,6 +18,16 @@
     <meta id="dynamic-app-title" name="apple-mobile-web-app-title" content="TechOffice Hub" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="msapplication-starturl" content="/" />
+    <meta name="msapplication-TileColor" content="#00D9FF" />
+    
+    <!-- PWA: iOS Splash Screens -->
+    <link rel="apple-touch-startup-image" href="/icon-512x512.png" />
+    
+    <!-- PWA: Status bar appearance -->
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="format-detection" content="date=no" />
+    <meta name="format-detection" content="address=no" />
+    <meta name="format-detection" content="email=no" />
     
     <!-- Icons dinámicos - serán actualizados por globalService -->
     <link id="dynamic-apple-touch-icon" rel="apple-touch-icon" href="/icon-192x192.png" />
