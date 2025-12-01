@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Calendar, MapPin, Users, Grid3x3, List, Search, Filter, X } from "lucide-react";
+import { Calendar, MapPin, Users, Grid3x3, List, Search, Filter, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { eventService, eventTypeService } from "@/services/catalogServices";
+import { eventAttendanceService } from "@/services/eventAttendanceService";
 import { API_CONFIG } from "@/config/api";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -34,6 +35,14 @@ interface EventData {
   main_image?: any;
 }
 
+interface AttendanceState {
+  [eventId: string]: {
+    isAttending: boolean;
+    attendanceId: string | null;
+    loading: boolean;
+  };
+}
+
 type ViewMode = 'grid' | 'list';
 
 const EventList = () => {
@@ -50,11 +59,18 @@ const EventList = () => {
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
+  const [attendanceStates, setAttendanceStates] = useState<AttendanceState>({});
 
   useEffect(() => {
     loadEvents();
     loadEventTypes();
   }, []);
+
+  useEffect(() => {
+    if (events.length > 0 && user?.documentId) {
+      checkAllAttendances();
+    }
+  }, [events, user]);
 
   useEffect(() => {
     applyFilters();
@@ -99,6 +115,103 @@ const EventList = () => {
       }
     } catch (error) {
       console.error("Error loading event types:", error);
+    }
+  };
+
+  const checkAllAttendances = async () => {
+    if (!user?.documentId) return;
+
+    const newStates: AttendanceState = {};
+    
+    for (const event of events) {
+      if (event.documentId) {
+        const result = await eventAttendanceService.checkAttendance(
+          event.documentId,
+          user.documentId
+        );
+        
+        newStates[event.documentId] = {
+          isAttending: result.data !== null && result.data.status_attendance === 'confirmed',
+          attendanceId: result.data?.documentId || null,
+          loading: false,
+        };
+      }
+    }
+
+    setAttendanceStates(newStates);
+  };
+
+  const handleAttendance = async (eventId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!user?.documentId) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Debes iniciar sesión para confirmar asistencia",
+      });
+      return;
+    }
+
+    const currentState = attendanceStates[eventId];
+    
+    setAttendanceStates(prev => ({
+      ...prev,
+      [eventId]: { ...prev[eventId], loading: true },
+    }));
+
+    try {
+      if (currentState?.isAttending && currentState.attendanceId) {
+        // Cancelar asistencia
+        const result = await eventAttendanceService.cancelAttendance(currentState.attendanceId);
+        
+        if (result.success) {
+          setAttendanceStates(prev => ({
+            ...prev,
+            [eventId]: {
+              isAttending: false,
+              attendanceId: null,
+              loading: false,
+            },
+          }));
+          
+          toast({
+            title: "Asistencia cancelada",
+            description: "Tu asistencia ha sido cancelada exitosamente",
+          });
+        }
+      } else {
+        // Confirmar asistencia
+        const result = await eventAttendanceService.createAttendance(eventId, user.documentId);
+        
+        if (result.success) {
+          setAttendanceStates(prev => ({
+            ...prev,
+            [eventId]: {
+              isAttending: true,
+              attendanceId: result.data.documentId,
+              loading: false,
+            },
+          }));
+          
+          toast({
+            title: "¡Asistencia confirmada!",
+            description: "Te esperamos en el evento",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error handling attendance:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo procesar la solicitud",
+      });
+      
+      setAttendanceStates(prev => ({
+        ...prev,
+        [eventId]: { ...prev[eventId], loading: false },
+      }));
     }
   };
 
@@ -158,83 +271,25 @@ const EventList = () => {
 
   const renderGridView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredEvents.map((event) => (
-        <Card 
-          key={event.id} 
-          className="hover:shadow-lg transition-all duration-300 cursor-pointer group"
-          onClick={() => handleEventClick(event.documentId!)}
-        >
-          {event.main_image && (
-            <div className="relative h-48 overflow-hidden rounded-t-lg">
-              <img
-                src={getImageUrl(event.main_image)}
-                alt={event.title || "Evento"}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              {event.type_event && (
-                <Badge 
-                  className="absolute top-3 right-3"
-                  style={{
-                    backgroundColor: event.type_event.color || '#3b82f6',
-                    color: 'white'
-                  }}
-                >
-                  {event.type_event.name}
-                </Badge>
-              )}
-            </div>
-          )}
-          <CardHeader>
-            <CardTitle className="line-clamp-2">{event.title || "Sin título"}</CardTitle>
-            <CardDescription className="line-clamp-2">
-              {event.description || "Sin descripción"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {event.start_date && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
-                  {format(new Date(event.start_date), "dd 'de' MMMM, yyyy", { locale: es })}
-                </div>
-              )}
-              {event.location && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <MapPin className="h-4 w-4" />
-                  {event.location.name}
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-
-  const renderListView = () => (
-    <div className="space-y-4">
-      {filteredEvents.map((event) => (
-        <Card 
-          key={event.id}
-          className="hover:shadow-lg transition-all duration-300 cursor-pointer"
-          onClick={() => handleEventClick(event.documentId!)}
-        >
-          <CardContent className="p-6">
-            <div className="flex gap-6">
+      {filteredEvents.map((event) => {
+        const attendanceState = attendanceStates[event.documentId!];
+        
+        return (
+          <Card 
+            key={event.id} 
+            className="hover:shadow-lg transition-all duration-300 cursor-pointer group"
+          >
+            <div onClick={() => handleEventClick(event.documentId!)}>
               {event.main_image && (
-                <div className="flex-shrink-0 w-32 h-32 rounded-lg overflow-hidden">
+                <div className="relative h-48 overflow-hidden rounded-t-lg">
                   <img
                     src={getImageUrl(event.main_image)}
                     alt={event.title || "Evento"}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-4 mb-2">
-                  <h3 className="text-xl font-semibold">{event.title || "Sin título"}</h3>
                   {event.type_event && (
                     <Badge 
+                      className="absolute top-3 right-3"
                       style={{
                         backgroundColor: event.type_event.color || '#3b82f6',
                         color: 'white'
@@ -244,28 +299,135 @@ const EventList = () => {
                     </Badge>
                   )}
                 </div>
-                <p className="text-muted-foreground mb-4 line-clamp-2">
+              )}
+              <CardHeader>
+                <CardTitle className="line-clamp-2">{event.title || "Sin título"}</CardTitle>
+                <CardDescription className="line-clamp-2">
                   {event.description || "Sin descripción"}
-                </p>
-                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
                   {event.start_date && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="h-4 w-4" />
                       {format(new Date(event.start_date), "dd 'de' MMMM, yyyy", { locale: es })}
                     </div>
                   )}
                   {event.location && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <MapPin className="h-4 w-4" />
                       {event.location.name}
                     </div>
                   )}
                 </div>
-              </div>
+              </CardContent>
             </div>
-          </CardContent>
-        </Card>
-      ))}
+            <div className="px-6 pb-4">
+              <Button
+                className="w-full"
+                variant={attendanceState?.isAttending ? "outline" : "default"}
+                disabled={attendanceState?.loading}
+                onClick={(e) => handleAttendance(event.documentId!, e)}
+              >
+                {attendanceState?.loading ? (
+                  "Procesando..."
+                ) : attendanceState?.isAttending ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2" />
+                    Cancelar asistencia
+                  </>
+                ) : (
+                  "Asistir al evento"
+                )}
+              </Button>
+            </div>
+          </Card>
+        );
+      })}
+    </div>
+  );
+
+  const renderListView = () => (
+    <div className="space-y-4">
+      {filteredEvents.map((event) => {
+        const attendanceState = attendanceStates[event.documentId!];
+        
+        return (
+          <Card 
+            key={event.id}
+            className="hover:shadow-lg transition-all duration-300"
+          >
+            <CardContent className="p-6">
+              <div className="flex gap-6">
+                <div className="flex-1 cursor-pointer" onClick={() => handleEventClick(event.documentId!)}>
+                  <div className="flex gap-6">
+                    {event.main_image && (
+                      <div className="flex-shrink-0 w-32 h-32 rounded-lg overflow-hidden">
+                        <img
+                          src={getImageUrl(event.main_image)}
+                          alt={event.title || "Evento"}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-4 mb-2">
+                        <h3 className="text-xl font-semibold">{event.title || "Sin título"}</h3>
+                        {event.type_event && (
+                          <Badge 
+                            style={{
+                              backgroundColor: event.type_event.color || '#3b82f6',
+                              color: 'white'
+                            }}
+                          >
+                            {event.type_event.name}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-muted-foreground mb-4 line-clamp-2">
+                        {event.description || "Sin descripción"}
+                      </p>
+                      <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                        {event.start_date && (
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4" />
+                            {format(new Date(event.start_date), "dd 'de' MMMM, yyyy", { locale: es })}
+                          </div>
+                        )}
+                        {event.location && (
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4" />
+                            {event.location.name}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex-shrink-0">
+                  <Button
+                    variant={attendanceState?.isAttending ? "outline" : "default"}
+                    disabled={attendanceState?.loading}
+                    onClick={(e) => handleAttendance(event.documentId!, e)}
+                  >
+                    {attendanceState?.loading ? (
+                      "Procesando..."
+                    ) : attendanceState?.isAttending ? (
+                      <>
+                        <Check className="h-4 w-4 mr-2" />
+                        Cancelar
+                      </>
+                    ) : (
+                      "Asistir"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 

@@ -4,7 +4,7 @@ import moment from "moment";
 import "moment/locale/es";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "@/styles/calendar.css";
-import { Calendar as CalendarIcon, MapPin, Users, Download, X, Apple, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, Users, Download, X, Apple, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -18,7 +18,9 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 import { eventService } from "@/services/catalogServices";
+import { eventAttendanceService } from "@/services/eventAttendanceService";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -48,6 +50,7 @@ interface CalendarEvent extends BigCalendarEvent {
 }
 
 const EventCalendar = () => {
+  const { user } = useAuth();
   const [events, setEvents] = useState<EventData[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<EventData | null>(null);
@@ -55,6 +58,9 @@ const EventCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [currentView, setCurrentView] = useState<View>("week");
   const [selectedEventTypes, setSelectedEventTypes] = useState<number[]>([]);
+  const [isAttending, setIsAttending] = useState(false);
+  const [attendanceId, setAttendanceId] = useState<string | null>(null);
+  const [attendanceLoading, setAttendanceLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -112,9 +118,25 @@ const EventCalendar = () => {
     }));
   }, [filteredEvents]);
 
-  const handleSelectEvent = (event: CalendarEvent) => {
+  const handleSelectEvent = async (event: CalendarEvent) => {
     setSelectedEvent(event.resource || null);
     setIsDialogOpen(true);
+    
+    // Check attendance for this event
+    if (event.documentId && user?.documentId) {
+      const result = await eventAttendanceService.checkAttendance(
+        event.documentId,
+        user.documentId
+      );
+      
+      if (result.success && result.data) {
+        setIsAttending(result.data.status_attendance === 'confirmed');
+        setAttendanceId(result.data.documentId);
+      } else {
+        setIsAttending(false);
+        setAttendanceId(null);
+      }
+    }
   };
 
   const toggleEventType = (typeId: number) => {
@@ -186,6 +208,61 @@ END:VCALENDAR`;
       title: "Descargando evento",
       description: "El archivo se ha descargado para Apple Calendar",
     });
+  };
+
+  const handleAttendance = async () => {
+    if (!selectedEvent?.documentId || !user?.documentId) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Debes iniciar sesión para confirmar asistencia",
+      });
+      return;
+    }
+
+    setAttendanceLoading(true);
+
+    try {
+      if (isAttending && attendanceId) {
+        // Cancelar asistencia
+        const result = await eventAttendanceService.cancelAttendance(attendanceId);
+        
+        if (result.success) {
+          setIsAttending(false);
+          setAttendanceId(null);
+          
+          toast({
+            title: "Asistencia cancelada",
+            description: "Tu asistencia ha sido cancelada exitosamente",
+          });
+        }
+      } else {
+        // Confirmar asistencia
+        const result = await eventAttendanceService.createAttendance(
+          selectedEvent.documentId,
+          user.documentId
+        );
+        
+        if (result.success) {
+          setIsAttending(true);
+          setAttendanceId(result.data.documentId);
+          
+          toast({
+            title: "¡Asistencia confirmada!",
+            description: "Te esperamos en el evento",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error handling attendance:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo procesar la solicitud",
+      });
+    } finally {
+      setAttendanceLoading(false);
+    }
   };
 
   const eventStyleGetter = (event: CalendarEvent) => {
@@ -479,6 +556,24 @@ END:VCALENDAR`;
             )}
 
             <div className="flex flex-col gap-2 pt-4">
+              <Button 
+                onClick={handleAttendance} 
+                variant={isAttending ? "outline" : "default"}
+                disabled={attendanceLoading}
+                className="w-full"
+              >
+                {attendanceLoading ? (
+                  "Procesando..."
+                ) : isAttending ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2" />
+                    Cancelar asistencia
+                  </>
+                ) : (
+                  "Asistir al evento"
+                )}
+              </Button>
+              
               <div className="grid grid-cols-2 gap-2">
                 <Button onClick={addToGoogleCalendar} variant="outline">
                   <Download className="h-4 w-4 mr-2" />
@@ -489,7 +584,7 @@ END:VCALENDAR`;
                   Apple Calendar
                 </Button>
               </div>
-              <Button variant="default" onClick={() => setIsDialogOpen(false)}>
+              <Button variant="secondary" onClick={() => setIsDialogOpen(false)}>
                 Cerrar
               </Button>
             </div>
