@@ -7,16 +7,28 @@ export const SplashScreen = () => {
   const { getImageUrl, getBranding } = useGlobal();
   const branding = getBranding();
 
+  // Check if running as PWA/standalone
+  const isPWA = 
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as any).standalone === true ||
+    document.referrer.includes('android-app://');
+
   useEffect(() => {
+    // Only show splash in PWA mode
+    if (!isPWA) {
+      setIsVisible(false);
+      return;
+    }
+
     // Hide splash screen after animation completes
     const timer = setTimeout(() => {
       setIsVisible(false);
     }, 2500);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [isPWA]);
 
-  if (!isVisible) return null;
+  if (!isVisible || !isPWA) return null;
 
   const logoUrl = branding?.logo ? getImageUrl(branding.logo) : '/icon-512x512.png';
   const appName = branding?.name || 'TechOffice Hub';
