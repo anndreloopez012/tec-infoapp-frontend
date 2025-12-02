@@ -165,7 +165,7 @@ export default function LexicalViewer({ content, className = '' }: LexicalViewer
   }
 
   return (
-    <div className={`lexical-viewer ${className}`}>
+    <div className={`lexical-viewer ${className}`} style={{ maxWidth: '100%', overflow: 'hidden' }}>
       <style>{`
         .lexical-viewer .image-resizer,
         .lexical-viewer .video-resizer,
@@ -177,19 +177,23 @@ export default function LexicalViewer({ content, className = '' }: LexicalViewer
           visibility: hidden !important;
           pointer-events: none !important;
         }
-        .lexical-viewer img,
+        .lexical-viewer * {
+          max-width: 100% !important;
+        }
+        .lexical-viewer img {
+          pointer-events: none !important;
+          user-select: none !important;
+          width: 100% !important;
+          height: auto !important;
+          object-fit: contain !important;
+          display: block !important;
+        }
         .lexical-viewer video,
         .lexical-viewer iframe {
           pointer-events: none !important;
           user-select: none !important;
           max-width: 100% !important;
-          width: 100% !important;
           height: auto !important;
-          object-fit: contain !important;
-        }
-        .lexical-viewer > div,
-        .lexical-viewer span {
-          max-width: 100% !important;
         }
       `}</style>
       <LexicalComposer initialConfig={initialConfig}>
