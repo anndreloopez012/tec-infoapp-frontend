@@ -157,6 +157,7 @@ export default function PublicEventDetail() {
               <img
                 src={getImageUrl(event.main_image)}
                 alt={event.title || 'Evento'}
+                loading="lazy"
                 className="w-full h-full object-cover"
               />
               {event.type_event && (

@@ -303,6 +303,7 @@ const ContentGlobal = () => {
                   <img
                     src={getBestImageFormat(getMainImage(item)!)}
                     alt={getMainImage(item)?.alternativeText || item.title}
+                    loading="lazy"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -391,6 +392,7 @@ const ContentGlobal = () => {
                     <img
                       src={getBestImageFormat(getMainImage(item)!)}
                       alt={getMainImage(item)?.alternativeText || item.title}
+                      loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     {item.attachments && item.attachments.length > 1 && (
@@ -745,6 +747,7 @@ const ContentGlobal = () => {
                       transition={{ duration: 0.6 }}
                       src={getImageUrl(selectedContent.attachments[0])}
                       alt={selectedContent.attachments[0].alternativeText || selectedContent.title}
+                      loading="lazy"
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
@@ -758,6 +761,7 @@ const ContentGlobal = () => {
                             <img
                               src={getImageUrl(attachment)}
                               alt={attachment.alternativeText || `${selectedContent.title} - Imagen ${index + 1}`}
+                              loading="lazy"
                               className="w-full h-full object-cover"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
@@ -947,6 +951,7 @@ const ContentGlobal = () => {
                         <img
                           src={getBestImageFormat(attachment) || getImageUrl(attachment)}
                           alt={attachment.alternativeText || `Adjunto ${attachment.id}`}
+                          loading="lazy"
                           className="w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

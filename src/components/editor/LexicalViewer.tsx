@@ -182,6 +182,8 @@ export default function LexicalViewer({ content, className = '' }: LexicalViewer
         .lexical-viewer iframe {
           pointer-events: none !important;
           user-select: none !important;
+          max-width: 100% !important;
+          height: auto !important;
         }
       `}</style>
       <LexicalComposer initialConfig={initialConfig}>

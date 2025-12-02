@@ -206,6 +206,7 @@ const ContentDetail: React.FC = () => {
               <img
                 src={getBestImageFormat(item.attachments[0]) || getImageUrl(item.attachments[0]) || undefined}
                 alt={item.attachments[0].alternativeText || item.title}
+                loading="lazy"
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
@@ -329,6 +330,7 @@ const ContentDetail: React.FC = () => {
                       <img
                         src={getBestImageFormat(attachment) || getImageUrl(attachment)}
                         alt={attachment.alternativeText || `Adjunto ${attachment.id}`}
+                        loading="lazy"
                         className="w-full h-full object-cover transition-transform"
                       />
                       <figcaption className="sr-only">{attachment.alternativeText || `Adjunto ${attachment.id}`}</figcaption>
@@ -369,6 +371,7 @@ const ContentDetail: React.FC = () => {
                       <img
                         src={getBestImageFormat(attachment) || getImageUrl(attachment)}
                         alt={attachment.alternativeText || `Adjunto ${attachment.id}`}
+                        loading="lazy"
                         className="max-w-full max-h-full object-contain rounded-lg"
                       />
                     </div>
