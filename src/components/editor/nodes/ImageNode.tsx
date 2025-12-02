@@ -79,6 +79,9 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
     const element = document.createElement('img');
     element.setAttribute('src', this.__src);
     element.setAttribute('alt', this.__altText);
+    element.setAttribute('loading', 'lazy');
+    element.style.maxWidth = '100%';
+    element.style.height = 'auto';
     if (this.__width) element.setAttribute('width', this.__width.toString());
     if (this.__height) element.setAttribute('height', this.__height.toString());
     return { element };
@@ -249,11 +252,13 @@ function ImageComponent({
       <img
         src={src}
         alt={altText}
+        loading="lazy"
         style={{
           width: '100%',
           height: dimensions.height ? `${dimensions.height}px` : 'auto',
           display: 'block',
           borderRadius: '0.5rem',
+          maxWidth: '100%',
         }}
       />
       {isEditable && (

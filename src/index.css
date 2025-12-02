@@ -6,6 +6,21 @@
 All colors MUST be HSL.
 */
 
+/* Global image styles - Responsive and lazy loading */
+@layer base {
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+  
+  /* Ensure images are responsive within containers */
+  img[class*="object-cover"],
+  img[class*="object-contain"] {
+    width: 100%;
+  }
+}
+
 @layer base {
   :root {
     /* TechOffice - Modern Tech Workspace Color System */

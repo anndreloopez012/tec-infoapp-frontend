@@ -213,6 +213,7 @@ export default function PublicContentDetail() {
             <img
               src={getImageUrl(item.main_image)}
               alt={item.title}
+              loading="lazy"
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-transparent" />
@@ -320,6 +321,7 @@ export default function PublicContentDetail() {
                     <img
                       src={getBestImageFormat(attachment)}
                       alt={attachment.name}
+                      loading="lazy"
                       className="w-full h-full object-cover transition-transform"
                     />
                   </div>
@@ -357,6 +359,7 @@ export default function PublicContentDetail() {
                         <img
                           src={getBestImageFormat(attachment)}
                           alt={attachment.name}
+                          loading="lazy"
                           className="max-w-full max-h-full object-contain rounded-lg"
                         />
                       </div>
