@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { contentInfoService, contentCategoryService, companyService } from '@/services/catalogServices';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
+import { buildApiUrl, getUploadHeaders } from '@/config/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -206,11 +207,9 @@ const ContentInfoForm = () => {
         formData.append('field', 'attachments');
 
         try {
-          await fetch(`${import.meta.env.VITE_API_URL || 'https://tec-adm.server-softplus.plus'}/api/upload`, {
+          await fetch(buildApiUrl('upload'), {
             method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            },
+            headers: getUploadHeaders(),
             body: formData,
           });
         } catch (uploadError) {
