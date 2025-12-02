@@ -72,7 +72,6 @@ import TicketDetail from '@/pages/catalog/TicketDetail';
 // Layout
 import ModernLayout from '@/components/layout/ModernLayout';
 import { PublicLayout } from '@/components/layout/PublicLayout';
-import NotificationIntegration from '@/components/NotificationIntegration';
 import { SplashScreen } from '@/components/SplashScreen';
 import { PWAUpdatePrompt } from '@/components/PWAUpdatePrompt';
 
@@ -211,7 +210,6 @@ const App = () => {
             <AuthProvider>
               <PermissionsProvider>
                 <NotificationsProvider>
-                  <NotificationIntegration />
                   <PWAUpdatePrompt />
                   <Toaster />
                   <Sonner />
