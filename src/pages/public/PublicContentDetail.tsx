@@ -5,13 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Calendar, User, Download } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { ArrowLeft, Calendar, User, Download, X } from 'lucide-react';
 import { ShareButtons } from '@/components/public/ShareButtons';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { API_CONFIG } from '@/config/api.js';
 import { toast } from 'sonner';
 import LexicalViewer from '@/components/editor/LexicalViewer';
+import type { CarouselApi } from '@/components/ui/carousel';
 
 interface Attachment {
   id: number;
@@ -58,12 +61,31 @@ export default function PublicContentDetail() {
   const navigate = useNavigate();
   const [item, setItem] = useState<ContentDetailItem | null>(null);
   const [loading, setLoading] = useState(true);
+  const [carouselOpen, setCarouselOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
 
   useEffect(() => {
     if (contentId) {
       loadContent();
     }
   }, [contentId]);
+
+  // Auto-advance carousel every 4 seconds
+  useEffect(() => {
+    if (!carouselOpen || !carouselApi) return;
+
+    const interval = setInterval(() => {
+      carouselApi.scrollNext();
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [carouselOpen, carouselApi]);
+
+  const openCarousel = (index: number) => {
+    setCurrentImageIndex(index);
+    setCarouselOpen(true);
+  };
 
   const loadContent = async () => {
     if (!contentId) return;
@@ -280,31 +302,64 @@ export default function PublicContentDetail() {
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {item.attachments.map((attachment) => (
+                {item.attachments.map((attachment, index) => (
                   <div
                     key={attachment.id}
-                    className="group relative aspect-square rounded-lg overflow-hidden border border-border hover:border-primary transition-colors"
+                    onClick={() => openCarousel(index)}
+                    className="group relative aspect-square rounded-lg overflow-hidden border border-border hover:border-primary transition-all cursor-pointer hover:scale-105 hover:shadow-lg"
                   >
                     <img
                       src={getBestImageFormat(attachment)}
                       alt={attachment.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform"
                     />
-                    <div className="absolute inset-0 bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Button
-                        size="sm"
-                        onClick={() => downloadImage(getBestImageFormat(attachment), attachment.name)}
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Descargar
-                      </Button>
-                    </div>
                   </div>
                 ))}
               </div>
             </CardContent>
           </Card>
         )}
+
+        {/* Fullscreen Carousel Modal */}
+        <Dialog open={carouselOpen} onOpenChange={setCarouselOpen}>
+          <DialogContent className="max-w-full w-screen h-screen p-0 bg-black/95 flex items-center justify-center border-none">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-4 right-4 z-50 text-white hover:bg-white/20"
+              onClick={() => setCarouselOpen(false)}
+            >
+              <X className="h-6 w-6" />
+            </Button>
+            
+            {item?.attachments && item.attachments.length > 0 && (
+              <Carousel
+                setApi={setCarouselApi}
+                opts={{
+                  loop: true,
+                  startIndex: currentImageIndex,
+                }}
+                className="w-full max-w-6xl"
+              >
+                <CarouselContent>
+                  {item.attachments.map((attachment, index) => (
+                    <CarouselItem key={attachment.id}>
+                      <div className="flex items-center justify-center h-[80vh] p-8 animate-fade-in">
+                        <img
+                          src={getBestImageFormat(attachment)}
+                          alt={attachment.name}
+                          className="max-w-full max-h-full object-contain rounded-lg"
+                        />
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-4 h-12 w-12 bg-white/10 border-white/20 text-white hover:bg-white/20" />
+                <CarouselNext className="right-4 h-12 w-12 bg-white/10 border-white/20 text-white hover:bg-white/20" />
+              </Carousel>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
