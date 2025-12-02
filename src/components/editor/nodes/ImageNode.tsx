@@ -245,8 +245,8 @@ function ImageComponent({
     <div
       className="relative inline-block group my-4"
       style={{
-        maxWidth: maxWidth ? `${maxWidth}px` : '100%',
-        width: dimensions.width ? `${dimensions.width}px` : 'auto',
+        maxWidth: '100%',
+        width: dimensions.width ? `min(${dimensions.width}px, 100%)` : '100%',
       }}
     >
       <img
@@ -259,6 +259,7 @@ function ImageComponent({
           display: 'block',
           borderRadius: '0.5rem',
           maxWidth: '100%',
+          objectFit: 'contain',
         }}
       />
       {isEditable && (
