@@ -70,7 +70,7 @@ const ModernLayout = () => {
             />
             
             {/* Contenido de la página */}
-            <main className="flex-1 overflow-auto">
+            <main className="flex-1 overflow-auto pb-28 md:pb-0">
               <PageTransition>
                 <Outlet />
               </PageTransition>
