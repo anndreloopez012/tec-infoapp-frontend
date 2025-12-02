@@ -290,15 +290,24 @@ export default function PublicContentDetail() {
                   <Download className="h-5 w-5" />
                   Archivos adjuntos ({item.attachments.length})
                 </h3>
-                {item.attachments.length > 1 && (
+                <div className="flex gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => downloadAllImages(item.attachments!)}
+                    onClick={() => openCarousel(0)}
                   >
-                    Descargar todos
+                    Ver fotos
                   </Button>
-                )}
+                  {item.attachments.length > 1 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => downloadAllImages(item.attachments!)}
+                    >
+                      Descargar todos
+                    </Button>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
