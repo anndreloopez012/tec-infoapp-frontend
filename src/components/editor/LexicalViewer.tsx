@@ -183,7 +183,13 @@ export default function LexicalViewer({ content, className = '' }: LexicalViewer
           pointer-events: none !important;
           user-select: none !important;
           max-width: 100% !important;
+          width: 100% !important;
           height: auto !important;
+          object-fit: contain !important;
+        }
+        .lexical-viewer > div,
+        .lexical-viewer span {
+          max-width: 100% !important;
         }
       `}</style>
       <LexicalComposer initialConfig={initialConfig}>
