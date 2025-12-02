@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { ArrowLeft, Calendar, User, Download, X } from 'lucide-react';
+import { ArrowLeft, Calendar, User, X } from 'lucide-react';
 import { ShareButtons } from '@/components/public/ShareButtons';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { format } from 'date-fns';
@@ -125,34 +125,6 @@ export default function PublicContentDetail() {
       navigate(-1);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const downloadImage = async (url: string, filename: string) => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
-      toast.success('Imagen descargada');
-    } catch (error) {
-      console.error('Error downloading image:', error);
-      toast.error('Error al descargar la imagen');
-    }
-  };
-
-  const downloadAllImages = async (attachments: Attachment[]) => {
-    toast.info(`Descargando ${attachments.length} imágenes...`);
-    for (const attachment of attachments) {
-      const imageUrl = getBestImageFormat(attachment);
-      await downloadImage(imageUrl, attachment.name);
-      await new Promise(resolve => setTimeout(resolve, 500));
     }
   };
 
@@ -287,18 +259,8 @@ export default function PublicContentDetail() {
             <CardContent className="p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Download className="h-5 w-5" />
-                  Archivos adjuntos ({item.attachments.length})
+                  Imágenes ({item.attachments.length})
                 </h3>
-                {item.attachments.length > 1 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => downloadAllImages(item.attachments!)}
-                  >
-                    Descargar todos
-                  </Button>
-                )}
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
