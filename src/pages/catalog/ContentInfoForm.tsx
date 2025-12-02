@@ -62,6 +62,7 @@ const ContentInfoForm = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [companies, setCompanies] = useState<any[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [filePreviews, setFilePreviews] = useState<string[]>([]);
   const [existingAttachments, setExistingAttachments] = useState<any[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -94,6 +95,8 @@ const ContentInfoForm = () => {
       });
       setExistingAttachments([]);
       setUploadedFiles([]);
+      filePreviews.forEach(url => URL.revokeObjectURL(url));
+      setFilePreviews([]);
     }
   }, [editId, currentEditId]);
 
@@ -115,6 +118,8 @@ const ContentInfoForm = () => {
     setLoading(true);
     // Limpiar archivos subidos antes de cargar nuevo contenido
     setUploadedFiles([]);
+    filePreviews.forEach(url => URL.revokeObjectURL(url));
+    setFilePreviews([]);
     try {
       // Usar getById porque el endpoint está basado en documentId
       const result = await contentInfoService.getById(documentId);
@@ -150,8 +155,25 @@ const ContentInfoForm = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setUploadedFiles(Array.from(e.target.files));
+      const files = Array.from(e.target.files);
+      setUploadedFiles(files);
+      
+      // Limpiar previews anteriores
+      filePreviews.forEach(url => URL.revokeObjectURL(url));
+      
+      // Crear nuevos previews
+      const newPreviews = files.map(file => URL.createObjectURL(file));
+      setFilePreviews(newPreviews);
     }
+  };
+
+  const handleRemoveUploadedFile = (index: number) => {
+    // Revocar URL del preview
+    URL.revokeObjectURL(filePreviews[index]);
+    
+    // Remover archivo y preview
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    setFilePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleRemoveExistingAttachment = (attachmentId: number) => {
@@ -377,39 +399,76 @@ const ContentInfoForm = () => {
                 <Label htmlFor="active">Activo</Label>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="attachments">Imágenes de Portada</Label>
-                <Input
-                  id="attachments"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleFileChange}
-                />
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="attachments">Imágenes de Portada</Label>
+                  <Input
+                    id="attachments"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFileChange}
+                  />
+                </div>
+
                 {uploadedFiles.length > 0 && (
-                  <div className="text-sm text-muted-foreground">
-                    {uploadedFiles.length} archivo(s) seleccionado(s)
+                  <div className="space-y-2 animate-fade-in">
+                    <Label>Vista previa de nuevas imágenes:</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {filePreviews.map((preview, index) => (
+                        <div 
+                          key={index} 
+                          className="relative group rounded-lg overflow-hidden border-2 border-border hover:border-primary transition-all duration-200"
+                        >
+                          <img
+                            src={preview}
+                            alt={uploadedFiles[index].name}
+                            className="w-full h-32 object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveUploadedFile(index)}
+                              className="bg-destructive text-destructive-foreground rounded-full w-8 h-8 flex items-center justify-center hover:scale-110 transition-transform"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 bg-background/90 p-1 text-xs truncate">
+                            {uploadedFiles[index].name}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
                 
                 {existingAttachments.length > 0 && (
                   <div className="space-y-2">
                     <Label>Imágenes actuales:</Label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                       {existingAttachments.map((att) => (
-                        <div key={att.id} className="relative group">
+                        <div 
+                          key={att.id} 
+                          className="relative group rounded-lg overflow-hidden border-2 border-border hover:border-primary transition-all duration-200"
+                        >
                           <img
                             src={`${import.meta.env.VITE_API_URL || 'https://tec-adm.server-softplus.plus'}${att.url}`}
                             alt={att.name}
-                            className="w-full h-24 object-cover rounded"
+                            className="w-full h-32 object-cover"
                           />
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveExistingAttachment(att.id)}
-                            className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            ✕
-                          </button>
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveExistingAttachment(att.id)}
+                              className="bg-destructive text-destructive-foreground rounded-full w-8 h-8 flex items-center justify-center hover:scale-110 transition-transform"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 bg-background/90 p-1 text-xs truncate">
+                            {att.name}
+                          </div>
                         </div>
                       ))}
                     </div>
