@@ -275,9 +275,11 @@ export default function PublicContentDetail() {
 
         {/* Rich Content */}
         {item.content && (
-          <Card className="border-none shadow-none bg-transparent">
-            <CardContent className="px-0">
-              <LexicalViewer content={item.content} />
+          <Card className="border-none shadow-none bg-transparent overflow-hidden">
+            <CardContent className="px-0 overflow-hidden">
+              <div className="w-full overflow-hidden">
+                <LexicalViewer content={item.content} />
+              </div>
             </CardContent>
           </Card>
         )}

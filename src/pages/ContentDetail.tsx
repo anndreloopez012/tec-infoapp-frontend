@@ -275,9 +275,11 @@ const ContentDetail: React.FC = () => {
             </header>
 
             {/* Content body */}
-            <section className="mb-8">
+            <section className="mb-8 overflow-hidden">
               <h2 className="sr-only">Contenido</h2>
-              <LexicalViewer content={item.content} />
+              <div className="w-full overflow-hidden">
+                <LexicalViewer content={item.content} />
+              </div>
             </section>
 
             {/* Comment */}

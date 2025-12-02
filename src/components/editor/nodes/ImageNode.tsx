@@ -145,6 +145,9 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
     if (className !== undefined) {
       span.className = className;
     }
+    span.style.maxWidth = '100%';
+    span.style.display = 'block';
+    span.style.overflow = 'hidden';
     return span;
   }
 
@@ -246,7 +249,7 @@ function ImageComponent({
       className="relative inline-block group my-4"
       style={{
         maxWidth: '100%',
-        width: dimensions.width ? `min(${dimensions.width}px, 100%)` : '100%',
+        width: '100%',
       }}
     >
       <img
@@ -255,7 +258,7 @@ function ImageComponent({
         loading="lazy"
         style={{
           width: '100%',
-          height: dimensions.height ? `${dimensions.height}px` : 'auto',
+          height: 'auto',
           display: 'block',
           borderRadius: '0.5rem',
           maxWidth: '100%',
