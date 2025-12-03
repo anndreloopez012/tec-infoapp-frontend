@@ -68,6 +68,7 @@ import TicketPriority from '@/pages/catalog/TicketPriority';
 import TicketType from '@/pages/catalog/TicketType';
 import TicketList from '@/pages/catalog/TicketList';
 import TicketDetail from '@/pages/catalog/TicketDetail';
+import ContentByCategory from '@/pages/catalog/ContentByCategory';
 
 // Layout
 import ModernLayout from '@/components/layout/ModernLayout';
@@ -105,6 +106,8 @@ const AppRoutes = () => {
           <Route path="/dashboard" element={<ModernDashboard />} />
           <Route path="/content-global" element={<ContentGlobal />} />
           <Route path="/content-global/:slug" element={<ContentDetail />} />
+          <Route path="/content-category/:categoryId" element={<ContentByCategory />} />
+          <Route path="/content-detail/:contentId" element={<ContentDetail />} />
           <Route path="/admin/users" element={
             <ProtectedRoute roles={['super', 'admin', 'super_admin']}>
               <Users />

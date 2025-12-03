@@ -232,6 +232,11 @@ export const GlobalProvider = ({ children }) => {
     };
   };
 
+  // Get content menu mode ('global' or 'categories')
+  const getContentMenuMode = () => {
+    return state.config?.contentMenuMode || 'global';
+  };
+
   // Get colors
   const getColors = () => {
     if (!state.config?.colors) return {};
@@ -303,6 +308,7 @@ export const GlobalProvider = ({ children }) => {
     getSEO,
     getSocials,
     getContact,
+    getContentMenuMode,
     
     // Utilities
     refreshConfig: () => loadGlobalConfig(true)

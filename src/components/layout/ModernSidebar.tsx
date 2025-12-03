@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -17,7 +17,8 @@ import {
   ScrollText,
   Send,
   Calendar,
-  CalendarDays
+  CalendarDays,
+  FolderOpen
 } from 'lucide-react';
 
 import { useAuth } from '@/context/AuthContext';
@@ -30,6 +31,7 @@ import { Badge } from '@/components/ui/badge';
 import { useRoles } from '@/hooks/useRoles';
 import { useSearch } from '@/context/SearchContext';
 import DynamicNavigation from './DynamicNavigation';
+import { contentCategoryService } from '@/services/catalogServices';
 
 interface NavigationItem {
   title: string;
@@ -39,96 +41,148 @@ interface NavigationItem {
   requiredPermissions?: string[];
   requiredRoles?: string[];
   children?: NavigationItem[];
+  color?: string;
 }
 
 const ModernSidebar = () => {
   const { user, logout, hasPermission, hasRole } = useAuth();
   const { navigationMenus } = useAuthPermissions();
-  const { getBranding } = useGlobal();
+  const { getBranding, getContentMenuMode } = useGlobal();
   const location = useLocation();
   const navigate = useNavigate();
   const branding = getBranding();
+  const contentMenuMode = getContentMenuMode();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const { getRoleLabelForUser, getUserType, getRoleType } = useRoles();
   const { searchQuery, isSearching } = useSearch();
+  const [categories, setCategories] = useState<any[]>([]);
 
   // Check if user has admin role for certain menu items
   const roleType = getRoleType();
   const isAdmin = roleType === 'super' || roleType === 'admin';
   const isSuper = roleType === 'super';
 
-  const navigation: NavigationItem[] = [
-    {
-      title: 'Dashboard',
-      href: '/dashboard',
-      icon: LayoutDashboard,
-    },
-    {
-      title: 'Contenido Global',
-      href: '/content-global',
-      icon: FileText,
-    },
-    {
-      title: 'Administración',
-      href: '/admin',
-      icon: Shield,
-      requiredRoles: ['super', 'admin', 'super_admin'],
-      children: [
-        {
-          title: 'Gestión de Usuarios',
-          href: '/admin/users',
-          icon: Users,
-          requiredRoles: ['super', 'admin', 'super_admin'],
-        },
-        {
-          title: 'Gestión de Roles',
-          href: '/admin/roles',
-          icon: Shield,
-          requiredRoles: ['super', 'admin', 'super_admin'],
-        },
-        {
-          title: 'Gestión de Permisos',
-          href: '/admin/permissions',
-          icon: UserCog,
-          requiredRoles: ['super', 'admin', 'super_admin'],
-        },
-        {
-          title: 'Tipos de Usuario',
-          href: '/admin/type-users',
-          icon: FileText,
-          requiredRoles: ['super', 'admin', 'super_admin'],
-        },
-        {
-          title: 'Envio Notificacion',
-          href: '/admin/notifications',
-          icon: Send,
-          requiredRoles: ['super', 'admin', 'super_admin'],
-        },
-      ],
-    },
-    {
-      title: 'Eventos',
-      href: '/event-list',
-      icon: Calendar,
-    },
-    {
-      title: 'Calendario',
-      href: '/calendar',
-      icon: CalendarDays,
-    },
-    {
-      title: 'Configuración',
-      href: '/settings',
-      icon: Settings,
-      requiredRoles: ['super', 'admin', 'super_admin'],
-    },
-    {
-      title: 'BITÁCORA',
-      href: '/admin/bitacora',
-      icon: ScrollText,
-      requiredRoles: ['super', 'admin', 'super_admin'],
-    },
-  ];
+  // Load categories when mode is 'categories'
+  useEffect(() => {
+    if (contentMenuMode === 'categories') {
+      loadCategories();
+    }
+  }, [contentMenuMode]);
+
+  const loadCategories = async () => {
+    try {
+      const result = await contentCategoryService.getAll({ pageSize: 100 });
+      if (result.data) {
+        setCategories(result.data);
+      }
+    } catch (error) {
+      console.error('Error loading categories:', error);
+    }
+  };
+
+  // Build category navigation items
+  const categoryNavItems: NavigationItem[] = useMemo(() => {
+    if (contentMenuMode !== 'categories' || categories.length === 0) return [];
+    
+    return categories.map(cat => ({
+      title: cat.name || cat.Name || 'Sin nombre',
+      href: `/content-category/${cat.documentId || cat.id}`,
+      icon: FolderOpen,
+      color: cat.color || undefined,
+    }));
+  }, [categories, contentMenuMode]);
+
+  const navigation: NavigationItem[] = useMemo(() => {
+    const baseNavigation: NavigationItem[] = [
+      {
+        title: 'Dashboard',
+        href: '/dashboard',
+        icon: LayoutDashboard,
+      },
+    ];
+
+    // Add content navigation based on mode
+    if (contentMenuMode === 'categories' && categoryNavItems.length > 0) {
+      baseNavigation.push({
+        title: 'Contenido',
+        href: '/content',
+        icon: FileText,
+        children: categoryNavItems,
+      });
+    } else {
+      baseNavigation.push({
+        title: 'Contenido Global',
+        href: '/content-global',
+        icon: FileText,
+      });
+    }
+
+    // Add rest of navigation
+    baseNavigation.push(
+      {
+        title: 'Administración',
+        href: '/admin',
+        icon: Shield,
+        requiredRoles: ['super', 'admin', 'super_admin'],
+        children: [
+          {
+            title: 'Gestión de Usuarios',
+            href: '/admin/users',
+            icon: Users,
+            requiredRoles: ['super', 'admin', 'super_admin'],
+          },
+          {
+            title: 'Gestión de Roles',
+            href: '/admin/roles',
+            icon: Shield,
+            requiredRoles: ['super', 'admin', 'super_admin'],
+          },
+          {
+            title: 'Gestión de Permisos',
+            href: '/admin/permissions',
+            icon: UserCog,
+            requiredRoles: ['super', 'admin', 'super_admin'],
+          },
+          {
+            title: 'Tipos de Usuario',
+            href: '/admin/type-users',
+            icon: FileText,
+            requiredRoles: ['super', 'admin', 'super_admin'],
+          },
+          {
+            title: 'Envio Notificacion',
+            href: '/admin/notifications',
+            icon: Send,
+            requiredRoles: ['super', 'admin', 'super_admin'],
+          },
+        ],
+      },
+      {
+        title: 'Eventos',
+        href: '/event-list',
+        icon: Calendar,
+      },
+      {
+        title: 'Calendario',
+        href: '/calendar',
+        icon: CalendarDays,
+      },
+      {
+        title: 'Configuración',
+        href: '/settings',
+        icon: Settings,
+        requiredRoles: ['super', 'admin', 'super_admin'],
+      },
+      {
+        title: 'BITÁCORA',
+        href: '/admin/bitacora',
+        icon: ScrollText,
+        requiredRoles: ['super', 'admin', 'super_admin'],
+      }
+    );
+
+    return baseNavigation;
+  }, [contentMenuMode, categoryNavItems]);
 
   // Filter navigation based on permissions, roles, and search query
   const filteredNavigation = useMemo(() => {
