@@ -25,6 +25,8 @@ export const API_CONFIG = {
   FEATURES: {
     // Habilitar/deshabilitar edición de perfil (nombre y correo)
     editPerfil: false,
+    // Modo de menú de contenido: true = categorías, false = contenido global
+    contentMenuByCategories: true,
   },
 
   // Claves para localStorage
