@@ -33,6 +33,7 @@ import {
 import { contentInfoService, contentCategoryService } from '@/services/catalogServices';
 import { API_CONFIG } from '@/config/api';
 import { cn } from '@/lib/utils';
+import { useRoles } from '@/hooks/useRoles';
 
 interface ContentData {
   id: number;
@@ -60,6 +61,7 @@ const PAGE_SIZE = 20;
 const ContentByCategory = () => {
   const { categoryId } = useParams<{ categoryId: string }>();
   const navigate = useNavigate();
+  const { getRoleType } = useRoles();
   const [category, setCategory] = useState<any>(null);
   const [content, setContent] = useState<ContentData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,6 +77,16 @@ const ContentByCategory = () => {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
+  // Check if user has admin/super role
+  const userRole = getRoleType();
+  const isAdminOrSuper = ['super', 'admin', 'super_admin'].includes(userRole);
+
+  // Get today's date for publish_date filter
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
   // Get sort parameter for API
   const getSortParam = () => {
     switch (sortBy) {
@@ -85,17 +97,30 @@ const ContentByCategory = () => {
     }
   };
 
-  // Build filters for API - Authenticated version shows ALL content (with and without companies)
+  // Build filters for API - Authenticated version with role-based status filtering
   const buildFilters = useCallback(() => {
+    const today = getTodayDate();
     const filters: Record<string, string> = {
       'filters[category_content][documentId][$eq]': categoryId || '',
       'filters[active][$eq]': 'true',
+      'filters[publish_date][$lte]': today,
     };
 
+    // Status filtering based on role
+    // - Admin/Super can see published AND archived
+    // - Regular users only see published
+    // - Draft is NEVER visible to anyone
+    if (isAdminOrSuper) {
+      filters['filters[$or][0][status_content][$eq]'] = 'published';
+      filters['filters[$or][1][status_content][$eq]'] = 'archived';
+    } else {
+      filters['filters[status_content][$eq]'] = 'published';
+    }
+
     if (searchQuery.trim()) {
-      filters['filters[$or][0][title][$containsi]'] = searchQuery;
-      filters['filters[$or][1][subtitle][$containsi]'] = searchQuery;
-      filters['filters[$or][2][description][$containsi]'] = searchQuery;
+      // When we have search, we need to handle filters differently
+      // This is a simplified approach - full $and/$or requires backend support
+      filters['filters[title][$containsi]'] = searchQuery;
     }
 
     if (selectedAuthor !== 'all') {
@@ -103,7 +128,7 @@ const ContentByCategory = () => {
     }
 
     return filters;
-  }, [categoryId, searchQuery, selectedAuthor]);
+  }, [categoryId, searchQuery, selectedAuthor, isAdminOrSuper]);
 
   useEffect(() => {
     if (categoryId) {
@@ -162,6 +187,16 @@ const ContentByCategory = () => {
 
   const loadAuthors = async () => {
     try {
+      const today = getTodayDate();
+      const statusFilters: Record<string, string> = isAdminOrSuper
+        ? {
+            'filters[$or][0][status_content][$eq]': 'published',
+            'filters[$or][1][status_content][$eq]': 'archived',
+          }
+        : {
+            'filters[status_content][$eq]': 'published',
+          };
+
       // Load content to extract unique authors
       const result = await contentInfoService.getAll({
         pageSize: 500,
@@ -169,6 +204,8 @@ const ContentByCategory = () => {
         additionalFilters: {
           'filters[category_content][documentId][$eq]': categoryId,
           'filters[active][$eq]': 'true',
+          'filters[publish_date][$lte]': today,
+          ...statusFilters,
         },
       });
 
