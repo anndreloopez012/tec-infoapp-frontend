@@ -29,6 +29,7 @@ interface ContentData {
   content?: string;
   publish_date?: string;
   main_image?: any;
+  cover_image?: any;
   category_content?: any;
   companies?: any[];
   author_content?: any;
@@ -214,14 +215,21 @@ export default function CategoryContent() {
   };
 
   const getImageUrl = (imageData: any) => {
-    if (!imageData?.url) return null;
-    return imageData.url.startsWith('http')
-      ? imageData.url
-      : `${API_CONFIG.BASE_URL}${imageData.url}`;
+    if (!imageData) return null;
+    const url = imageData.url || imageData.formats?.large?.url || imageData.formats?.medium?.url || imageData.formats?.small?.url;
+    if (!url) return null;
+    return url.startsWith('http') ? url : `${API_CONFIG.BASE_URL}${url}`;
   };
 
   const handleContentClick = (documentId: string) => {
-    navigate(`/public/content/${documentId}`);
+    // Use View Transitions API for smooth animation
+    if (document.startViewTransition) {
+      document.startViewTransition(() => {
+        navigate(`/public/content/${documentId}`);
+      });
+    } else {
+      navigate(`/public/content/${documentId}`);
+    }
   };
 
   return (
@@ -378,12 +386,13 @@ export default function CategoryContent() {
                   <div onClick={() => handleContentClick(item.documentId)}>
                     {/* Image Preview */}
                     <div className="relative h-56 overflow-hidden bg-gradient-to-br from-primary/5 to-accent/5">
-                      {item.main_image ? (
+                      {(item.main_image || item.cover_image) ? (
                         <img
-                          src={getImageUrl(item.main_image)}
+                          src={getImageUrl(item.main_image || item.cover_image)}
                           alt={item.title}
                           loading="lazy"
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          style={{ viewTransitionName: `content-image-${item.documentId}` }}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
@@ -476,12 +485,13 @@ export default function CategoryContent() {
                   >
                     {/* Image */}
                     <div className="relative w-full md:w-48 h-48 flex-shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-primary/5 to-accent/5">
-                      {item.main_image ? (
+                      {(item.main_image || item.cover_image) ? (
                         <img
-                          src={getImageUrl(item.main_image)}
+                          src={getImageUrl(item.main_image || item.cover_image)}
                           alt={item.title}
                           loading="lazy"
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          style={{ viewTransitionName: `content-image-${item.documentId}` }}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
@@ -562,12 +572,13 @@ export default function CategoryContent() {
                       className="relative overflow-hidden bg-gradient-to-br from-primary/5 to-accent/5"
                       style={{ height: `${200 + (index % 3) * 60}px` }}
                     >
-                      {item.main_image ? (
+                      {(item.main_image || item.cover_image) ? (
                         <img
-                          src={getImageUrl(item.main_image)}
+                          src={getImageUrl(item.main_image || item.cover_image)}
                           alt={item.title}
                           loading="lazy"
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          style={{ viewTransitionName: `content-image-${item.documentId}` }}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
