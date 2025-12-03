@@ -105,11 +105,9 @@ const ModernSidebar = () => {
 
     // Add content navigation based on mode
     if (contentMenuMode === 'categories' && categoryNavItems.length > 0) {
-      baseNavigation.push({
-        title: 'Contenido',
-        href: '/content',
-        icon: FileText,
-        children: categoryNavItems,
+      // Add categories directly at first level
+      categoryNavItems.forEach(cat => {
+        baseNavigation.push(cat);
       });
     } else {
       baseNavigation.push({
@@ -482,9 +480,19 @@ const ModernSidebar = () => {
                     )}
                     
                     <div className="relative z-10 flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-                      <Icon className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300 flex-shrink-0 ${
-                        parentActive ? 'scale-110 text-white' : 'group-hover:scale-105'
-                      }`} />
+                      {item.color ? (
+                        <div 
+                          className="w-3 h-3 sm:w-4 sm:h-4 rounded-full flex-shrink-0 transition-all duration-300 group-hover:scale-125 group-hover:shadow-lg"
+                          style={{ 
+                            backgroundColor: item.color,
+                            boxShadow: `0 0 0 0 ${item.color}40`
+                          }}
+                        />
+                      ) : (
+                        <Icon className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300 flex-shrink-0 ${
+                          parentActive ? 'scale-110 text-white' : 'group-hover:scale-105'
+                        }`} />
+                      )}
                       <span className="font-medium text-sm sm:text-base truncate">{item.title}</span>
                       
                       {item.badge && (
