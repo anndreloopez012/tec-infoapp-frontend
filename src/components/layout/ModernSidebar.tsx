@@ -32,6 +32,7 @@ import { useRoles } from '@/hooks/useRoles';
 import { useSearch } from '@/context/SearchContext';
 import DynamicNavigation from './DynamicNavigation';
 import { contentCategoryService } from '@/services/catalogServices';
+import { API_CONFIG } from '@/config/api';
 
 interface NavigationItem {
   title: string;
@@ -47,11 +48,12 @@ interface NavigationItem {
 const ModernSidebar = () => {
   const { user, logout, hasPermission, hasRole } = useAuth();
   const { navigationMenus } = useAuthPermissions();
-  const { getBranding, getContentMenuMode } = useGlobal();
+  const { getBranding } = useGlobal();
   const location = useLocation();
   const navigate = useNavigate();
   const branding = getBranding();
-  const contentMenuMode = getContentMenuMode();
+  // Modo de menú de contenido desde configuración del código
+  const contentMenuMode = API_CONFIG.FEATURES.contentMenuByCategories ? 'categories' : 'global';
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const { getRoleLabelForUser, getUserType, getRoleType } = useRoles();
   const { searchQuery, isSearching } = useSearch();
