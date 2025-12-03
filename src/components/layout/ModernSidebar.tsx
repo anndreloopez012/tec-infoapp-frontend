@@ -529,9 +529,17 @@ const ModernSidebar = () => {
                               }
                             `}
                           >
-                            <ChildIcon className={`w-3 h-3 sm:w-4 sm:h-4 transition-all duration-300 flex-shrink-0 ${
-                              childActive ? 'text-primary' : 'group-hover:scale-105'
-                            }`} />
+                            {/* Color indicator for categories */}
+                            {child.color ? (
+                              <div 
+                                className="w-3 h-3 sm:w-4 sm:h-4 rounded-full flex-shrink-0 ring-2 ring-background shadow-sm"
+                                style={{ backgroundColor: child.color }}
+                              />
+                            ) : (
+                              <ChildIcon className={`w-3 h-3 sm:w-4 sm:h-4 transition-all duration-300 flex-shrink-0 ${
+                                childActive ? 'text-primary' : 'group-hover:scale-105'
+                              }`} />
+                            )}
                             <span className="text-xs sm:text-sm font-medium truncate">{child.title}</span>
                             
                             {child.badge && (
