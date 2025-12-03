@@ -67,12 +67,20 @@ export default function CategoryContent() {
     }
   };
 
-  // Build filters for API
+  // Get today's date for publish_date filter
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
+  // Build filters for API - Public page only shows published, active, and valid publish_date
   const buildFilters = useCallback(() => {
+    const today = getTodayDate();
     const filters: Record<string, string> = {
       'filters[category_content][documentId][$eq]': categoryId || '',
       'filters[status_content][$eq]': 'published',
       'filters[active][$eq]': 'true',
+      'filters[publish_date][$lte]': today,
     };
 
     if (searchQuery.trim()) {
@@ -139,6 +147,7 @@ export default function CategoryContent() {
   };
 
   const loadAuthors = async () => {
+    const today = getTodayDate();
     // Load all content once to extract unique authors
     const result = await publicContentService.getAll({
       pageSize: 500,
@@ -147,6 +156,7 @@ export default function CategoryContent() {
         'filters[category_content][documentId][$eq]': categoryId,
         'filters[status_content][$eq]': 'published',
         'filters[active][$eq]': 'true',
+        'filters[publish_date][$lte]': today,
       },
     });
 
