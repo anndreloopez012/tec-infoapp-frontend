@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -12,7 +12,8 @@ import {
   SlidersHorizontal, 
   User,
   Loader2,
-  Building2
+  Building2,
+  Archive
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -33,6 +34,7 @@ import {
 import { contentInfoService, contentCategoryService } from '@/services/catalogServices';
 import { API_CONFIG } from '@/config/api';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
 
 interface ContentData {
   id: number;
@@ -60,6 +62,7 @@ const PAGE_SIZE = 20;
 const ContentByCategory = () => {
   const { categoryId } = useParams<{ categoryId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [category, setCategory] = useState<any>(null);
   const [content, setContent] = useState<ContentData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,27 +78,58 @@ const ContentByCategory = () => {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  // Get sort parameter for API
+  // Check if user has super/admin role to see archived content
+  const canSeeArchived = useMemo(() => {
+    if (!user?.role) return false;
+    const roleType = user.role?.type?.toLowerCase() || '';
+    const roleName = user.role?.name?.toLowerCase() || '';
+    return ['super', 'admin', 'super_admin'].includes(roleType) || 
+           ['super', 'admin', 'super_admin'].includes(roleName);
+  }, [user]);
+
+  // Get sort parameter for API - newest first by default
   const getSortParam = () => {
     switch (sortBy) {
-      case 'newest': return 'publish_date:desc';
-      case 'oldest': return 'publish_date:asc';
+      case 'newest': return 'createdAt:desc';
+      case 'oldest': return 'createdAt:asc';
       case 'title': return 'title:asc';
-      default: return 'publish_date:desc';
+      default: return 'createdAt:desc';
     }
   };
 
+  // Get today's date in ISO format for publication date filter
+  const getTodayISO = () => {
+    return new Date().toISOString().split('T')[0];
+  };
+
   // Build filters for API - Authenticated version shows ALL content (with and without companies)
+  // Status filtering: 
+  // - "publicado" visible for everyone
+  // - "archivado" visible only for super/admin roles
+  // - "borrador" never visible
+  // Publication date: only show content where publish_date <= today
   const buildFilters = useCallback(() => {
+    const today = getTodayISO();
     const filters: Record<string, string> = {
       'filters[category_content][documentId][$eq]': categoryId || '',
       'filters[active][$eq]': 'true',
+      'filters[publish_date][$lte]': today,
     };
 
+    // Status filter - exclude draft, and exclude archived if user is not super/admin
+    if (canSeeArchived) {
+      // Super/admin can see both publicado and archivado (but not borrador)
+      filters['filters[$or][0][status_content][$eq]'] = 'publicado';
+      filters['filters[$or][1][status_content][$eq]'] = 'archivado';
+    } else {
+      // Regular users only see publicado
+      filters['filters[status_content][$eq]'] = 'publicado';
+    }
+
     if (searchQuery.trim()) {
-      filters['filters[$or][0][title][$containsi]'] = searchQuery;
-      filters['filters[$or][1][subtitle][$containsi]'] = searchQuery;
-      filters['filters[$or][2][description][$containsi]'] = searchQuery;
+      // When using search, we need to handle the OR conditions differently
+      // For now, simplify to basic search
+      filters['filters[title][$containsi]'] = searchQuery;
     }
 
     if (selectedAuthor !== 'all') {
@@ -103,7 +137,7 @@ const ContentByCategory = () => {
     }
 
     return filters;
-  }, [categoryId, searchQuery, selectedAuthor]);
+  }, [categoryId, searchQuery, selectedAuthor, canSeeArchived]);
 
   useEffect(() => {
     if (categoryId) {
@@ -162,14 +196,26 @@ const ContentByCategory = () => {
 
   const loadAuthors = async () => {
     try {
+      const today = getTodayISO();
+      const additionalFilters: Record<string, string> = {
+        'filters[category_content][documentId][$eq]': categoryId || '',
+        'filters[active][$eq]': 'true',
+        'filters[publish_date][$lte]': today,
+      };
+
+      // Apply same status filters as content
+      if (canSeeArchived) {
+        additionalFilters['filters[$or][0][status_content][$eq]'] = 'publicado';
+        additionalFilters['filters[$or][1][status_content][$eq]'] = 'archivado';
+      } else {
+        additionalFilters['filters[status_content][$eq]'] = 'publicado';
+      }
+
       // Load content to extract unique authors
       const result = await contentInfoService.getAll({
         pageSize: 500,
         populate: 'author_content',
-        additionalFilters: {
-          'filters[category_content][documentId][$eq]': categoryId,
-          'filters[active][$eq]': 'true',
-        },
+        additionalFilters,
       });
 
       if (result.data) {
@@ -431,10 +477,13 @@ const ContentByCategory = () => {
                       {/* Status Badge */}
                       {(item.status_content || item.status) && (
                         <Badge 
-                          variant={(item.status_content || item.status) === 'published' ? 'default' : 'secondary'}
-                          className="absolute top-4 right-4"
+                          variant={(item.status_content || item.status) === 'archivado' ? 'secondary' : 'default'}
+                          className="absolute top-4 right-4 gap-1"
                         >
-                          {(item.status_content || item.status) === 'published' ? 'Publicado' : (item.status_content || item.status)}
+                          {(item.status_content || item.status) === 'archivado' && <Archive className="h-3 w-3" />}
+                          {(item.status_content || item.status) === 'publicado' ? 'Publicado' : 
+                           (item.status_content || item.status) === 'archivado' ? 'Archivado' : 
+                           (item.status_content || item.status)}
                         </Badge>
                       )}
 
