@@ -1,20 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { contentInfoService } from "@/services/catalogServices";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 import { Calendar, Tag, Building2, User, Download, ArrowLeft, X } from "lucide-react";
-import LoadingSpinner from "@/components/common/LoadingSpinner";
+import { Skeleton } from "@/components/ui/skeleton";
 import { API_CONFIG } from "@/config/api";
 import LexicalViewer from "@/components/editor/LexicalViewer";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import type { CarouselApi } from "@/components/ui/carousel";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 interface Attachment {
   id: number;
+  name?: string;
   url: string;
   alternativeText?: string;
   formats?: {
@@ -29,22 +33,29 @@ interface ContentDetailItem {
   id: number;
   documentId: string;
   title: string;
-  slug: string;
+  subtitle?: string;
+  description?: string;
+  slug?: string;
   content: string;
   active: boolean;
-  status_content: "draft" | "published" | "archived";
-  publish_date: string;
+  status_content?: string;
+  status?: string;
+  publish_date?: string;
+  createdAt?: string;
+  main_image?: any;
+  cover_image?: any;
   category_content?: {
     id: number;
     name: string;
     description?: string;
     color?: string;
   };
-  company?: {
+  companies?: any[];
+  attachments?: Attachment[];
+  author_content?: {
     id: number;
     name: string;
   };
-  attachments?: Attachment[];
   author?: {
     id: number;
     username: string;
@@ -52,12 +63,6 @@ interface ContentDetailItem {
   };
   comment?: string;
 }
-
-const stripHtml = (html: string) => {
-  const tmp = document.createElement("DIV");
-  tmp.innerHTML = html;
-  return tmp.textContent || tmp.innerText || "";
-};
 
 const getImageUrl = (imageData: any) => {
   if (!imageData?.url) return null;
@@ -71,9 +76,8 @@ const getBestImageFormat = (attachment: Attachment) => {
 };
 
 const ContentDetail: React.FC = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const { contentId } = useParams<{ contentId: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const [item, setItem] = useState<ContentDetailItem | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -82,52 +86,47 @@ const ContentDetail: React.FC = () => {
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
 
   useEffect(() => {
-    const load = async () => {
-      if (!slug) return;
-      setLoading(true);
-      try {
-        const result = await contentInfoService.getAll({
+    if (contentId) {
+      loadContent();
+    }
+  }, [contentId]);
+
+  const loadContent = async () => {
+    if (!contentId) return;
+    setLoading(true);
+    
+    try {
+      // First try to get by documentId directly
+      const result = await contentInfoService.getById(contentId);
+      
+      if (result && result.data) {
+        setItem(result.data as ContentDetailItem);
+        document.title = `${result.data.title} | TEC Info`;
+      } else {
+        // Fallback: try to search by slug or documentId
+        const searchResult = await contentInfoService.getAll({
           pageSize: 1,
+          populate: '*',
           additionalFilters: {
-            "filters[slug][$eq]": slug,
-            "filters[status_content][$eq]": "published",
-            "filters[active][$eq]": true,
+            "filters[$or][0][documentId][$eq]": contentId,
+            "filters[$or][1][slug][$eq]": contentId,
           },
         });
 
-        if (result.success && result.data.length > 0) {
-          const contentItem = result.data[0] as ContentDetailItem;
-          setItem(contentItem);
-
-          const plainText = stripHtml(contentItem.content || "");
-          const description = plainText.substring(0, 150);
-          document.title = `${contentItem.title} | TEC Info`;
-
-          const metaDescription = document.querySelector<HTMLMetaElement>('meta[name="description"]');
-          if (metaDescription) {
-            metaDescription.content = description;
-          }
+        if (searchResult.data && searchResult.data.length > 0) {
+          setItem(searchResult.data[0] as ContentDetailItem);
+          document.title = `${searchResult.data[0].title} | TEC Info`;
         } else {
-          toast({
-            title: "No encontrado",
-            description: "No se encontró el contenido solicitado",
-            variant: "destructive",
-          });
+          toast.error("Contenido no encontrado");
         }
-      } catch (error) {
-        console.error("Error loading content detail:", error);
-        toast({
-          title: "Error",
-          description: "No se pudo cargar el contenido",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
       }
-    };
-
-    load();
-  }, [slug, toast]);
+    } catch (error) {
+      console.error("Error loading content detail:", error);
+      toast.error("No se pudo cargar el contenido");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Auto-advance carousel every 4 seconds
   useEffect(() => {
@@ -157,193 +156,235 @@ const ContentDetail: React.FC = () => {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
+      toast.success("Imagen descargada");
     } catch (error) {
       console.error("Error downloading image:", error);
+      toast.error("Error al descargar la imagen");
     }
   };
 
   const downloadAllImages = async (attachments: Attachment[]) => {
+    toast.info(`Descargando ${attachments.length} imágenes...`);
     for (const attachment of attachments) {
-      const url = getImageUrl(attachment);
+      const url = getBestImageFormat(attachment) || getImageUrl(attachment);
       if (url) {
-        await downloadImage(url, `attachment-${attachment.id}.png`);
+        await downloadImage(url, attachment.name || `attachment-${attachment.id}.png`);
         await new Promise((resolve) => setTimeout(resolve, 500));
       }
     }
   };
 
   if (loading) {
-    return <LoadingSpinner />;
+    return (
+      <div className="container py-12 max-w-5xl">
+        <div className="animate-pulse space-y-8">
+          <div className="h-8 w-32 bg-muted rounded" />
+          <div className="h-96 bg-muted rounded-xl" />
+          <div className="space-y-4">
+            <div className="h-12 bg-muted rounded w-3/4" />
+            <div className="h-6 bg-muted rounded w-1/2" />
+            <div className="h-40 bg-muted rounded" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!item) {
     return (
-      <div className="container mx-auto px-4 py-10 max-w-5xl">
+      <div className="container py-12 max-w-5xl">
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4 flex items-center gap-2">
           <ArrowLeft className="w-4 h-4" />
           Volver
         </Button>
-        <Card className="p-8 text-center">
-          <h1 className="text-2xl font-semibold mb-2">Contenido no encontrado</h1>
-          <p className="text-muted-foreground">El contenido que buscas no existe o ya no está disponible.</p>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <p className="text-lg text-muted-foreground mb-4">Contenido no encontrado</p>
+            <p className="text-sm text-muted-foreground">El contenido que buscas no existe o ya no está disponible.</p>
+          </CardContent>
         </Card>
       </div>
     );
   }
 
-  return (
-    <main className="min-h-screen bg-gradient-to-br from-background via-background to-accent/10">
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4 flex items-center gap-2">
-          <ArrowLeft className="w-4 h-4" />
-          Volver al contenido
-        </Button>
+  const heroImage = item.main_image || item.cover_image || (item.attachments && item.attachments.length > 0 ? item.attachments[0] : null);
 
-        <article className="bg-card rounded-2xl shadow-xl overflow-hidden border border-primary/10">
-          {/* Hero Image */}
-          {item.attachments && item.attachments.length > 0 && (
-            <div className="relative h-80 w-full overflow-hidden">
-              <img
-                src={getBestImageFormat(item.attachments[0]) || getImageUrl(item.attachments[0]) || undefined}
-                alt={item.attachments[0].alternativeText || item.title}
-                loading="lazy"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+  return (
+    <div className="container py-8 space-y-8 max-w-5xl animate-fade-in">
+      {/* Back Button */}
+      <div className="flex items-center justify-between">
+        <Button
+          variant="ghost"
+          onClick={() => navigate(-1)}
+          className="gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Volver
+        </Button>
+      </div>
+
+      {/* Hero Image */}
+      {heroImage && (
+        <div className="relative w-full h-[400px] rounded-2xl overflow-hidden shadow-2xl">
+          <img
+            src={getBestImageFormat(heroImage) || getImageUrl(heroImage)}
+            alt={item.title}
+            loading="lazy"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-transparent" />
+        </div>
+      )}
+
+      {/* Content Header */}
+      <div className="space-y-6">
+        <div className="space-y-4">
+          <h1 className="text-4xl md:text-5xl font-bold leading-tight">
+            {item.title}
+          </h1>
+          {(item.subtitle || item.description) && (
+            <p className="text-xl text-muted-foreground leading-relaxed">
+              {item.subtitle || item.description}
+            </p>
+          )}
+        </div>
+
+        {/* Metadata */}
+        <div className="flex flex-wrap gap-4 text-sm">
+          {item.category_content?.name && (
+            <Badge
+              variant="outline"
+              className="text-sm px-3 py-1"
+              style={{
+                backgroundColor: item.category_content?.color 
+                  ? `${item.category_content.color}20`
+                  : 'hsl(var(--primary) / 0.1)',
+                borderColor: item.category_content?.color || 'hsl(var(--primary))',
+                color: item.category_content?.color || 'hsl(var(--primary))'
+              }}
+            >
+              <Tag className="w-3 h-3 mr-1" />
+              {item.category_content.name}
+            </Badge>
+          )}
+          
+          {(item.publish_date || item.createdAt) && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Calendar className="h-4 w-4" />
+              <span>
+                {format(new Date(item.publish_date || item.createdAt!), "dd 'de' MMMM, yyyy", {
+                  locale: es,
+                })}
+              </span>
             </div>
           )}
 
-          <div className="p-8">
-            {/* Title and meta */}
-            <header className="mb-6">
-              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                {item.title}
-              </h1>
+          {item.author_content?.name && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <User className="h-4 w-4" />
+              <span>{item.author_content.name}</span>
+            </div>
+          )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                {item.category_content && (
-                  <div className="space-y-1">
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      Categoría
-                    </span>
-                    <Badge variant="secondary" className="text-sm">
-                      <Tag className="w-4 h-4 mr-1" />
-                      {item.category_content.name}
-                    </Badge>
-                  </div>
-                )}
+          {item.author?.username && !item.author_content?.name && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <User className="h-4 w-4" />
+              <span>{item.author.username}</span>
+            </div>
+          )}
 
-                {item.company && (
-                  <div className="space-y-1">
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Empresa</span>
-                    <Badge variant="outline" className="text-sm">
-                      <Building2 className="w-3 h-3 mr-1" />
-                      {item.company.name}
-                    </Badge>
-                  </div>
-                )}
+          {item.companies && item.companies.length > 0 && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Building2 className="h-4 w-4" />
+              <span>{item.companies.map(c => c.name || c.Name).join(', ')}</span>
+            </div>
+          )}
 
-                <div className="space-y-1">
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    Fecha de publicación
-                  </span>
-                  <Badge variant="outline" className="text-sm">
-                    <Calendar className="w-3 h-3 mr-1" />
-                    {new Date(item.publish_date).toLocaleDateString("es-MX", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </Badge>
-                </div>
+          {(item.status_content || item.status) && (
+            <Badge variant={(item.status_content || item.status) === 'published' ? 'default' : 'secondary'}>
+              {(item.status_content || item.status) === 'published' ? 'Publicado' : (item.status_content || item.status)}
+            </Badge>
+          )}
+        </div>
 
-                {item.author && (
-                  <div className="space-y-1">
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Autor</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-                        <User className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium leading-tight">{item.author.username}</p>
-                        <p className="text-xs text-muted-foreground">{item.author.email}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </header>
-
-            {/* Content body */}
-            <section className="mb-8 overflow-hidden">
-              <h2 className="sr-only">Contenido</h2>
-              <div className="w-full overflow-hidden">
-                <LexicalViewer content={item.content} />
-              </div>
-            </section>
-
-            {/* Comment */}
-            {item.comment && (
-              <section className="mb-8">
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                  Comentarios
-                </h2>
-                <div className="p-4 bg-accent/20 rounded-lg border-l-4 border-primary">
-                  <p className="text-sm">{item.comment}</p>
-                </div>
-              </section>
-            )}
-
-            {/* Attachments */}
-            {item.attachments && item.attachments.length > 0 && (
-              <section>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    Imágenes ({item.attachments.length})
-                  </h2>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openCarousel(0)}
-                    >
-                      Ver fotos
-                    </Button>
-                    {item.attachments.length > 1 && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => downloadAllImages(item.attachments!)}
-                        className="gap-2"
-                      >
-                        <Download className="w-4 h-4" />
-                        Descargar todas
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {item.attachments.map((attachment, index) => (
-                    <figure
-                      key={attachment.id}
-                      onClick={() => openCarousel(index)}
-                      className="group relative aspect-video rounded-lg overflow-hidden border border-border bg-accent/20 cursor-pointer hover:border-primary transition-all hover:scale-105 hover:shadow-lg"
-                    >
-                      <img
-                        src={getBestImageFormat(attachment) || getImageUrl(attachment)}
-                        alt={attachment.alternativeText || `Adjunto ${attachment.id}`}
-                        loading="lazy"
-                        className="w-full h-full object-cover transition-transform"
-                      />
-                      <figcaption className="sr-only">{attachment.alternativeText || `Adjunto ${attachment.id}`}</figcaption>
-                    </figure>
-                  ))}
-                </div>
-              </section>
-            )}
-          </div>
-        </article>
+        <Separator />
       </div>
+
+      {/* Rich Content */}
+      {item.content && (
+        <Card className="border-none shadow-none bg-transparent overflow-hidden">
+          <CardContent className="px-0 overflow-hidden">
+            <div className="w-full overflow-hidden">
+              <LexicalViewer content={item.content} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Comment */}
+      {item.comment && (
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+              Comentarios
+            </h3>
+            <div className="p-4 bg-accent/20 rounded-lg border-l-4 border-primary">
+              <p className="text-sm">{item.comment}</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Attachments */}
+      {item.attachments && item.attachments.length > 0 && (
+        <Card>
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Download className="h-5 w-5" />
+                Archivos adjuntos ({item.attachments.length})
+              </h3>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  onClick={() => openCarousel(0)}
+                >
+                  Ver fotos
+                </Button>
+                {item.attachments.length > 1 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    type="button"
+                    onClick={() => downloadAllImages(item.attachments!)}
+                  >
+                    Descargar todos
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {item.attachments.map((attachment, index) => (
+                <div
+                  key={attachment.id}
+                  onClick={() => openCarousel(index)}
+                  className="group relative aspect-square rounded-lg overflow-hidden border border-border hover:border-primary transition-all cursor-pointer hover:scale-105 hover:shadow-lg"
+                >
+                  <img
+                    src={getBestImageFormat(attachment) || getImageUrl(attachment)}
+                    alt={attachment.alternativeText || attachment.name || `Adjunto ${attachment.id}`}
+                    loading="lazy"
+                    className="w-full h-full object-cover transition-transform"
+                  />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Fullscreen Carousel Modal */}
       <Dialog open={carouselOpen} onOpenChange={setCarouselOpen}>
@@ -351,6 +392,7 @@ const ContentDetail: React.FC = () => {
           <Button
             variant="ghost"
             size="icon"
+            type="button"
             className="absolute top-4 right-4 z-50 text-white hover:bg-white/20"
             onClick={() => setCarouselOpen(false)}
           >
@@ -372,7 +414,7 @@ const ContentDetail: React.FC = () => {
                     <div className="flex items-center justify-center h-[80vh] p-8 animate-fade-in">
                       <img
                         src={getBestImageFormat(attachment) || getImageUrl(attachment)}
-                        alt={attachment.alternativeText || `Adjunto ${attachment.id}`}
+                        alt={attachment.alternativeText || attachment.name || `Adjunto ${attachment.id}`}
                         loading="lazy"
                         className="max-w-full max-h-full object-contain rounded-lg"
                       />
@@ -386,7 +428,7 @@ const ContentDetail: React.FC = () => {
           )}
         </DialogContent>
       </Dialog>
-    </main>
+    </div>
   );
 };
 
