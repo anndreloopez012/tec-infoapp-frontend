@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -10,7 +10,9 @@ import {
   List, 
   LayoutGrid, 
   SlidersHorizontal, 
-  User 
+  User,
+  Loader2,
+  Building2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -28,14 +30,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination';
 import { contentInfoService, contentCategoryService } from '@/services/catalogServices';
 import { API_CONFIG } from '@/config/api';
 import { cn } from '@/lib/utils';
@@ -61,104 +55,168 @@ interface ContentData {
 type ViewMode = 'grid' | 'list' | 'masonry';
 type SortOption = 'newest' | 'oldest' | 'title';
 
+const PAGE_SIZE = 20;
+
 const ContentByCategory = () => {
   const { categoryId } = useParams<{ categoryId: string }>();
   const navigate = useNavigate();
   const [category, setCategory] = useState<any>(null);
   const [content, setContent] = useState<ContentData[]>([]);
-  const [filteredContent, setFilteredContent] = useState<ContentData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [selectedAuthor, setSelectedAuthor] = useState<string>('all');
-  const pageSize = 9;
+  const [allAuthors, setAllAuthors] = useState<string[]>([]);
 
-  const authors = Array.from(
-    new Set(content.map((item) => item.author_content?.name).filter(Boolean))
-  );
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  // Get sort parameter for API
+  const getSortParam = () => {
+    switch (sortBy) {
+      case 'newest': return 'publish_date:desc';
+      case 'oldest': return 'publish_date:asc';
+      case 'title': return 'title:asc';
+      default: return 'publish_date:desc';
+    }
+  };
+
+  // Build filters for API - Authenticated version shows ALL content (with and without companies)
+  const buildFilters = useCallback(() => {
+    const filters: Record<string, string> = {
+      'filters[category_content][documentId][$eq]': categoryId || '',
+      'filters[active][$eq]': 'true',
+    };
+
+    if (searchQuery.trim()) {
+      filters['filters[$or][0][title][$containsi]'] = searchQuery;
+      filters['filters[$or][1][subtitle][$containsi]'] = searchQuery;
+      filters['filters[$or][2][description][$containsi]'] = searchQuery;
+    }
+
+    if (selectedAuthor !== 'all') {
+      filters['filters[author_content][name][$eq]'] = selectedAuthor;
+    }
+
+    return filters;
+  }, [categoryId, searchQuery, selectedAuthor]);
 
   useEffect(() => {
     if (categoryId) {
       loadCategory();
-      loadContent();
+      loadAuthors();
     }
   }, [categoryId]);
 
+  // Reset and reload when filters change
   useEffect(() => {
-    handleSearch();
-  }, [searchQuery, content, sortBy, selectedAuthor]);
+    if (categoryId) {
+      setContent([]);
+      setPage(1);
+      setHasMore(true);
+      loadContent(1, true);
+    }
+  }, [categoryId, searchQuery, sortBy, selectedAuthor]);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading && !loadingMore) {
+          loadContent(page + 1, false);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observerRef.current.observe(loadMoreRef.current);
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [hasMore, loading, loadingMore, page]);
 
   const loadCategory = async () => {
     if (!categoryId) return;
     try {
       const result = await contentCategoryService.getById(categoryId);
-      if (result) {
-        setCategory(result);
+      if (result && result.data) {
+        setCategory(result.data);
       }
     } catch (error) {
       console.error('Error loading category:', error);
     }
   };
 
-  const loadContent = async () => {
-    setLoading(true);
+  const loadAuthors = async () => {
     try {
+      // Load content to extract unique authors
       const result = await contentInfoService.getAll({
-        pageSize: 1000,
-        populate: '*',
+        pageSize: 500,
+        populate: 'author_content',
         additionalFilters: {
           'filters[category_content][documentId][$eq]': categoryId,
-          'filters[active][$eq]': true,
+          'filters[active][$eq]': 'true',
         },
       });
 
       if (result.data) {
-        setContent(result.data);
-        setFilteredContent(result.data);
+        const authors = Array.from(
+          new Set(result.data.map((item: ContentData) => item.author_content?.name).filter(Boolean))
+        ) as string[];
+        setAllAuthors(authors);
+      }
+    } catch (error) {
+      console.error('Error loading authors:', error);
+    }
+  };
+
+  const loadContent = async (pageNum: number, isReset: boolean) => {
+    if (isReset) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
+
+    try {
+      const result = await contentInfoService.getAll({
+        pageSize: PAGE_SIZE,
+        page: pageNum,
+        sort: getSortParam(),
+        populate: '*',
+        additionalFilters: buildFilters(),
+      });
+
+      if (result.success && result.data) {
+        if (isReset) {
+          setContent(result.data);
+        } else {
+          setContent(prev => [...prev, ...result.data]);
+        }
+
+        setPage(pageNum);
+        // Check if we have more pages
+        const totalFromPagination = result.pagination?.total || 0;
+        setHasMore(pageNum * PAGE_SIZE < totalFromPagination && result.data.length === PAGE_SIZE);
       }
     } catch (error) {
       console.error('Error loading content:', error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  };
-
-  const handleSearch = () => {
-    let filtered = [...content];
-
-    // Apply text search
-    if (searchQuery.trim()) {
-      filtered = filtered.filter(
-        (item) =>
-          item.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.subtitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.description?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Apply author filter
-    if (selectedAuthor !== 'all') {
-      filtered = filtered.filter((item) => item.author_content?.name === selectedAuthor);
-    }
-
-    // Apply sorting
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'newest':
-          return new Date(b.publish_date || b.createdAt || 0).getTime() - new Date(a.publish_date || a.createdAt || 0).getTime();
-        case 'oldest':
-          return new Date(a.publish_date || a.createdAt || 0).getTime() - new Date(b.publish_date || b.createdAt || 0).getTime();
-        case 'title':
-          return (a.title || '').localeCompare(b.title || '');
-        default:
-          return 0;
-      }
-    });
-
-    setFilteredContent(filtered);
-    setCurrentPage(1);
   };
 
   const getImageUrl = (imageData: any) => {
@@ -171,12 +229,6 @@ const ContentByCategory = () => {
   const handleContentClick = (item: ContentData) => {
     navigate(`/content-detail/${item.documentId || item.id}`);
   };
-
-  const paginatedContent = filteredContent.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
-  const totalPages = Math.ceil(filteredContent.length / pageSize);
 
   return (
     <div className="container py-8 space-y-8 animate-fade-in">
@@ -228,7 +280,7 @@ const ContentByCategory = () => {
                 </SelectContent>
               </Select>
 
-              {authors.length > 0 && (
+              {allAuthors.length > 0 && (
                 <Select value={selectedAuthor} onValueChange={setSelectedAuthor}>
                   <SelectTrigger className="w-[180px]">
                     <User className="h-4 w-4 mr-2" />
@@ -236,7 +288,7 @@ const ContentByCategory = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos los autores</SelectItem>
-                    {authors.map((author) => (
+                    {allAuthors.map((author) => (
                       <SelectItem key={author} value={author}>
                         {author}
                       </SelectItem>
@@ -304,8 +356,7 @@ const ContentByCategory = () => {
       {/* Results Count */}
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>
-          Mostrando <strong>{paginatedContent.length}</strong> de{' '}
-          <strong>{filteredContent.length}</strong> resultados
+          Mostrando <strong>{content.length}</strong> resultados
         </span>
       </div>
 
@@ -320,7 +371,7 @@ const ContentByCategory = () => {
             <Skeleton key={i} className="h-[420px] rounded-xl" />
           ))}
         </div>
-      ) : paginatedContent.length === 0 ? (
+      ) : content.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
@@ -334,12 +385,12 @@ const ContentByCategory = () => {
           {/* Grid View */}
           {viewMode === 'grid' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {paginatedContent.map((item, index) => (
+              {content.map((item, index) => (
                 <motion.div
                   key={item.documentId || item.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
+                  transition={{ delay: Math.min(index * 0.05, 0.3) }}
                 >
                   <Card
                     className="group cursor-pointer overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-border/50 hover:border-primary/50 flex flex-col h-full"
@@ -384,6 +435,17 @@ const ContentByCategory = () => {
                           className="absolute top-4 right-4"
                         >
                           {(item.status_content || item.status) === 'published' ? 'Publicado' : (item.status_content || item.status)}
+                        </Badge>
+                      )}
+
+                      {/* Private Content Indicator */}
+                      {item.companies && item.companies.length > 0 && (
+                        <Badge 
+                          variant="outline"
+                          className="absolute bottom-4 left-4 bg-background/80 backdrop-blur-sm"
+                        >
+                          <Building2 className="h-3 w-3 mr-1" />
+                          Privado
                         </Badge>
                       )}
                     </div>
@@ -435,12 +497,12 @@ const ContentByCategory = () => {
           {/* List View */}
           {viewMode === 'list' && (
             <div className="space-y-4">
-              {paginatedContent.map((item, index) => (
+              {content.map((item, index) => (
                 <motion.div
                   key={item.documentId || item.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
+                  transition={{ delay: Math.min(index * 0.05, 0.3) }}
                 >
                   <Card
                     className="group cursor-pointer overflow-hidden hover:shadow-xl transition-all duration-300 border-border/50 hover:border-primary/50"
@@ -461,18 +523,28 @@ const ContentByCategory = () => {
                             <BookOpen className="h-12 w-12 text-muted-foreground/30" />
                           </div>
                         )}
+                        {/* Private Content Indicator */}
+                        {item.companies && item.companies.length > 0 && (
+                          <Badge 
+                            variant="outline"
+                            className="absolute bottom-2 left-2 bg-background/80 backdrop-blur-sm text-xs"
+                          >
+                            <Building2 className="h-3 w-3 mr-1" />
+                            Privado
+                          </Badge>
+                        )}
                       </div>
 
                       {/* Content */}
                       <div className="flex-1 flex flex-col justify-between min-w-0">
                         <div className="space-y-2">
                           <div className="flex items-start justify-between gap-4">
-                            <h3 className="text-xl font-semibold line-clamp-2 group-hover:text-primary transition-colors">
+                            <CardTitle className="text-xl leading-tight line-clamp-2 group-hover:text-primary transition-colors">
                               {item.title}
-                            </h3>
+                            </CardTitle>
                             <div className="flex gap-2 flex-shrink-0">
                               {item.category_content?.name && (
-                                <Badge
+                                <Badge 
                                   style={{
                                     backgroundColor: item.category_content?.color 
                                       ? `${item.category_content.color}40`
@@ -485,24 +557,26 @@ const ContentByCategory = () => {
                                 </Badge>
                               )}
                               {(item.status_content || item.status) && (
-                                <Badge variant={(item.status_content || item.status) === 'published' ? 'default' : 'secondary'}>
+                                <Badge 
+                                  variant={(item.status_content || item.status) === 'published' ? 'default' : 'secondary'}
+                                >
                                   {(item.status_content || item.status) === 'published' ? 'Publicado' : (item.status_content || item.status)}
                                 </Badge>
                               )}
                             </div>
                           </div>
                           {(item.subtitle || item.description) && (
-                            <p className="text-muted-foreground line-clamp-2">
+                            <CardDescription className="line-clamp-3">
                               {item.subtitle || item.description}
-                            </p>
+                            </CardDescription>
                           )}
                         </div>
 
-                        <div className="flex items-center justify-between mt-4">
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/50">
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
                             {(item.publish_date || item.createdAt) && (
                               <div className="flex items-center gap-1.5">
-                                <Calendar className="h-4 w-4" />
+                                <Calendar className="h-3.5 w-3.5" />
                                 <span>
                                   {format(new Date(item.publish_date || item.createdAt!), "dd MMM yyyy", {
                                     locale: es,
@@ -511,10 +585,7 @@ const ContentByCategory = () => {
                               </div>
                             )}
                             {item.author_content?.name && (
-                              <div className="flex items-center gap-1.5">
-                                <User className="h-4 w-4" />
-                                <span>{item.author_content.name}</span>
-                              </div>
+                              <span>{item.author_content.name}</span>
                             )}
                           </div>
                           <div className="flex items-center gap-2 text-sm font-medium text-primary group-hover:gap-3 transition-all">
@@ -533,75 +604,92 @@ const ContentByCategory = () => {
           {/* Masonry View */}
           {viewMode === 'masonry' && (
             <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
-              {paginatedContent.map((item, index) => (
+              {content.map((item, index) => (
                 <motion.div
                   key={item.documentId || item.id}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.05 }}
+                  transition={{ delay: Math.min(index * 0.05, 0.3) }}
                   className="break-inside-avoid"
+                  style={{ marginBottom: '1.5rem' }}
                 >
                   <Card
-                    className="group cursor-pointer overflow-hidden hover:shadow-2xl transition-all duration-300 border-border/50 hover:border-primary/50"
+                    className="group cursor-pointer overflow-hidden hover:shadow-2xl transition-all duration-500 border-border/50 hover:border-primary/50"
                     onClick={() => handleContentClick(item)}
                   >
-                    {/* Image */}
-                    {(item.main_image || item.cover_image) && (
-                      <div className="relative overflow-hidden">
+                    {/* Image Preview - Variable height for masonry effect */}
+                    <div 
+                      className="relative overflow-hidden bg-gradient-to-br from-primary/5 to-accent/5"
+                      style={{ height: `${200 + (index % 3) * 60}px` }}
+                    >
+                      {(item.main_image || item.cover_image) ? (
                         <img
                           src={getImageUrl(item.main_image || item.cover_image)}
                           alt={item.title}
                           loading="lazy"
-                          className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                    )}
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <BookOpen className="h-16 w-16 text-muted-foreground/30" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      
+                      {/* Category Badge */}
+                      {item.category_content?.name && (
+                        <Badge 
+                          className="absolute top-4 left-4 shadow-lg backdrop-blur-sm"
+                          style={{
+                            backgroundColor: item.category_content?.color 
+                              ? `${item.category_content.color}40`
+                              : 'hsl(var(--primary) / 0.2)',
+                            borderColor: item.category_content?.color || 'hsl(var(--primary))',
+                            color: item.category_content?.color || 'hsl(var(--primary))'
+                          }}
+                        >
+                          {item.category_content.name}
+                        </Badge>
+                      )}
 
-                    <CardHeader>
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        {item.category_content?.name && (
-                          <Badge
-                            className="text-xs"
-                            style={{
-                              backgroundColor: item.category_content?.color 
-                                ? `${item.category_content.color}40`
-                                : 'hsl(var(--primary) / 0.2)',
-                              borderColor: item.category_content?.color || 'hsl(var(--primary))',
-                              color: item.category_content?.color || 'hsl(var(--primary))'
-                            }}
-                          >
-                            {item.category_content.name}
-                          </Badge>
-                        )}
-                        {(item.status_content || item.status) && (
-                          <Badge variant={(item.status_content || item.status) === 'published' ? 'default' : 'secondary'} className="text-xs">
-                            {(item.status_content || item.status) === 'published' ? 'Publicado' : (item.status_content || item.status)}
-                          </Badge>
-                        )}
-                      </div>
-                      <CardTitle className="text-lg line-clamp-2 group-hover:text-primary transition-colors">
+                      {/* Private Content Indicator */}
+                      {item.companies && item.companies.length > 0 && (
+                        <Badge 
+                          variant="outline"
+                          className="absolute bottom-4 left-4 bg-background/80 backdrop-blur-sm"
+                        >
+                          <Building2 className="h-3 w-3 mr-1" />
+                          Privado
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <CardHeader className="space-y-3 pb-4">
+                      <CardTitle className="text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors">
                         {item.title}
                       </CardTitle>
                       {(item.subtitle || item.description) && (
-                        <CardDescription className="line-clamp-3 mt-2">
+                        <CardDescription className="text-sm line-clamp-3">
                           {item.subtitle || item.description}
                         </CardDescription>
                       )}
                     </CardHeader>
 
+                    {/* Footer */}
                     <CardContent className="pt-0">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-border/50 pt-3">
                         {(item.publish_date || item.createdAt) && (
-                          <span>
-                            {format(new Date(item.publish_date || item.createdAt!), "dd MMM yyyy", {
-                              locale: es,
-                            })}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <Calendar className="h-3.5 w-3.5" />
+                            <span>
+                              {format(new Date(item.publish_date || item.createdAt!), "dd MMM yyyy", {
+                                locale: es,
+                              })}
+                            </span>
+                          </div>
                         )}
-                        {item.author_content?.name && (
-                          <span>{item.author_content.name}</span>
-                        )}
+                        <ArrowRight className="h-4 w-4 text-primary transition-transform group-hover:translate-x-1" />
                       </div>
                     </CardContent>
                   </Card>
@@ -610,58 +698,18 @@ const ContentByCategory = () => {
             </div>
           )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center mt-8">
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                      className={cn(
-                        'cursor-pointer',
-                        currentPage === 1 && 'pointer-events-none opacity-50'
-                      )}
-                    />
-                  </PaginationItem>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter(
-                      (page) =>
-                        page === 1 ||
-                        page === totalPages ||
-                        Math.abs(page - currentPage) <= 1
-                    )
-                    .map((page, index, array) => (
-                      <React.Fragment key={page}>
-                        {index > 0 && array[index - 1] !== page - 1 && (
-                          <PaginationItem>
-                            <span className="px-2">...</span>
-                          </PaginationItem>
-                        )}
-                        <PaginationItem>
-                          <PaginationLink
-                            onClick={() => setCurrentPage(page)}
-                            isActive={currentPage === page}
-                            className="cursor-pointer"
-                          >
-                            {page}
-                          </PaginationLink>
-                        </PaginationItem>
-                      </React.Fragment>
-                    ))}
-                  <PaginationItem>
-                    <PaginationNext
-                      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                      className={cn(
-                        'cursor-pointer',
-                        currentPage === totalPages && 'pointer-events-none opacity-50'
-                      )}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
-          )}
+          {/* Load More Trigger */}
+          <div ref={loadMoreRef} className="flex justify-center py-8">
+            {loadingMore && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Cargando más contenido...</span>
+              </div>
+            )}
+            {!hasMore && content.length > 0 && (
+              <p className="text-muted-foreground text-sm">No hay más contenido para mostrar</p>
+            )}
+          </div>
         </>
       )}
     </div>
