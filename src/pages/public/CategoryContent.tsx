@@ -57,35 +57,27 @@ export default function CategoryContent() {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  // Get sort parameter for API - newest first by default
+  // Get sort parameter for API
   const getSortParam = () => {
     switch (sortBy) {
-      case 'newest': return 'createdAt:desc';
-      case 'oldest': return 'createdAt:asc';
+      case 'newest': return 'publish_date:desc';
+      case 'oldest': return 'publish_date:asc';
       case 'title': return 'title:asc';
-      default: return 'createdAt:desc';
+      default: return 'publish_date:desc';
     }
   };
 
-  // Get today's date in ISO format for publication date filter
-  const getTodayISO = () => {
-    return new Date().toISOString().split('T')[0];
-  };
-
   // Build filters for API
-  // Public: Only show "publicado" status, no "archivado" or "borrador"
-  // Only show content where publish_date <= today (scheduled publishing)
   const buildFilters = useCallback(() => {
-    const today = getTodayISO();
     const filters: Record<string, string> = {
       'filters[category_content][documentId][$eq]': categoryId || '',
-      'filters[status_content][$eqi]': 'publicado', // Case insensitive
+      'filters[status_content][$eq]': 'published',
       'filters[active][$eq]': 'true',
-      'filters[publish_date][$lte]': today,
     };
 
     if (searchQuery.trim()) {
-      filters['filters[title][$containsi]'] = searchQuery;
+      filters['filters[$or][0][title][$containsi]'] = searchQuery;
+      filters['filters[$or][1][subtitle][$containsi]'] = searchQuery;
     }
 
     if (selectedAuthor !== 'all') {
@@ -147,16 +139,14 @@ export default function CategoryContent() {
   };
 
   const loadAuthors = async () => {
-    const today = getTodayISO();
     // Load all content once to extract unique authors
     const result = await publicContentService.getAll({
       pageSize: 500,
       populate: 'author_content',
       additionalFilters: {
         'filters[category_content][documentId][$eq]': categoryId,
-        'filters[status_content][$eqi]': 'publicado', // Case insensitive
+        'filters[status_content][$eq]': 'published',
         'filters[active][$eq]': 'true',
-        'filters[publish_date][$lte]': today,
       },
     });
 
