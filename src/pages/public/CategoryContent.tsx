@@ -79,14 +79,13 @@ export default function CategoryContent() {
     const today = getTodayISO();
     const filters: Record<string, string> = {
       'filters[category_content][documentId][$eq]': categoryId || '',
-      'filters[status_content][$eq]': 'publicado',
+      'filters[status_content][$eqi]': 'publicado', // Case insensitive
       'filters[active][$eq]': 'true',
       'filters[publish_date][$lte]': today,
     };
 
     if (searchQuery.trim()) {
-      filters['filters[$or][0][title][$containsi]'] = searchQuery;
-      filters['filters[$or][1][subtitle][$containsi]'] = searchQuery;
+      filters['filters[title][$containsi]'] = searchQuery;
     }
 
     if (selectedAuthor !== 'all') {
@@ -155,7 +154,7 @@ export default function CategoryContent() {
       populate: 'author_content',
       additionalFilters: {
         'filters[category_content][documentId][$eq]': categoryId,
-        'filters[status_content][$eq]': 'publicado',
+        'filters[status_content][$eqi]': 'publicado', // Case insensitive
         'filters[active][$eq]': 'true',
         'filters[publish_date][$lte]': today,
       },
