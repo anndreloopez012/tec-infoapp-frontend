@@ -117,18 +117,17 @@ const ContentByCategory = () => {
     };
 
     // Status filter - exclude draft, and exclude archived if user is not super/admin
+    // Use case insensitive filter ($eqi) since API may return "Publicado" or "publicado"
     if (canSeeArchived) {
       // Super/admin can see both publicado and archivado (but not borrador)
-      filters['filters[$or][0][status_content][$eq]'] = 'publicado';
-      filters['filters[$or][1][status_content][$eq]'] = 'archivado';
+      filters['filters[$or][0][status_content][$eqi]'] = 'publicado';
+      filters['filters[$or][1][status_content][$eqi]'] = 'archivado';
     } else {
       // Regular users only see publicado
-      filters['filters[status_content][$eq]'] = 'publicado';
+      filters['filters[status_content][$eqi]'] = 'publicado';
     }
 
     if (searchQuery.trim()) {
-      // When using search, we need to handle the OR conditions differently
-      // For now, simplify to basic search
       filters['filters[title][$containsi]'] = searchQuery;
     }
 
@@ -203,12 +202,12 @@ const ContentByCategory = () => {
         'filters[publish_date][$lte]': today,
       };
 
-      // Apply same status filters as content
+      // Apply same status filters as content (case insensitive)
       if (canSeeArchived) {
-        additionalFilters['filters[$or][0][status_content][$eq]'] = 'publicado';
-        additionalFilters['filters[$or][1][status_content][$eq]'] = 'archivado';
+        additionalFilters['filters[$or][0][status_content][$eqi]'] = 'publicado';
+        additionalFilters['filters[$or][1][status_content][$eqi]'] = 'archivado';
       } else {
-        additionalFilters['filters[status_content][$eq]'] = 'publicado';
+        additionalFilters['filters[status_content][$eqi]'] = 'publicado';
       }
 
       // Load content to extract unique authors
