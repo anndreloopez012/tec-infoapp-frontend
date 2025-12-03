@@ -46,6 +46,7 @@ interface ContentData {
   createdAt?: string;
   main_image?: any;
   cover_image?: any;
+  attachments?: any[];
   category_content?: any;
   companies?: any[];
   author_content?: any;
@@ -200,7 +201,7 @@ const ContentByCategory = () => {
       // Load content to extract unique authors
       const result = await contentInfoService.getAll({
         pageSize: 500,
-        populate: 'author_content',
+        populate: '*',
         additionalFilters: {
           'filters[category_content][documentId][$eq]': categoryId,
           'filters[active][$eq]': 'true',
@@ -258,9 +259,26 @@ const ContentByCategory = () => {
 
   const getImageUrl = (imageData: any) => {
     if (!imageData) return null;
-    const url = imageData.url || imageData.formats?.medium?.url || imageData.formats?.small?.url;
+    const url = imageData.url || imageData.formats?.large?.url || imageData.formats?.medium?.url || imageData.formats?.small?.url;
     if (!url) return null;
     return url.startsWith('http') ? url : `${API_CONFIG.BASE_URL}${url}`;
+  };
+
+  // Get first image from attachments as cover
+  const getCoverImage = (item: ContentData) => {
+    if (item.attachments && item.attachments.length > 0) {
+      const firstImage = item.attachments.find((att: any) => 
+        att.mime?.startsWith('image/') || 
+        att.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i)
+      );
+      if (firstImage) {
+        return getImageUrl(firstImage);
+      }
+    }
+    // Fallback to main_image or cover_image if no attachments
+    if (item.main_image) return getImageUrl(item.main_image);
+    if (item.cover_image) return getImageUrl(item.cover_image);
+    return null;
   };
 
   const handleContentClick = (item: ContentData) => {
@@ -442,9 +460,9 @@ const ContentByCategory = () => {
                   >
                     {/* Image Preview */}
                     <div className="relative h-56 overflow-hidden bg-gradient-to-br from-primary/5 to-accent/5">
-                      {(item.main_image || item.cover_image) ? (
+                      {getCoverImage(item) ? (
                         <img
-                          src={getImageUrl(item.main_image || item.cover_image)}
+                          src={getCoverImage(item)!}
                           alt={item.title}
                           loading="lazy"
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
@@ -556,9 +574,9 @@ const ContentByCategory = () => {
                     <div className="flex flex-col md:flex-row gap-4 p-4">
                       {/* Image */}
                       <div className="relative w-full md:w-48 h-48 flex-shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-primary/5 to-accent/5">
-                        {(item.main_image || item.cover_image) ? (
+                        {getCoverImage(item) ? (
                           <img
-                            src={getImageUrl(item.main_image || item.cover_image)}
+                            src={getCoverImage(item)!}
                             alt={item.title}
                             loading="lazy"
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
@@ -668,9 +686,9 @@ const ContentByCategory = () => {
                       className="relative overflow-hidden bg-gradient-to-br from-primary/5 to-accent/5"
                       style={{ height: `${200 + (index % 3) * 60}px` }}
                     >
-                      {(item.main_image || item.cover_image) ? (
+                      {getCoverImage(item) ? (
                         <img
-                          src={getImageUrl(item.main_image || item.cover_image)}
+                          src={getCoverImage(item)!}
                           alt={item.title}
                           loading="lazy"
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
