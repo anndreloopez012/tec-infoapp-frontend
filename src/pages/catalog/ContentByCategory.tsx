@@ -264,7 +264,14 @@ const ContentByCategory = () => {
   };
 
   const handleContentClick = (item: ContentData) => {
-    navigate(`/content-detail/${item.documentId || item.id}`);
+    // Use View Transitions API for smooth animation
+    if (document.startViewTransition) {
+      document.startViewTransition(() => {
+        navigate(`/content-detail/${item.documentId || item.id}`);
+      });
+    } else {
+      navigate(`/content-detail/${item.documentId || item.id}`);
+    }
   };
 
   return (
@@ -441,6 +448,7 @@ const ContentByCategory = () => {
                           alt={item.title}
                           loading="lazy"
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          style={{ viewTransitionName: `content-image-${item.documentId || item.id}` }}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
@@ -554,6 +562,7 @@ const ContentByCategory = () => {
                             alt={item.title}
                             loading="lazy"
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            style={{ viewTransitionName: `content-image-${item.documentId || item.id}` }}
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
@@ -665,6 +674,7 @@ const ContentByCategory = () => {
                           alt={item.title}
                           loading="lazy"
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          style={{ viewTransitionName: `content-image-${item.documentId || item.id}` }}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
