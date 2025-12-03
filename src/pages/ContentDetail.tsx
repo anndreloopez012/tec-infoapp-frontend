@@ -96,32 +96,40 @@ const ContentDetail: React.FC = () => {
     setLoading(true);
     
     try {
+      console.log('🔍 Loading content with ID:', contentId);
+      
       // First try to get by documentId directly
       const result = await contentInfoService.getById(contentId);
+      console.log('📦 getById result:', result);
       
-      if (result && result.data) {
+      if (result.success && result.data && result.data.title) {
+        console.log('✅ Content found via getById');
         setItem(result.data as ContentDetailItem);
         document.title = `${result.data.title} | TEC Info`;
       } else {
-        // Fallback: try to search by slug or documentId
+        console.log('⚠️ getById failed, trying getAll fallback...');
+        // Fallback: try to search by documentId
         const searchResult = await contentInfoService.getAll({
           pageSize: 1,
           populate: '*',
           additionalFilters: {
-            "filters[$or][0][documentId][$eq]": contentId,
-            "filters[$or][1][slug][$eq]": contentId,
+            "filters[documentId][$eq]": contentId,
           },
         });
+        
+        console.log('📦 getAll result:', searchResult);
 
-        if (searchResult.data && searchResult.data.length > 0) {
+        if (searchResult.success && searchResult.data && searchResult.data.length > 0) {
+          console.log('✅ Content found via getAll');
           setItem(searchResult.data[0] as ContentDetailItem);
           document.title = `${searchResult.data[0].title} | TEC Info`;
         } else {
+          console.log('❌ Content not found');
           toast.error("Contenido no encontrado");
         }
       }
     } catch (error) {
-      console.error("Error loading content detail:", error);
+      console.error("❌ Error loading content detail:", error);
       toast.error("No se pudo cargar el contenido");
     } finally {
       setLoading(false);
