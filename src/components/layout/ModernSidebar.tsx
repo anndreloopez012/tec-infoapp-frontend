@@ -19,7 +19,8 @@ import {
   Calendar,
   CalendarDays,
   FolderOpen,
-  MessageCircle
+  MessageCircle,
+  Building2
 } from 'lucide-react';
 
 import { useAuth } from '@/context/AuthContext';
@@ -176,6 +177,11 @@ const ModernSidebar = () => {
         title: 'Calendario',
         href: '/calendar',
         icon: CalendarDays,
+      },
+      {
+        title: 'Empresas',
+        href: '/public/companies',
+        icon: Building2,
       },
       {
         title: 'Configuración',
