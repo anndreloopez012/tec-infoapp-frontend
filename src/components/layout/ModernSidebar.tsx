@@ -18,7 +18,8 @@ import {
   Send,
   Calendar,
   CalendarDays,
-  FolderOpen
+  FolderOpen,
+  MessageCircle
 } from 'lucide-react';
 
 import { useAuth } from '@/context/AuthContext';
@@ -48,10 +49,11 @@ interface NavigationItem {
 const ModernSidebar = () => {
   const { user, logout, hasPermission, hasRole } = useAuth();
   const { navigationMenus } = useAuthPermissions();
-  const { getBranding } = useGlobal();
+  const { getBranding, getContact } = useGlobal();
   const location = useLocation();
   const navigate = useNavigate();
   const branding = getBranding();
+  const contact = getContact();
   // Modo de menú de contenido desde configuración del código
   const contentMenuMode = API_CONFIG.FEATURES.contentMenuByCategories ? 'categories' : 'global';
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
@@ -93,6 +95,14 @@ const ModernSidebar = () => {
       color: cat.color || undefined,
     }));
   }, [categories, contentMenuMode]);
+
+  // WhatsApp handler
+  const handleWhatsAppClick = () => {
+    const phone = contact?.contactPhone?.replace(/\D/g, '') || '';
+    const message = encodeURIComponent('¡Hola! Me gustaría recibir atención al cliente. ¿Podrían ayudarme?');
+    const whatsappUrl = `https://wa.me/${phone}?text=${message}`;
+    window.open(whatsappUrl, '_blank');
+  };
 
   const navigation: NavigationItem[] = useMemo(() => {
     const baseNavigation: NavigationItem[] = [
@@ -394,6 +404,26 @@ const ModernSidebar = () => {
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-2 truncate">
             Navegación Principal
           </h3>
+
+          {/* WhatsApp Button - justo después de Dashboard */}
+          {contact?.contactPhone && (
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.15 }}
+              className="mb-1"
+            >
+              <button
+                onClick={handleWhatsAppClick}
+                className="w-full group flex items-center space-x-2 sm:space-x-3 px-2 sm:px-4 py-3 sm:py-3.5 rounded-xl transition-all duration-300 relative overflow-hidden text-muted-foreground hover:text-foreground hover:bg-green-500/10 hover:text-green-600"
+              >
+                <div className="relative z-10 flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+                  <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300 flex-shrink-0 group-hover:scale-105 group-hover:text-green-500" />
+                  <span className="font-medium text-sm sm:text-base truncate">WhatsApp</span>
+                </div>
+              </button>
+            </motion.div>
+          )}
           
           {filteredNavigation.map((item, index) => {
             const Icon = item.icon;
