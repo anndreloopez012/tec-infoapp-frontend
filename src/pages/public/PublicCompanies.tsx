@@ -307,7 +307,7 @@ const PublicCompanies = () => {
               Directorio de Empresas
             </Badge>
             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent mb-4">
-              Nuestras Empresas
+              Empresas
             </h1>
             <p className="text-lg text-muted-foreground">
               Conoce las empresas que forman parte de nuestra comunidad de innovación y tecnología
