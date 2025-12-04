@@ -59,9 +59,10 @@ const PublicCompanies = () => {
         sort: 'name:asc',
       });
 
-      console.log('Companies loaded:', result.data);
-      if (result.success) {
-        setCompanies(result.data || []);
+      console.log('Companies API result:', result);
+      if (result.success && result.data) {
+        console.log('Companies data structure:', JSON.stringify(result.data[0], null, 2));
+        setCompanies(result.data);
       }
     } catch (error) {
       console.error('Error loading companies:', error);
@@ -122,11 +123,7 @@ const PublicCompanies = () => {
 
     if (viewMode === 'list') {
       return (
-        <motion.div
-          variants={itemVariants}
-          layout
-          className="group"
-        >
+        <div className="group animate-fade-in">
           <Card className="overflow-hidden hover:shadow-xl transition-all duration-500 border-border/50 hover:border-primary/30 bg-card/80 backdrop-blur-sm">
             <CardContent className="p-4 flex items-center gap-6">
               <div className="relative h-20 w-20 flex-shrink-0 rounded-xl overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
@@ -165,24 +162,16 @@ const PublicCompanies = () => {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       );
     }
 
     return (
-      <motion.div
-        variants={itemVariants}
-        layout
-        className="group"
-      >
+      <div className="group animate-fade-in">
         <Card className="overflow-hidden hover:shadow-2xl transition-all duration-500 border-border/50 hover:border-primary/30 bg-card/80 backdrop-blur-sm h-full">
           <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
             <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent z-10" />
-            <motion.div 
-              className="absolute inset-0 flex items-center justify-center"
-              whileHover={{ scale: 1.1 }}
-              transition={{ type: 'spring', stiffness: 200 }}
-            >
+            <div className="absolute inset-0 flex items-center justify-center hover:scale-110 transition-transform duration-500">
               {logoUrl ? (
                 <img
                   src={logoUrl}
@@ -195,7 +184,7 @@ const PublicCompanies = () => {
                   <Building2 className="h-12 w-12 text-primary/60" />
                 </div>
               )}
-            </motion.div>
+            </div>
             
             {/* Animated background decoration */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
@@ -203,12 +192,9 @@ const PublicCompanies = () => {
           </div>
           
           <CardContent className="p-5 relative">
-            <motion.h3 
-              className="font-bold text-xl text-foreground group-hover:text-primary transition-colors text-center"
-              layoutId={`title-${company.id}`}
-            >
+            <h3 className="font-bold text-xl text-foreground group-hover:text-primary transition-colors text-center">
               {name}
-            </motion.h3>
+            </h3>
             
             {description && (
               <p className="text-sm text-muted-foreground text-center mt-2 line-clamp-3">
@@ -238,7 +224,7 @@ const PublicCompanies = () => {
             </div>
           </CardContent>
         </Card>
-      </motion.div>
+      </div>
     );
   };
 
@@ -385,10 +371,7 @@ const PublicCompanies = () => {
             </p>
           </motion.div>
         ) : (
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
+          <div
             className={
               viewMode === 'list'
                 ? 'space-y-4'
@@ -397,12 +380,10 @@ const PublicCompanies = () => {
                 : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
             }
           >
-            <AnimatePresence mode="popLayout">
-              {filteredCompanies.map((company, index) => (
-                <CompanyCard key={company.id} company={company} index={index} />
-              ))}
-            </AnimatePresence>
-          </motion.div>
+            {filteredCompanies.map((company, index) => (
+              <CompanyCard key={company.documentId || company.id || index} company={company} index={index} />
+            ))}
+          </div>
         )}
       </section>
     </div>
