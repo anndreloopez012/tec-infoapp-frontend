@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Building2, Search, Grid3X3, List, LayoutGrid, Filter, X, Mail, Phone, MapPin, Globe } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Building2, Search, Grid3X3, List, LayoutGrid, X, Mail, Phone, MapPin, Navigation } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { publicCompanyService } from '@/services/publicApiService';
 import { API_CONFIG } from '@/config/api.js';
 
@@ -41,6 +42,8 @@ const PublicCompanies = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   useEffect(() => {
     loadCompanies();
@@ -95,22 +98,29 @@ const PublicCompanies = () => {
     return url.startsWith('http') ? url : `${API_CONFIG.BASE_URL}${url}`;
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.08 }
-    }
+  // Abrir detalle de empresa
+  const openCompanyDetail = (company: Company) => {
+    setSelectedCompany(company);
+    setDetailOpen(true);
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20, scale: 0.95 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: { type: 'spring' as const, stiffness: 100, damping: 15 }
-    }
+  // Abrir Google Maps con la dirección
+  const openMaps = (address: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const encodedAddress = encodeURIComponent(address);
+    window.open(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`, '_blank');
+  };
+
+  // Abrir email
+  const openEmail = (email: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.location.href = `mailto:${email}`;
+  };
+
+  // Abrir teléfono
+  const openPhone = (phone: string | number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.location.href = `tel:${phone}`;
   };
 
   const CompanyCard = ({ company, index }: { company: Company; index: number }) => {
@@ -123,7 +133,10 @@ const PublicCompanies = () => {
 
     if (viewMode === 'list') {
       return (
-        <div className="group animate-fade-in">
+        <div 
+          className="group animate-fade-in cursor-pointer"
+          onClick={() => openCompanyDetail(company)}
+        >
           <Card className="overflow-hidden hover:shadow-xl transition-all duration-500 border-border/50 hover:border-primary/30 bg-card/80 backdrop-blur-sm">
             <CardContent className="p-4 flex items-center gap-6">
               <div className="relative h-20 w-20 flex-shrink-0 rounded-xl overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
@@ -149,14 +162,20 @@ const PublicCompanies = () => {
                 )}
                 <div className="flex flex-wrap gap-3 mt-2">
                   {acronym && (
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <button 
+                      onClick={(e) => openEmail(acronym, e)}
+                      className="text-xs text-muted-foreground flex items-center gap-1 hover:text-primary transition-colors"
+                    >
                       <Mail className="h-3 w-3" /> {acronym}
-                    </span>
+                    </button>
                   )}
                   {phone && (
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <button 
+                      onClick={(e) => openPhone(phone, e)}
+                      className="text-xs text-muted-foreground flex items-center gap-1 hover:text-primary transition-colors"
+                    >
                       <Phone className="h-3 w-3" /> {phone}
-                    </span>
+                    </button>
                   )}
                 </div>
               </div>
@@ -167,7 +186,10 @@ const PublicCompanies = () => {
     }
 
     return (
-      <div className="group animate-fade-in">
+      <div 
+        className="group animate-fade-in cursor-pointer"
+        onClick={() => openCompanyDetail(company)}
+      >
         <Card className="overflow-hidden hover:shadow-2xl transition-all duration-500 border-border/50 hover:border-primary/30 bg-card/80 backdrop-blur-sm h-full">
           <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
             <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent z-10" />
@@ -204,22 +226,31 @@ const PublicCompanies = () => {
             
             <div className="flex flex-col gap-2 mt-4">
               {acronym && (
-                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <button 
+                  onClick={(e) => openEmail(acronym, e)}
+                  className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
                   <Mail className="h-4 w-4 text-primary/60" />
                   <span className="truncate">{acronym}</span>
-                </div>
+                </button>
               )}
               {phone && (
-                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <button 
+                  onClick={(e) => openPhone(phone, e)}
+                  className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
                   <Phone className="h-4 w-4 text-primary/60" />
                   <span>{phone}</span>
-                </div>
+                </button>
               )}
               {address && (
-                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <button 
+                  onClick={(e) => openMaps(address, e)}
+                  className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
                   <MapPin className="h-4 w-4 text-primary/60" />
                   <span className="truncate">{address}</span>
-                </div>
+                </button>
               )}
             </div>
           </CardContent>
@@ -386,6 +417,92 @@ const PublicCompanies = () => {
           </div>
         )}
       </section>
+
+      {/* Company Detail Dialog */}
+      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+        <DialogContent className="max-w-lg">
+          {selectedCompany && (() => {
+            const logoUrl = getLogoUrl(selectedCompany);
+            const name = getAttr(selectedCompany, 'name') || 'Sin nombre';
+            const description = getAttr(selectedCompany, 'description');
+            const acronym = getAttr(selectedCompany, 'acronym');
+            const phone = getAttr(selectedCompany, 'phone');
+            const address = getAttr(selectedCompany, 'address');
+
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="text-center text-2xl">{name}</DialogTitle>
+                </DialogHeader>
+                
+                <div className="flex flex-col items-center gap-6">
+                  {/* Logo grande */}
+                  <div className="relative w-48 h-48 rounded-2xl overflow-hidden bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 flex items-center justify-center shadow-xl">
+                    {logoUrl ? (
+                      <img
+                        src={logoUrl}
+                        alt={name}
+                        className="max-w-full max-h-full object-contain p-4"
+                      />
+                    ) : (
+                      <Building2 className="h-24 w-24 text-primary/40" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent" />
+                  </div>
+
+                  {/* Nombre grande */}
+                  <h2 className="text-3xl font-bold text-center bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                    {name}
+                  </h2>
+
+                  {/* Descripción */}
+                  {description && (
+                    <p className="text-muted-foreground text-center max-w-md">
+                      {description}
+                    </p>
+                  )}
+
+                  {/* Botones de contacto */}
+                  <div className="flex flex-col gap-3 w-full max-w-xs">
+                    {acronym && (
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start gap-3 h-12"
+                        onClick={(e) => openEmail(acronym, e)}
+                      >
+                        <Mail className="h-5 w-5 text-primary" />
+                        <span className="truncate">{acronym}</span>
+                      </Button>
+                    )}
+                    
+                    {phone && (
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start gap-3 h-12"
+                        onClick={(e) => openPhone(phone, e)}
+                      >
+                        <Phone className="h-5 w-5 text-primary" />
+                        <span>{phone}</span>
+                      </Button>
+                    )}
+                    
+                    {address && (
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start gap-3 h-12"
+                        onClick={(e) => openMaps(address, e)}
+                      >
+                        <Navigation className="h-5 w-5 text-primary" />
+                        <span className="truncate">{address}</span>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
