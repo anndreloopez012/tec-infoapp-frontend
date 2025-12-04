@@ -23,8 +23,7 @@ import {
   Linkedin,
   Youtube,
   Search,
-  Hash,
-  FileText
+  Hash
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -47,7 +46,6 @@ const globalConfigSchema = z.object({
   contactEmail: z.string().email('Email inválido').optional().or(z.literal('')),
   contactPhone: z.string().optional(),
   address: z.string().optional(),
-  contentMenuMode: z.enum(['global', 'categories']).optional(),
   colors: z.object({
     primaryColor: z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, 'Color primario inválido'),
     secondaryColor: z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, 'Color secundario inválido'),
@@ -87,7 +85,6 @@ const GlobalSettings = () => {
       contactEmail: '',
       contactPhone: '',
       address: '',
-      contentMenuMode: 'global',
       colors: {
         primaryColor: '#2881E7',
         secondaryColor: '#36D2F1',
@@ -131,7 +128,6 @@ const GlobalSettings = () => {
           contactEmail: result.data.contactEmail || '',
           contactPhone: result.data.contactPhone || '',
           address: result.data.address || '',
-          contentMenuMode: result.data.contentMenuMode || 'global',
           colors: {
             primaryColor: result.data.colors?.primaryColor || '#2881E7',
             secondaryColor: result.data.colors?.secondaryColor || '#36D2F1',
@@ -178,7 +174,6 @@ const GlobalSettings = () => {
         contactEmail: data.contactEmail || '',
         contactPhone: data.contactPhone || '',
         address: data.address || '',
-        contentMenuMode: data.contentMenuMode || 'global',
         ...(data.colors && { colors: data.colors }),
         ...(data.seo && { seo: data.seo }),
         ...(data.socials && { socials: data.socials }),
@@ -428,44 +423,6 @@ const GlobalSettings = () => {
                   </CardContent>
                 </Card>
 
-                {/* Content Menu Mode */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <FileText className="w-5 h-5" />
-                      Modo de Menú de Contenido
-                    </CardTitle>
-                    <CardDescription>
-                      Configura cómo se muestra el contenido en el menú lateral
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <FormField
-                      control={form.control}
-                      name="contentMenuMode"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Modo de visualización</FormLabel>
-                          <FormControl>
-                            <select
-                              className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                              value={field.value}
-                              onChange={field.onChange}
-                            >
-                              <option value="global">Contenido Global (una sola opción en menú)</option>
-                              <option value="categories">Por Categorías (mostrar categorías en menú)</option>
-                            </select>
-                          </FormControl>
-                          <FormDescription>
-                            "Contenido Global" muestra un solo botón que lleva a todo el contenido. 
-                            "Por Categorías" muestra las categorías directamente en el menú.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </CardContent>
-                </Card>
               </TabsContent>
 
               {/* Imágenes */}
