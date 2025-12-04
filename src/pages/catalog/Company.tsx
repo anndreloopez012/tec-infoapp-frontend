@@ -16,9 +16,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { Building2 } from 'lucide-react';
+import { API_CONFIG } from '@/config/api.js';
+import axios from 'axios';
 
 export const Company: React.FC = () => {
   const { user } = useAuth();
@@ -26,6 +27,7 @@ export const Company: React.FC = () => {
   
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [formLoading, setFormLoading] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
     pageSize: 10,
@@ -53,7 +55,8 @@ export const Company: React.FC = () => {
         page: pagination.page,
         pageSize: pagination.pageSize,
         search: searchQuery,
-        searchFields: ['name', 'description', 'email', 'phone'],
+        searchFields: ['name', 'acronym', 'description', 'phone'],
+        populate: 'logo',
       };
 
       if (showOnlyOwn && (user?.documentId || user?.id)) {
@@ -96,19 +99,39 @@ export const Company: React.FC = () => {
         cell: ({ row }) => <span className="font-mono text-sm">{row.original.id}</span>,
       },
       {
+        accessorKey: 'logo',
+        header: 'Logo',
+        cell: ({ row }) => {
+          const logo = row.original.attributes?.logo;
+          const logoUrl = logo?.[0]?.url || logo?.url;
+          if (logoUrl) {
+            const fullUrl = logoUrl.startsWith('http') ? logoUrl : `${API_CONFIG.BASE_URL}${logoUrl}`;
+            return (
+              <img 
+                src={fullUrl} 
+                alt="Logo" 
+                className="h-10 w-10 object-cover rounded-md border"
+              />
+            );
+          }
+          return (
+            <div className="h-10 w-10 bg-muted rounded-md flex items-center justify-center">
+              <Building2 className="h-5 w-5 text-muted-foreground" />
+            </div>
+          );
+        },
+      },
+      {
         accessorKey: 'attributes.name',
         header: 'Nombre',
         cell: ({ row }) => (
-          <div className="flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">{row.original.attributes?.name || 'N/A'}</span>
-          </div>
+          <span className="font-medium">{row.original.attributes?.name || 'N/A'}</span>
         ),
       },
       {
-        accessorKey: 'attributes.email',
+        accessorKey: 'attributes.acronym',
         header: 'Email',
-        cell: ({ row }) => row.original.attributes?.email || 'N/A',
+        cell: ({ row }) => row.original.attributes?.acronym || 'N/A',
       },
       {
         accessorKey: 'attributes.phone',
@@ -139,7 +162,7 @@ export const Company: React.FC = () => {
     []
   );
 
-  // Campos del formulario
+  // Campos del formulario - según schema de Strapi
   const formFields = [
     {
       name: 'name',
@@ -149,18 +172,18 @@ export const Company: React.FC = () => {
       placeholder: 'Nombre de la empresa',
     },
     {
-      name: 'email',
+      name: 'acronym',
       label: 'Email',
       type: 'email' as const,
-      required: false,
+      required: true,
       placeholder: 'email@empresa.com',
     },
     {
       name: 'phone',
       label: 'Teléfono',
-      type: 'text' as const,
+      type: 'number' as const,
       required: false,
-      placeholder: '+52 123 456 7890',
+      placeholder: '1234567890',
     },
     {
       name: 'address',
@@ -177,11 +200,12 @@ export const Company: React.FC = () => {
       placeholder: 'Descripción de la empresa',
     },
     {
-      name: 'website',
-      label: 'Sitio Web',
-      type: 'text' as const,
+      name: 'logo',
+      label: 'Logo',
+      type: 'image' as const,
       required: false,
-      placeholder: 'https://www.empresa.com',
+      multiple: true,
+      description: 'Sube el logo de la empresa',
     },
   ];
 
@@ -201,13 +225,65 @@ export const Company: React.FC = () => {
     setDeleteDialogOpen(true);
   };
 
-  const handleFormSubmit = async (formData: any) => {
+  // Subir imagen a Strapi
+  const uploadImage = async (file: File): Promise<number | null> => {
     try {
+      const formData = new FormData();
+      formData.append('files', file);
+      
+      const token = localStorage.getItem(API_CONFIG.LOCAL_STORAGE_KEYS.TOKEN);
+      const response = await axios.post(
+        `${API_CONFIG.BASE_URL}/api/upload`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      if (response.data && response.data[0]) {
+        return response.data[0].id;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      return null;
+    }
+  };
+
+  const handleFormSubmit = async (formData: any, files?: { [key: string]: File[] }) => {
+    setFormLoading(true);
+    try {
+      // Subir imágenes si hay
+      let logoIds: number[] = [];
+      if (files?.logo && files.logo.length > 0) {
+        for (const file of files.logo) {
+          const id = await uploadImage(file);
+          if (id) logoIds.push(id);
+        }
+      }
+
+      // Preparar datos
+      const dataToSend: any = {
+        name: formData.name,
+        acronym: formData.acronym,
+        description: formData.description || null,
+        phone: formData.phone ? parseInt(formData.phone) : null,
+        address: formData.address || null,
+      };
+
+      // Solo agregar logo si hay nuevas imágenes
+      if (logoIds.length > 0) {
+        dataToSend.logo = logoIds;
+      }
+
       let response;
       if (editingItem) {
-        response = await companyService.update(editingItem.documentId || editingItem.id, formData);
+        response = await companyService.update(editingItem.documentId || editingItem.id, dataToSend);
       } else {
-        response = await companyService.create(formData);
+        response = await companyService.create(dataToSend);
       }
 
       if (response.success) {
@@ -219,7 +295,10 @@ export const Company: React.FC = () => {
         toast.error(response.error);
       }
     } catch (error) {
+      console.error('Error:', error);
       toast.error('Error al guardar');
+    } finally {
+      setFormLoading(false);
     }
   };
 
@@ -273,6 +352,7 @@ export const Company: React.FC = () => {
         description={editingItem ? 'Modifica los datos de la empresa' : 'Completa el formulario para registrar una nueva empresa'}
         fields={formFields}
         defaultValues={editingItem ? editingItem.attributes : {}}
+        isLoading={formLoading}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
