@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Building2, Search, Grid3X3, List, LayoutGrid, X, Mail, Phone, MapPin, Navigation, Share2 } from 'lucide-react';
+import { Building2, Search, Grid3X3, List, LayoutGrid, X, Mail, Phone, MapPin, Navigation, Share2, MessageCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -121,6 +121,13 @@ const PublicCompanies = () => {
   const openPhone = (phone: string | number, e: React.MouseEvent) => {
     e.stopPropagation();
     window.location.href = `tel:${phone}`;
+  };
+
+  // Abrir WhatsApp
+  const openWhatsApp = (phone: string | number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const cleanPhone = String(phone).replace(/\D/g, '');
+    window.open(`https://wa.me/${cleanPhone}`, '_blank');
   };
 
   const CompanyCard = ({ company, index }: { company: Company; index: number }) => {
@@ -509,6 +516,17 @@ const PublicCompanies = () => {
                       >
                         <Phone className="h-5 w-5 text-primary" />
                         <span>{phone}</span>
+                      </Button>
+                    )}
+
+                    {phone && (
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start gap-3 h-12 border-green-500/50 hover:bg-green-500/10"
+                        onClick={(e) => openWhatsApp(phone, e)}
+                      >
+                        <MessageCircle className="h-5 w-5 text-green-500" />
+                        <span>WhatsApp</span>
                       </Button>
                     )}
                     
