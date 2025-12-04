@@ -98,7 +98,7 @@ const ModernSidebar = () => {
 
   // WhatsApp handler
   const handleWhatsAppClick = () => {
-    const phone = contact?.contactPhone?.replace(/\D/g, '') || '';
+    const phone = contact?.phone?.replace(/\D/g, '') || '';
     const message = encodeURIComponent('¡Hola! Me gustaría recibir atención al cliente. ¿Podrían ayudarme?');
     const whatsappUrl = `https://wa.me/${phone}?text=${message}`;
     window.open(whatsappUrl, '_blank');
@@ -406,7 +406,7 @@ const ModernSidebar = () => {
           </h3>
 
           {/* WhatsApp Button - justo después de Dashboard */}
-          {contact?.contactPhone && (
+          {contact?.phone && (
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
