@@ -255,12 +255,16 @@ export const Company: React.FC = () => {
 
   const handleFormSubmit = async (formData: any, files?: { [key: string]: File[] }) => {
     setFormLoading(true);
+    console.log('handleFormSubmit called with:', { formData, files });
     try {
       // Subir imágenes si hay
       let logoIds: number[] = [];
       if (files?.logo && files.logo.length > 0) {
+        console.log('Uploading logo files:', files.logo);
         for (const file of files.logo) {
+          console.log('Uploading file:', file.name);
           const id = await uploadImage(file);
+          console.log('Upload result id:', id);
           if (id) logoIds.push(id);
         }
       }

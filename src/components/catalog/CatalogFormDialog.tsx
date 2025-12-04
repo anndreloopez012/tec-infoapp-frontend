@@ -173,11 +173,12 @@ export const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
 
   const handleSubmit = async (data: any) => {
     try {
-      await onSubmit(data, imageFiles);
-      form.reset();
-      setImageFiles({});
-      setImagePreviews({});
-      onOpenChange(false);
+      // Capturar los archivos antes de resetear
+      const filesToUpload = { ...imageFiles };
+      console.log('Files to upload:', filesToUpload);
+      await onSubmit(data, filesToUpload);
+      // Solo resetear después de que onSubmit complete exitosamente
+      // El componente padre maneja el cierre del dialog
     } catch (error) {
       console.error('Error en formulario:', error);
     }
