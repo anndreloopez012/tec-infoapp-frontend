@@ -12,17 +12,28 @@ import { API_CONFIG } from '@/config/api.js';
 interface Company {
   id: number;
   documentId: string;
-  attributes: {
-    name: string;
+  name?: string;
+  acronym?: string;
+  description?: string;
+  phone?: number;
+  address?: string;
+  logo?: any;
+  attributes?: {
+    name?: string;
     acronym?: string;
     description?: string;
     phone?: number;
     address?: string;
-    logo?: any[];
+    logo?: any;
   };
 }
 
 type ViewMode = 'grid' | 'list' | 'masonry';
+
+// Helper para obtener atributos de forma segura (maneja ambos formatos de API)
+const getAttr = (company: Company, key: string): any => {
+  return company?.attributes?.[key as keyof typeof company.attributes] ?? (company as any)?.[key];
+};
 
 const PublicCompanies = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -48,8 +59,9 @@ const PublicCompanies = () => {
         sort: 'name:asc',
       });
 
+      console.log('Companies loaded:', result.data);
       if (result.success) {
-        setCompanies(result.data);
+        setCompanies(result.data || []);
       }
     } catch (error) {
       console.error('Error loading companies:', error);
@@ -66,15 +78,15 @@ const PublicCompanies = () => {
 
     const query = searchQuery.toLowerCase();
     const filtered = companies.filter(company => {
-      const name = company.attributes?.name?.toLowerCase() || '';
-      const description = company.attributes?.description?.toLowerCase() || '';
+      const name = (getAttr(company, 'name') || '').toLowerCase();
+      const description = (getAttr(company, 'description') || '').toLowerCase();
       return name.includes(query) || description.includes(query);
     });
     setFilteredCompanies(filtered);
   };
 
   const getLogoUrl = (company: Company) => {
-    const logo = company.attributes?.logo;
+    const logo = getAttr(company, 'logo');
     if (!logo) return null;
     const logoData = Array.isArray(logo) ? logo[0] : logo;
     const url = logoData?.url || logoData?.formats?.thumbnail?.url;
@@ -102,7 +114,11 @@ const PublicCompanies = () => {
 
   const CompanyCard = ({ company, index }: { company: Company; index: number }) => {
     const logoUrl = getLogoUrl(company);
-    const attrs = company.attributes;
+    const name = getAttr(company, 'name') || 'Sin nombre';
+    const description = getAttr(company, 'description');
+    const acronym = getAttr(company, 'acronym');
+    const phone = getAttr(company, 'phone');
+    const address = getAttr(company, 'address');
 
     if (viewMode === 'list') {
       return (
@@ -117,7 +133,7 @@ const PublicCompanies = () => {
                 {logoUrl ? (
                   <img
                     src={logoUrl}
-                    alt={attrs.name}
+                    alt={name}
                     className="h-full w-full object-contain p-2"
                     loading="lazy"
                   />
@@ -127,22 +143,22 @@ const PublicCompanies = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors truncate">
-                  {attrs.name}
+                  {name}
                 </h3>
-                {attrs.description && (
+                {description && (
                   <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                    {attrs.description}
+                    {description}
                   </p>
                 )}
                 <div className="flex flex-wrap gap-3 mt-2">
-                  {attrs.acronym && (
+                  {acronym && (
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Mail className="h-3 w-3" /> {attrs.acronym}
+                      <Mail className="h-3 w-3" /> {acronym}
                     </span>
                   )}
-                  {attrs.phone && (
+                  {phone && (
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Phone className="h-3 w-3" /> {attrs.phone}
+                      <Phone className="h-3 w-3" /> {phone}
                     </span>
                   )}
                 </div>
@@ -170,7 +186,7 @@ const PublicCompanies = () => {
               {logoUrl ? (
                 <img
                   src={logoUrl}
-                  alt={attrs.name}
+                  alt={name}
                   className="max-h-32 max-w-[80%] object-contain drop-shadow-xl"
                   loading="lazy"
                 />
@@ -191,32 +207,32 @@ const PublicCompanies = () => {
               className="font-bold text-xl text-foreground group-hover:text-primary transition-colors text-center"
               layoutId={`title-${company.id}`}
             >
-              {attrs.name}
+              {name}
             </motion.h3>
             
-            {attrs.description && (
+            {description && (
               <p className="text-sm text-muted-foreground text-center mt-2 line-clamp-3">
-                {attrs.description}
+                {description}
               </p>
             )}
             
             <div className="flex flex-col gap-2 mt-4">
-              {attrs.acronym && (
+              {acronym && (
                 <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                   <Mail className="h-4 w-4 text-primary/60" />
-                  <span className="truncate">{attrs.acronym}</span>
+                  <span className="truncate">{acronym}</span>
                 </div>
               )}
-              {attrs.phone && (
+              {phone && (
                 <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                   <Phone className="h-4 w-4 text-primary/60" />
-                  <span>{attrs.phone}</span>
+                  <span>{phone}</span>
                 </div>
               )}
-              {attrs.address && (
+              {address && (
                 <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                   <MapPin className="h-4 w-4 text-primary/60" />
-                  <span className="truncate">{attrs.address}</span>
+                  <span className="truncate">{address}</span>
                 </div>
               )}
             </div>
