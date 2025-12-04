@@ -35,6 +35,7 @@ import PublicEvents from '@/pages/public/PublicEvents';
 import PublicEventDetail from '@/pages/public/PublicEventDetail';
 import CategoryContent from '@/pages/public/CategoryContent';
 import PublicContentDetail from '@/pages/public/PublicContentDetail';
+import PublicCompanies from '@/pages/public/PublicCompanies';
 
 // Admin Pages
 import RoleManagement from '@/pages/admin/RoleManagement';
@@ -90,6 +91,7 @@ const AppRoutes = () => {
         <Route path="/public/events" element={<PublicEvents />} />
         <Route path="/public/events/:eventId" element={<PublicEventDetail />} />
         <Route path="/public/category/:categoryId" element={<CategoryContent />} />
+        <Route path="/public/companies" element={<PublicCompanies />} />
         <Route path="/public/content/:contentId" element={<PublicContentDetail />} />
       </Route>
         

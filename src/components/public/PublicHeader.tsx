@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Moon, Sun, LogIn, Menu, X, Calendar, Users, BookOpen, Search } from 'lucide-react';
+import { Moon, Sun, LogIn, Menu, X, Calendar, Users, BookOpen, Search, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
 import { publicCategoryService } from '@/services/publicApiService';
@@ -76,6 +76,15 @@ export const PublicHeader = () => {
           >
             <Calendar className="h-4 w-4 md:mr-2" />
             <span className="hidden lg:inline">Calendario</span>
+          </Button>
+          <Button
+            variant={isActive('/public/companies') ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => navigate('/public/companies')}
+            className="rounded-full px-3 hover-scale whitespace-nowrap flex-shrink-0"
+          >
+            <Building2 className="h-4 w-4 md:mr-2" />
+            <span className="hidden lg:inline">Empresas</span>
           </Button>
           <Button
             variant={isActive('/public/events') ? 'default' : 'ghost'}
@@ -161,7 +170,20 @@ export const PublicHeader = () => {
               setMobileMenuOpen(false);
             }}
           >
+            <Calendar className="h-4 w-4 mr-2" />
             Calendario
+          </Button>
+          <Button
+            variant={isActive('/public/companies') ? 'default' : 'ghost'}
+            size="sm"
+            className="w-full justify-start"
+            onClick={() => {
+              navigate('/public/companies');
+              setMobileMenuOpen(false);
+            }}
+          >
+            <Building2 className="h-4 w-4 mr-2" />
+            Empresas
           </Button>
           <Button
             variant={isActive('/public/events') ? 'default' : 'ghost'}
@@ -172,6 +194,7 @@ export const PublicHeader = () => {
               setMobileMenuOpen(false);
             }}
           >
+            <Users className="h-4 w-4 mr-2" />
             Eventos
           </Button>
           
