@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Building2, Search, Grid3X3, List, LayoutGrid, X, Mail, Phone, MapPin, Navigation } from 'lucide-react';
+import { Building2, Search, Grid3X3, List, LayoutGrid, X, Mail, Phone, MapPin, Navigation, Share2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -429,15 +429,41 @@ const PublicCompanies = () => {
             const phone = getAttr(selectedCompany, 'phone');
             const address = getAttr(selectedCompany, 'address');
 
+            // Función para compartir empresa
+            const shareCompany = async () => {
+              const shareText = [
+                `🏢 ${name}`,
+                description ? `\n📝 ${description}` : '',
+                acronym ? `\n📧 ${acronym}` : '',
+                phone ? `\n📞 ${phone}` : '',
+                address ? `\n📍 ${address}` : '',
+              ].filter(Boolean).join('');
+
+              if (navigator.share) {
+                try {
+                  await navigator.share({
+                    title: name,
+                    text: shareText,
+                  });
+                } catch (err) {
+                  // User cancelled or error
+                }
+              } else {
+                // Fallback: copy to clipboard
+                await navigator.clipboard.writeText(shareText);
+                alert('Información copiada al portapapeles');
+              }
+            };
+
             return (
               <>
-                <DialogHeader>
-                  <DialogTitle className="text-center text-2xl">{name}</DialogTitle>
+                <DialogHeader className="sr-only">
+                  <DialogTitle>{name}</DialogTitle>
                 </DialogHeader>
                 
-                <div className="flex flex-col items-center gap-6">
+                <div className="flex flex-col items-center gap-6 pt-4">
                   {/* Logo grande */}
-                  <div className="relative w-48 h-48 rounded-2xl overflow-hidden bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 flex items-center justify-center shadow-xl">
+                  <div className="relative w-64 h-64 rounded-2xl overflow-hidden bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 flex items-center justify-center shadow-xl">
                     {logoUrl ? (
                       <img
                         src={logoUrl}
@@ -445,7 +471,7 @@ const PublicCompanies = () => {
                         className="max-w-full max-h-full object-contain p-4"
                       />
                     ) : (
-                      <Building2 className="h-24 w-24 text-primary/40" />
+                      <Building2 className="h-32 w-32 text-primary/40" />
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent" />
                   </div>
@@ -496,6 +522,16 @@ const PublicCompanies = () => {
                         <span className="truncate">{address}</span>
                       </Button>
                     )}
+
+                    {/* Botón compartir */}
+                    <Button
+                      variant="default"
+                      className="w-full gap-3 h-12 mt-2"
+                      onClick={shareCompany}
+                    >
+                      <Share2 className="h-5 w-5" />
+                      <span>Compartir empresa</span>
+                    </Button>
                   </div>
                 </div>
               </>
