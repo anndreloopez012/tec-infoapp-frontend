@@ -231,7 +231,7 @@ export const Company: React.FC = () => {
       const formData = new FormData();
       formData.append('files', file);
       
-      const token = localStorage.getItem(API_CONFIG.LOCAL_STORAGE_KEYS.TOKEN);
+      const token = localStorage.getItem(API_CONFIG.STORAGE_KEYS.AUTH_TOKEN) || API_CONFIG.AUTH_TOKEN;
       const response = await axios.post(
         `${API_CONFIG.BASE_URL}/api/upload`,
         formData,
