@@ -56,7 +56,7 @@ const ContentInfoForm = () => {
     title: '',
     slug: '',
     content: '',
-    active: true,
+    active: false, // Por defecto false - requiere aprobación
     status_content: 'draft',
   });
   const [categories, setCategories] = useState<any[]>([]);
@@ -90,7 +90,7 @@ const ContentInfoForm = () => {
         title: '',
         slug: '',
         content: '',
-        active: true,
+        active: false, // Por defecto false - requiere aprobación
         status_content: 'draft',
       });
       setExistingAttachments([]);
@@ -198,7 +198,8 @@ const ContentInfoForm = () => {
         title: formData.title,
         slug: formData.slug || formData.title.toLowerCase().replace(/\s+/g, '-'),
         content: formData.content || null,
-        active: formData.active ?? true,
+        // Para nuevos registros siempre active: false, para ediciones mantener el valor actual
+        active: editId ? (formData.active ?? false) : false,
         status_content: formData.status_content || 'draft',
         publish_date: formData.publish_date || null,
       };
@@ -390,14 +391,6 @@ const ContentInfoForm = () => {
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="active"
-                  checked={formData.active ?? true}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, active: checked }))}
-                />
-                <Label htmlFor="active">Activo</Label>
-              </div>
 
               <div className="space-y-4">
                 <div className="space-y-2">

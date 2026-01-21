@@ -5,6 +5,19 @@ import CatalogTable from '@/components/catalog/CatalogTable';
 import { contentInfoService } from '@/services/catalogServices';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { CheckCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const ContentInfo = () => {
   const navigate = useNavigate();
@@ -17,15 +30,65 @@ const ContentInfo = () => {
     total: 0,
   });
   const [searchQuery, setSearchQuery] = useState('');
+  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+  const [itemToApprove, setItemToApprove] = useState<any>(null);
+  const [approving, setApproving] = useState(false);
   
   const { toast } = useToast();
-  const { hasPermission } = useAuth();
+  const { hasPermission, user } = useAuth();
 
   // Permisos
   const canCreate = hasPermission('api::content-info.content-info.create');
   const canEdit = hasPermission('api::content-info.content-info.update');
   const canDelete = hasPermission('api::content-info.content-info.delete');
 
+  // Verificar si el usuario tiene rol super
+  const isSuperUser = user?.role?.type === 'super' || 
+                      user?.role?.type === 'super_admin' || 
+                      user?.role?.name === 'super' || 
+                      user?.role?.name === 'super_admin' ||
+                      user?.role?.name === 'Super Admin';
+
+  const handleApproveClick = (item: any) => {
+    setItemToApprove(item);
+    setApproveDialogOpen(true);
+  };
+
+  const handleApproveConfirm = async () => {
+    if (!itemToApprove) return;
+    
+    setApproving(true);
+    try {
+      const result = await contentInfoService.update(itemToApprove.documentId, {
+        active: true
+      });
+
+      if (result.success) {
+        toast({
+          title: "Contenido Aprobado",
+          description: "El contenido ha sido aprobado y activado correctamente",
+        });
+        loadData(pagination.page, pagination.pageSize, searchQuery);
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Error al aprobar el contenido",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error approving content:', error);
+      toast({
+        title: "Error",
+        description: "Error al aprobar el contenido",
+        variant: "destructive",
+      });
+    } finally {
+      setApproving(false);
+      setApproveDialogOpen(false);
+      setItemToApprove(null);
+    }
+  };
 
   const columns: ColumnDef<any>[] = [
     {
@@ -57,7 +120,30 @@ const ContentInfo = () => {
       header: 'Activo',
       cell: ({ row }) => {
         const active = row.getValue('active');
-        return active ? 'Sí' : 'No';
+        const item = row.original;
+        
+        return (
+          <div className="flex items-center gap-2">
+            <Badge variant={active ? "default" : "secondary"}>
+              {active ? 'Sí' : 'No'}
+            </Badge>
+            {!active && isSuperUser && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleApproveClick(item);
+                }}
+                className="h-7 px-2 text-xs gap-1 text-green-600 border-green-600 hover:bg-green-50 hover:text-green-700"
+                title="Aprobar contenido"
+              >
+                <CheckCircle className="h-3 w-3" />
+                Aprobar
+              </Button>
+            )}
+          </div>
+        );
       },
     },
     {
@@ -189,6 +275,32 @@ const ContentInfo = () => {
         canDelete={canDelete}
       />
 
+      {/* Dialog de confirmación de aprobación */}
+      <AlertDialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Aprobar Contenido</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Está seguro de aprobar este contenido? Una vez aprobado, el contenido estará activo y visible según su estado de publicación.
+              {itemToApprove && (
+                <div className="mt-2 p-2 bg-muted rounded-md">
+                  <strong>Título:</strong> {itemToApprove.title}
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={approving}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleApproveConfirm}
+              disabled={approving}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {approving ? 'Aprobando...' : 'Aprobar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
