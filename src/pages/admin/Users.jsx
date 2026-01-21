@@ -18,7 +18,10 @@ import {
   ChevronsRight,
   ArrowUpDown,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Building2,
+  Check,
+  ChevronsUpDown
 } from 'lucide-react';
 
 import {
@@ -46,11 +49,26 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 import { UserService } from '@/services/userService.js';
 import { RoleService } from '@/services/roleService.js';
 import { UserTypeService } from '@/services/userTypeService.js';
+import { companyService } from '@/services/catalogServices';
 import { useAuth } from '@/context/AuthContext';
 
 const columnHelper = createColumnHelper();
@@ -61,6 +79,7 @@ const Users = () => {
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
   const [userTypes, setUserTypes] = useState([]);
+  const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState('');
   const [sorting, setSorting] = useState([]);
@@ -71,6 +90,7 @@ const Users = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [dialogLoading, setDialogLoading] = useState(false);
+  const [companyPopoverOpen, setCompanyPopoverOpen] = useState(false);
   
   // Form data
   const [formData, setFormData] = useState({
@@ -78,7 +98,8 @@ const Users = () => {
     email: '',
     password: '',
     role: '',
-    type_user: ''
+    type_user: '',
+    company: ''
   });
 
   // Load initial data
@@ -101,14 +122,16 @@ const Users = () => {
     try {
       setLoading(true);
       
-      // Load roles and user types in parallel
-      const [rolesResult, userTypesResult] = await Promise.all([
+      // Load roles, user types and companies in parallel
+      const [rolesResult, userTypesResult, companiesResult] = await Promise.all([
         RoleService.getRoles(),
-        UserTypeService.getUserTypes()
+        UserTypeService.getUserTypes(),
+        companyService.getAll({ pageSize: 1000 })
       ]);
       
       console.log('🔧 Roles result:', rolesResult);
       console.log('🔧 UserTypes result:', userTypesResult);
+      console.log('🔧 Companies result:', companiesResult);
       
       if (rolesResult.success) {
         console.log('🔧 Setting roles:', rolesResult.data);
@@ -118,6 +141,11 @@ const Users = () => {
       if (userTypesResult.success) {
         console.log('🔧 Setting userTypes:', userTypesResult.data);
         setUserTypes(userTypesResult.data);
+      }
+
+      if (companiesResult.data) {
+        console.log('🔧 Setting companies:', companiesResult.data);
+        setCompanies(companiesResult.data);
       }
       
       // Load users after roles and types are loaded
@@ -231,8 +259,10 @@ const Users = () => {
       email: '',
       password: '',
       role: '',
-      type_user: ''
+      type_user: '',
+      company: ''
     });
+    setCompanyPopoverOpen(false);
     setIsCreateOpen(true);
   };
 
@@ -243,8 +273,10 @@ const Users = () => {
       email: user.email || '',
       password: '', // Don't pre-fill password
       role: user.role?.id?.toString() || '',
-      type_user: user.type_user?.id?.toString() || ''
+      type_user: user.type_user?.id?.toString() || '',
+      company: user.company?.id?.toString() || user.company?.documentId || ''
     });
+    setCompanyPopoverOpen(false);
     setIsEditOpen(true);
   };
 
@@ -275,7 +307,8 @@ const Users = () => {
         username: formData.username,
         email: formData.email,
         role: formData.role ? parseInt(formData.role) : null,
-        type_user: formData.type_user ? parseInt(formData.type_user) : null
+        type_user: formData.type_user ? parseInt(formData.type_user) : null,
+        company: formData.company || null
       };
 
       if (formData.password) {
@@ -779,28 +812,31 @@ const Users = () => {
 
       {/* Create User Dialog */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="w-[95vw] max-w-lg sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Crear Nuevo Usuario</DialogTitle>
             <DialogDescription>
               Completa los datos para crear un nuevo usuario en el sistema.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="username" className="text-right">
+          <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
+            {/* Usuario */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+              <Label htmlFor="username" className="sm:text-right font-medium">
                 Usuario
               </Label>
               <Input
                 id="username"
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="col-span-3"
+                className="sm:col-span-3"
                 placeholder="Nombre de usuario"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="email" className="text-right">
+
+            {/* Email */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+              <Label htmlFor="email" className="sm:text-right font-medium">
                 Email
               </Label>
               <Input
@@ -808,12 +844,14 @@ const Users = () => {
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="col-span-3"
+                className="sm:col-span-3"
                 placeholder="correo@ejemplo.com"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="password" className="text-right">
+
+            {/* Contraseña */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+              <Label htmlFor="password" className="sm:text-right font-medium">
                 Contraseña
               </Label>
               <Input
@@ -821,22 +859,24 @@ const Users = () => {
                 type="password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="col-span-3"
+                className="sm:col-span-3"
                 placeholder="Contraseña"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="role" className="text-right">
+
+            {/* Rol */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+              <Label htmlFor="role" className="sm:text-right font-medium">
                 Rol
               </Label>
               <Select 
                 value={formData.role} 
                 onValueChange={(value) => setFormData({ ...formData, role: value })}
               >
-                <SelectTrigger className="col-span-3">
+                <SelectTrigger className="sm:col-span-3">
                   <SelectValue placeholder="Seleccionar rol" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover z-50">
                   {roles.map((role) => (
                     <SelectItem key={role.id} value={role.id.toString()}>
                       {role.name}
@@ -845,18 +885,20 @@ const Users = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="type_user" className="text-right">
+
+            {/* Tipo */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+              <Label htmlFor="type_user" className="sm:text-right font-medium">
                 Tipo
               </Label>
               <Select 
                 value={formData.type_user} 
                 onValueChange={(value) => setFormData({ ...formData, type_user: value })}
               >
-                <SelectTrigger className="col-span-3">
+                <SelectTrigger className="sm:col-span-3">
                   <SelectValue placeholder="Seleccionar tipo" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover z-50">
                   {userTypes.map((type) => (
                     <SelectItem key={type.id} value={type.id.toString()}>
                       {type.Tipo}
@@ -865,13 +907,83 @@ const Users = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Empresa con filtro */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+              <Label htmlFor="company" className="sm:text-right font-medium">
+                Empresa
+              </Label>
+              <Popover open={companyPopoverOpen} onOpenChange={setCompanyPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={companyPopoverOpen}
+                    className="sm:col-span-3 justify-between font-normal"
+                  >
+                    <span className="truncate">
+                      {formData.company
+                        ? companies.find((c) => (c.documentId || c.id?.toString()) === formData.company)?.name || 'Seleccionar empresa'
+                        : 'Seleccionar empresa'}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[300px] p-0 bg-popover z-50" align="start">
+                  <Command>
+                    <CommandInput placeholder="Buscar empresa..." />
+                    <CommandList>
+                      <CommandEmpty>No se encontró empresa.</CommandEmpty>
+                      <CommandGroup>
+                        <CommandItem
+                          value=""
+                          onSelect={() => {
+                            setFormData({ ...formData, company: '' });
+                            setCompanyPopoverOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              !formData.company ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          Sin empresa
+                        </CommandItem>
+                        {companies.map((company) => (
+                          <CommandItem
+                            key={company.documentId || company.id}
+                            value={company.name}
+                            onSelect={() => {
+                              setFormData({ ...formData, company: company.documentId || company.id?.toString() });
+                              setCompanyPopoverOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                formData.company === (company.documentId || company.id?.toString()) ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
+                            {company.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button 
               type="button" 
               variant="outline" 
               onClick={() => setIsCreateOpen(false)}
               disabled={dialogLoading}
+              className="w-full sm:w-auto"
             >
               Cancelar
             </Button>
@@ -879,6 +991,7 @@ const Users = () => {
               type="button" 
               onClick={handleSaveUser}
               disabled={dialogLoading}
+              className="w-full sm:w-auto"
             >
               {dialogLoading ? 'Guardando...' : 'Crear Usuario'}
             </Button>
@@ -888,28 +1001,31 @@ const Users = () => {
 
       {/* Edit User Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="w-[95vw] max-w-lg sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Editar Usuario</DialogTitle>
             <DialogDescription>
               Modifica los datos del usuario seleccionado.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-username" className="text-right">
+          <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
+            {/* Usuario */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+              <Label htmlFor="edit-username" className="sm:text-right font-medium">
                 Usuario
               </Label>
               <Input
                 id="edit-username"
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="col-span-3"
+                className="sm:col-span-3"
                 placeholder="Nombre de usuario"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-email" className="text-right">
+
+            {/* Email */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+              <Label htmlFor="edit-email" className="sm:text-right font-medium">
                 Email
               </Label>
               <Input
@@ -917,12 +1033,14 @@ const Users = () => {
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="col-span-3"
+                className="sm:col-span-3"
                 placeholder="correo@ejemplo.com"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-password" className="text-right">
+
+            {/* Nueva Contraseña */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+              <Label htmlFor="edit-password" className="sm:text-right font-medium">
                 Nueva Contraseña
               </Label>
               <Input
@@ -930,22 +1048,24 @@ const Users = () => {
                 type="password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="col-span-3"
+                className="sm:col-span-3"
                 placeholder="Dejar vacío para mantener actual"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-role" className="text-right">
+
+            {/* Rol */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+              <Label htmlFor="edit-role" className="sm:text-right font-medium">
                 Rol
               </Label>
               <Select 
                 value={formData.role} 
                 onValueChange={(value) => setFormData({ ...formData, role: value })}
               >
-                <SelectTrigger className="col-span-3">
+                <SelectTrigger className="sm:col-span-3">
                   <SelectValue placeholder="Seleccionar rol" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover z-50">
                   {roles.map((role) => (
                     <SelectItem key={role.id} value={role.id.toString()}>
                       {role.name}
@@ -954,18 +1074,20 @@ const Users = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-type_user" className="text-right">
+
+            {/* Tipo */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+              <Label htmlFor="edit-type_user" className="sm:text-right font-medium">
                 Tipo
               </Label>
               <Select 
                 value={formData.type_user} 
                 onValueChange={(value) => setFormData({ ...formData, type_user: value })}
               >
-                <SelectTrigger className="col-span-3">
+                <SelectTrigger className="sm:col-span-3">
                   <SelectValue placeholder="Seleccionar tipo" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover z-50">
                   {userTypes.map((type) => (
                     <SelectItem key={type.id} value={type.id.toString()}>
                       {type.Tipo}
@@ -974,13 +1096,83 @@ const Users = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Empresa con filtro */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+              <Label htmlFor="edit-company" className="sm:text-right font-medium">
+                Empresa
+              </Label>
+              <Popover open={companyPopoverOpen} onOpenChange={setCompanyPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={companyPopoverOpen}
+                    className="sm:col-span-3 justify-between font-normal"
+                  >
+                    <span className="truncate">
+                      {formData.company
+                        ? companies.find((c) => (c.documentId || c.id?.toString()) === formData.company)?.name || 'Seleccionar empresa'
+                        : 'Seleccionar empresa'}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[300px] p-0 bg-popover z-50" align="start">
+                  <Command>
+                    <CommandInput placeholder="Buscar empresa..." />
+                    <CommandList>
+                      <CommandEmpty>No se encontró empresa.</CommandEmpty>
+                      <CommandGroup>
+                        <CommandItem
+                          value=""
+                          onSelect={() => {
+                            setFormData({ ...formData, company: '' });
+                            setCompanyPopoverOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              !formData.company ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          Sin empresa
+                        </CommandItem>
+                        {companies.map((company) => (
+                          <CommandItem
+                            key={company.documentId || company.id}
+                            value={company.name}
+                            onSelect={() => {
+                              setFormData({ ...formData, company: company.documentId || company.id?.toString() });
+                              setCompanyPopoverOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                formData.company === (company.documentId || company.id?.toString()) ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
+                            {company.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button 
               type="button" 
               variant="outline" 
               onClick={() => setIsEditOpen(false)}
               disabled={dialogLoading}
+              className="w-full sm:w-auto"
             >
               Cancelar
             </Button>
@@ -988,6 +1180,7 @@ const Users = () => {
               type="button" 
               onClick={handleSaveUser}
               disabled={dialogLoading}
+              className="w-full sm:w-auto"
             >
               {dialogLoading ? 'Guardando...' : 'Actualizar Usuario'}
             </Button>
