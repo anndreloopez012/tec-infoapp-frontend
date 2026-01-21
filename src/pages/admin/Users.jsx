@@ -102,6 +102,14 @@ const Users = () => {
     company: ''
   });
 
+  // Form validation errors
+  const [formErrors, setFormErrors] = useState({
+    username: '',
+    email: '',
+    password: '',
+    role: ''
+  });
+
   // Load initial data
   useEffect(() => {
     loadInitialData();
@@ -252,6 +260,65 @@ const Users = () => {
     }
   };
 
+  // Clear form errors
+  const clearFormErrors = () => {
+    setFormErrors({
+      username: '',
+      email: '',
+      password: '',
+      role: ''
+    });
+  };
+
+  // Validate form fields
+  const validateForm = (isCreate = false) => {
+    const errors = {
+      username: '',
+      email: '',
+      password: '',
+      role: ''
+    };
+    let isValid = true;
+
+    // Username validation
+    if (!formData.username.trim()) {
+      errors.username = 'El nombre de usuario es requerido';
+      isValid = false;
+    } else if (formData.username.trim().length < 3) {
+      errors.username = 'El usuario debe tener al menos 3 caracteres';
+      isValid = false;
+    }
+
+    // Email validation
+    if (!formData.email.trim()) {
+      errors.email = 'El email es requerido';
+      isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      errors.email = 'Ingresa un email válido';
+      isValid = false;
+    }
+
+    // Password validation (only for create)
+    if (isCreate) {
+      if (!formData.password) {
+        errors.password = 'La contraseña es requerida';
+        isValid = false;
+      } else if (formData.password.length < 6) {
+        errors.password = 'La contraseña debe tener al menos 6 caracteres';
+        isValid = false;
+      }
+    }
+
+    // Role validation
+    if (!formData.role) {
+      errors.role = 'El rol es requerido';
+      isValid = false;
+    }
+
+    setFormErrors(errors);
+    return isValid;
+  };
+
   // Dialog handlers
   const handleCreateUser = () => {
     setFormData({
@@ -262,6 +329,7 @@ const Users = () => {
       type_user: '',
       company: ''
     });
+    clearFormErrors();
     setCompanyPopoverOpen(false);
     setIsCreateOpen(true);
   };
@@ -276,36 +344,28 @@ const Users = () => {
       type_user: user.type_user?.id?.toString() || '',
       company: user.company?.id?.toString() || user.company?.documentId || ''
     });
+    clearFormErrors();
     setCompanyPopoverOpen(false);
     setIsEditOpen(true);
   };
 
   const handleSaveUser = async () => {
+    // Validate form before submission
+    if (!validateForm(isCreateOpen)) {
+      toast({
+        variant: "destructive",
+        title: "Error de validación",
+        description: "Por favor corrige los errores en el formulario",
+      });
+      return;
+    }
+
     try {
       setDialogLoading(true);
-      
-      // Basic validation
-      if (!formData.username || !formData.email) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Usuario y email son requeridos",
-        });
-        return;
-      }
-
-      if (isCreateOpen && !formData.password) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "La contraseña es requerida para crear un usuario",
-        });
-        return;
-      }
 
       const userData = {
-        username: formData.username,
-        email: formData.email,
+        username: formData.username.trim(),
+        email: formData.email.trim(),
         role: formData.role ? parseInt(formData.role) : null,
         type_user: formData.type_user ? parseInt(formData.type_user) : null,
         company: formData.company || null
@@ -821,69 +881,101 @@ const Users = () => {
           </DialogHeader>
           <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
             {/* Usuario */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
-              <Label htmlFor="username" className="sm:text-right font-medium">
-                Usuario
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
+              <Label htmlFor="username" className={cn("sm:text-right font-medium", formErrors.username && "text-destructive")}>
+                Usuario <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id="username"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="sm:col-span-3"
-                placeholder="Nombre de usuario"
-              />
+              <div className="sm:col-span-3 space-y-1">
+                <Input
+                  id="username"
+                  value={formData.username}
+                  onChange={(e) => {
+                    setFormData({ ...formData, username: e.target.value });
+                    if (formErrors.username) setFormErrors({ ...formErrors, username: '' });
+                  }}
+                  className={cn(formErrors.username && "border-destructive focus-visible:ring-destructive")}
+                  placeholder="Nombre de usuario"
+                />
+                {formErrors.username && (
+                  <p className="text-sm text-destructive">{formErrors.username}</p>
+                )}
+              </div>
             </div>
 
             {/* Email */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
-              <Label htmlFor="email" className="sm:text-right font-medium">
-                Email
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
+              <Label htmlFor="email" className={cn("sm:text-right font-medium", formErrors.email && "text-destructive")}>
+                Email <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="sm:col-span-3"
-                placeholder="correo@ejemplo.com"
-              />
+              <div className="sm:col-span-3 space-y-1">
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => {
+                    setFormData({ ...formData, email: e.target.value });
+                    if (formErrors.email) setFormErrors({ ...formErrors, email: '' });
+                  }}
+                  className={cn(formErrors.email && "border-destructive focus-visible:ring-destructive")}
+                  placeholder="correo@ejemplo.com"
+                />
+                {formErrors.email && (
+                  <p className="text-sm text-destructive">{formErrors.email}</p>
+                )}
+              </div>
             </div>
 
             {/* Contraseña */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
-              <Label htmlFor="password" className="sm:text-right font-medium">
-                Contraseña
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
+              <Label htmlFor="password" className={cn("sm:text-right font-medium", formErrors.password && "text-destructive")}>
+                Contraseña <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="sm:col-span-3"
-                placeholder="Contraseña"
-              />
+              <div className="sm:col-span-3 space-y-1">
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => {
+                    setFormData({ ...formData, password: e.target.value });
+                    if (formErrors.password) setFormErrors({ ...formErrors, password: '' });
+                  }}
+                  className={cn(formErrors.password && "border-destructive focus-visible:ring-destructive")}
+                  placeholder="Contraseña"
+                />
+                {formErrors.password && (
+                  <p className="text-sm text-destructive">{formErrors.password}</p>
+                )}
+              </div>
             </div>
 
             {/* Rol */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
-              <Label htmlFor="role" className="sm:text-right font-medium">
-                Rol
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
+              <Label htmlFor="role" className={cn("sm:text-right font-medium", formErrors.role && "text-destructive")}>
+                Rol <span className="text-destructive">*</span>
               </Label>
-              <Select 
-                value={formData.role} 
-                onValueChange={(value) => setFormData({ ...formData, role: value })}
-              >
-                <SelectTrigger className="sm:col-span-3">
-                  <SelectValue placeholder="Seleccionar rol" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover z-50">
-                  {roles.map((role) => (
-                    <SelectItem key={role.id} value={role.id.toString()}>
-                      {role.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="sm:col-span-3 space-y-1">
+                <Select 
+                  value={formData.role} 
+                  onValueChange={(value) => {
+                    setFormData({ ...formData, role: value });
+                    if (formErrors.role) setFormErrors({ ...formErrors, role: '' });
+                  }}
+                >
+                  <SelectTrigger className={cn(formErrors.role && "border-destructive focus-visible:ring-destructive")}>
+                    <SelectValue placeholder="Seleccionar rol" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50">
+                    {roles.map((role) => (
+                      <SelectItem key={role.id} value={role.id.toString()}>
+                        {role.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {formErrors.role && (
+                  <p className="text-sm text-destructive">{formErrors.role}</p>
+                )}
+              </div>
             </div>
 
             {/* Tipo */}
@@ -1010,69 +1102,95 @@ const Users = () => {
           </DialogHeader>
           <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
             {/* Usuario */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
-              <Label htmlFor="edit-username" className="sm:text-right font-medium">
-                Usuario
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
+              <Label htmlFor="edit-username" className={cn("sm:text-right font-medium", formErrors.username && "text-destructive")}>
+                Usuario <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id="edit-username"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="sm:col-span-3"
-                placeholder="Nombre de usuario"
-              />
+              <div className="sm:col-span-3 space-y-1">
+                <Input
+                  id="edit-username"
+                  value={formData.username}
+                  onChange={(e) => {
+                    setFormData({ ...formData, username: e.target.value });
+                    if (formErrors.username) setFormErrors({ ...formErrors, username: '' });
+                  }}
+                  className={cn(formErrors.username && "border-destructive focus-visible:ring-destructive")}
+                  placeholder="Nombre de usuario"
+                />
+                {formErrors.username && (
+                  <p className="text-sm text-destructive">{formErrors.username}</p>
+                )}
+              </div>
             </div>
 
             {/* Email */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
-              <Label htmlFor="edit-email" className="sm:text-right font-medium">
-                Email
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
+              <Label htmlFor="edit-email" className={cn("sm:text-right font-medium", formErrors.email && "text-destructive")}>
+                Email <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id="edit-email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="sm:col-span-3"
-                placeholder="correo@ejemplo.com"
-              />
+              <div className="sm:col-span-3 space-y-1">
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => {
+                    setFormData({ ...formData, email: e.target.value });
+                    if (formErrors.email) setFormErrors({ ...formErrors, email: '' });
+                  }}
+                  className={cn(formErrors.email && "border-destructive focus-visible:ring-destructive")}
+                  placeholder="correo@ejemplo.com"
+                />
+                {formErrors.email && (
+                  <p className="text-sm text-destructive">{formErrors.email}</p>
+                )}
+              </div>
             </div>
 
             {/* Nueva Contraseña */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
               <Label htmlFor="edit-password" className="sm:text-right font-medium">
                 Nueva Contraseña
               </Label>
-              <Input
-                id="edit-password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="sm:col-span-3"
-                placeholder="Dejar vacío para mantener actual"
-              />
+              <div className="sm:col-span-3 space-y-1">
+                <Input
+                  id="edit-password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="Dejar vacío para mantener actual"
+                />
+                <p className="text-xs text-muted-foreground">Opcional - solo si desea cambiar la contraseña</p>
+              </div>
             </div>
 
             {/* Rol */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
-              <Label htmlFor="edit-role" className="sm:text-right font-medium">
-                Rol
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
+              <Label htmlFor="edit-role" className={cn("sm:text-right font-medium", formErrors.role && "text-destructive")}>
+                Rol <span className="text-destructive">*</span>
               </Label>
-              <Select 
-                value={formData.role} 
-                onValueChange={(value) => setFormData({ ...formData, role: value })}
-              >
-                <SelectTrigger className="sm:col-span-3">
-                  <SelectValue placeholder="Seleccionar rol" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover z-50">
-                  {roles.map((role) => (
-                    <SelectItem key={role.id} value={role.id.toString()}>
-                      {role.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="sm:col-span-3 space-y-1">
+                <Select 
+                  value={formData.role} 
+                  onValueChange={(value) => {
+                    setFormData({ ...formData, role: value });
+                    if (formErrors.role) setFormErrors({ ...formErrors, role: '' });
+                  }}
+                >
+                  <SelectTrigger className={cn(formErrors.role && "border-destructive focus-visible:ring-destructive")}>
+                    <SelectValue placeholder="Seleccionar rol" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50">
+                    {roles.map((role) => (
+                      <SelectItem key={role.id} value={role.id.toString()}>
+                        {role.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {formErrors.role && (
+                  <p className="text-sm text-destructive">{formErrors.role}</p>
+                )}
+              </div>
             </div>
 
             {/* Tipo */}
