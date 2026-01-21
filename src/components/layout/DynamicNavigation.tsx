@@ -227,8 +227,8 @@ const DynamicNavigation: React.FC<DynamicNavigationProps> = ({ onNavigate, searc
       {/* Módulos Catálogos - Arriba */}
       {renderMenuSection(filteredCatalogMenus, "Módulos Catálogos")}
 
-      {/* Módulos Tickets - Medio */}
-      {renderMenuSection(filteredTicketMenus, "Módulos Tickets")}
+      {/* Módulos Tickets - Oculto */}
+      {/* {renderMenuSection(filteredTicketMenus, "Módulos Tickets")} */}
 
       {/* Módulos del Sistema - Abajo */}
       {renderMenuSection(filteredSystemMenus, "Módulos del Sistema")}
