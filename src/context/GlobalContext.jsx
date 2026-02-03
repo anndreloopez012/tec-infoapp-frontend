@@ -233,7 +233,7 @@ export const GlobalProvider = ({ children }) => {
     if (!state.config) return {};
     
     return {
-      siteName: state.config.siteName || 'TechOffice Hub',
+      siteName: state.config.siteName || 'TEC',
       tagline: state.config.tagline || 'Gestión de Espacios Tech',
       logo: state.config.logoMain ? getImageUrl(state.config.logoMain) : null,
       logoAlt: state.config.logoAlt ? getImageUrl(state.config.logoAlt) : null,
@@ -265,7 +265,7 @@ export const GlobalProvider = ({ children }) => {
     if (!state.config?.seo) return {};
     
     return {
-      title: state.config.seo.metaTitle || state.config.siteName || 'TechOffice Hub',
+      title: state.config.seo.metaTitle || state.config.siteName || 'TEC',
       description: state.config.seo.metaDescription || 'Plataforma de gestión integral para edificios de oficinas tech',
       keywords: state.config.seo.keywords || 'oficinas tech, coworking, gestión espacios',
       twitterHandle: state.config.seo.twitterHandle || ''

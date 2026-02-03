@@ -1,5 +1,5 @@
 {
-  "name": "TechOffice Hub - Gestión de Espacios Tech",
+  "name": "TEC - Gestión de Espacios Tech",
   "short_name": "TechOffice",
   "description": "Plataforma de gestión integral para edificios de oficinas tech - Administración de espacios, empresas y servicios",
   "start_url": "/",
@@ -71,14 +71,14 @@
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "TechOffice Hub Desktop"
+      "label": "TEC Desktop"
     },
     {
       "src": "/logoTec.png", 
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "TechOffice Hub Mobile"
+      "label": "TEC Mobile"
     }
   ]
 }

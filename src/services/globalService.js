@@ -231,8 +231,8 @@ class GlobalService {
     try {
       // Crear manifest dinámico
       const manifest = {
-        name: config.siteName || "TechOffice Hub - Gestión de Espacios Tech",
-        short_name: config.shortName || config.siteName?.substring(0, 12) || "TechOffice",
+        name: config.siteName || "Tec - Gestión de Espacios Tec",
+        short_name: config.shortName || config.siteName?.substring(0, 12) || "Tec",
         description: config.description || "Plataforma de gestión integral para edificios de oficinas tech - Administración de espacios, empresas y servicios",
         start_url: "/",
         display: "standalone",
