@@ -245,12 +245,12 @@ const Profile = () => {
         </div>
 
         {/* Profile Header Card */}
-        <Card className="border-0 shadow-xl bg-white dark:bg-gray-800">
+        <Card className="border border-gray-200 dark:border-gray-700 shadow-xl bg-white dark:bg-gray-800">
           <CardContent className="p-8">
             <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
               {/* Avatar */}
               <div className="relative">
-                <Avatar className="h-32 w-32 border-4 border-white shadow-lg">
+                <Avatar className="h-32 w-32 border-4 border-white dark:border-gray-700 shadow-lg">
                   <AvatarImage src="" alt={user.username} />
                   <AvatarFallback className="text-3xl font-bold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
                     {getInitials(user.username)}
@@ -259,15 +259,15 @@ const Profile = () => {
               </div>
               
               {/* User Info */}
-              <div className="text-center md:text-left flex-1 space-y-3">
+              <div className="text-center md:text-left flex-1 space-y-3 text-gray-900 dark:text-gray-100">
                 <div className="flex items-center gap-3 justify-center md:justify-start">
                   <div className="bg-green-500 h-3 w-3 rounded-full"></div>
-                  <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+                  <h2 className="text-3xl font-bold">
                     {user.username}
                   </h2>
                 </div>
-                <p className="text-lg text-gray-600 dark:text-gray-400 flex items-center gap-2 justify-center md:justify-start">
-                  <Mail className="h-5 w-5" />
+                <p className="text-lg text-gray-700 dark:text-gray-200 flex items-center gap-2 justify-center md:justify-start">
+                  <Mail className="h-5 w-5 text-gray-500 dark:text-gray-300" />
                   {user.email}
                 </p>
               </div>

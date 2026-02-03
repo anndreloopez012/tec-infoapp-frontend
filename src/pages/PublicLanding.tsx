@@ -94,17 +94,15 @@ export default function PublicLanding() {
 
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight animate-fade-in">
               <span className="bg-gradient-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent animate-gradient">
-                Descubre Eventos
+                Conectando con Ecosistema Tec.
               </span>
-              <br />
-              <span className="text-foreground">y Contenido Empresarial</span>
-            </h1>
+              </h1>
 
             <p
               className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto animate-fade-in"
               style={{ animationDelay: "0.2s" }}
             >
-              El centro de innovación tecnológica que reúne emprendedores y empresas para impulsar el desarrollo de nuevas tecnologías
+              Un lugar que impulsa la innovación, el aprendizaje y el crecimiento del ecosistema Tec.
             </p>
 
             <div
@@ -112,7 +110,7 @@ export default function PublicLanding() {
               style={{ animationDelay: "0.3s" }}
             >
               <div className="flex items-center gap-2">
-                <Terminal className="h-4 w-4 text-primary animate-pulse" />
+                <Terminal className="h-4 w-4 text-secondary animate-bounce" />
                 <span>Tecnología</span>
               </div>
               <div className="h-4 w-px bg-border" />
@@ -122,7 +120,7 @@ export default function PublicLanding() {
               </div>
               <div className="h-4 w-px bg-border" />
               <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-accent animate-pulse" />
+                <Users className="h-4 w-4 text-secondary animate-bounce" />
                 <span>Comunidad</span>
               </div>
             </div>
@@ -163,9 +161,6 @@ export default function PublicLanding() {
             <h2 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
               Silicon Valley con Frijoles
             </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Un concepto innovador adaptado a las realidades de Guatemala y Latinoamérica, ofreciendo espacios e infraestructura de clase mundial
-            </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
@@ -173,7 +168,6 @@ export default function PublicLanding() {
               {
                 icon: Lightbulb,
                 title: "Innovación",
-                description: "Espacios diseñados para generar nuevas ideas",
                 color: "from-yellow-500/20 to-orange-500/20",
                 iconColor: "text-yellow-500",
               },
@@ -187,14 +181,12 @@ export default function PublicLanding() {
               {
                 icon: TrendingUp,
                 title: "Crecimiento",
-                description: "Impulsa tu startup al siguiente nivel",
                 color: "from-green-500/20 to-emerald-500/20",
                 iconColor: "text-green-500",
               },
               {
                 icon: Target,
                 title: "Estrategia",
-                description: "Acceso a mentorías y recursos clave",
                 color: "from-purple-500/20 to-pink-500/20",
                 iconColor: "text-purple-500",
               },
@@ -226,19 +218,19 @@ export default function PublicLanding() {
             {[
               {
                 icon: Building2,
-                value: "50+",
-                label: "Empresas Tech",
+                value: "2000+",
+                label: "Empresas",
                 description: "En nuestro ecosistema",
               },
               {
                 icon: Users,
-                value: "1000+",
+                value: "3000+",
                 label: "Emprendedores",
                 description: "Conectados diariamente",
               },
               {
                 icon: Calendar,
-                value: "200+",
+                value: "100+",
                 label: "Eventos Anuales",
                 description: "De tecnología e innovación",
               },
@@ -246,7 +238,7 @@ export default function PublicLanding() {
                 icon: Award,
                 value: "24/7",
                 label: "Acceso",
-                description: "A espacios de trabajo",
+                description: "Acceso a tu lugar de trabajo",
               },
             ].map((stat, index) => (
               <div
