@@ -397,7 +397,7 @@ export default function PublicLanding() {
                   <span className="text-primary-foreground font-bold text-xl">T</span>
                 </div>
                 <span className="font-bold text-xl bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                  TEC Portal
+                  TEC
                 </span>
               </div>
               <p className="text-sm text-muted-foreground">

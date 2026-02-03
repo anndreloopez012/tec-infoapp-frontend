@@ -257,17 +257,41 @@ const ContentByCategory = () => {
     }
   };
 
+  const normalizeMedia = (media: any): any[] => {
+    if (!media) return [];
+    if (Array.isArray(media)) return media;
+    if (media.data) {
+      if (Array.isArray(media.data)) {
+        return media.data.map((item: any) =>
+          item?.attributes ? { id: item.id, ...item.attributes } : item
+        );
+      }
+      if (media.data?.attributes) return [{ id: media.data.id, ...media.data.attributes }];
+      return [media.data];
+    }
+    if (media.attributes) return [{ id: media.id, ...media.attributes }];
+    return [media];
+  };
+
   const getImageUrl = (imageData: any) => {
     if (!imageData) return null;
-    const url = imageData.url || imageData.formats?.large?.url || imageData.formats?.medium?.url || imageData.formats?.small?.url;
+    if (typeof imageData === 'string') {
+      return imageData.startsWith('http') ? imageData : `${API_CONFIG.BASE_URL}${imageData}`;
+    }
+    const url =
+      imageData.url ||
+      imageData.formats?.large?.url ||
+      imageData.formats?.medium?.url ||
+      imageData.formats?.small?.url;
     if (!url) return null;
     return url.startsWith('http') ? url : `${API_CONFIG.BASE_URL}${url}`;
   };
 
   // Get first image from attachments as cover
   const getCoverImage = (item: ContentData) => {
-    if (item.attachments && item.attachments.length > 0) {
-      const firstImage = item.attachments.find((att: any) => 
+    const attachments = normalizeMedia(item.attachments);
+    if (attachments.length > 0) {
+      const firstImage = attachments.find((att: any) => 
         att.mime?.startsWith('image/') || 
         att.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i)
       );
@@ -276,8 +300,10 @@ const ContentByCategory = () => {
       }
     }
     // Fallback to main_image or cover_image if no attachments
-    if (item.main_image) return getImageUrl(item.main_image);
-    if (item.cover_image) return getImageUrl(item.cover_image);
+    const mainImage = normalizeMedia(item.main_image)[0];
+    if (mainImage) return getImageUrl(mainImage);
+    const coverImage = normalizeMedia(item.cover_image)[0];
+    if (coverImage) return getImageUrl(coverImage);
     return null;
   };
 

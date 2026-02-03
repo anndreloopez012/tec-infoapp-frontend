@@ -6,6 +6,7 @@ import { useTheme } from 'next-themes';
 import { publicCategoryService } from '@/services/publicApiService';
 import { cn } from '@/lib/utils';
 import { GlobalSearch } from './GlobalSearch';
+import { useGlobal } from '@/context/GlobalContext';
 
 interface Category {
   id: number;
@@ -16,6 +17,9 @@ interface Category {
 
 export const PublicHeader = () => {
   const { theme, setTheme } = useTheme();
+  const { getBranding } = useGlobal();
+  const branding = getBranding();
+  const logoUrl = branding.logo || branding.logoAlt || branding.logoMobile;
   const [categories, setCategories] = useState<Category[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -43,14 +47,25 @@ export const PublicHeader = () => {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 shadow-sm">
       <div className="container flex h-20 items-center justify-between">
         <Link to="/" className="flex items-center space-x-3 group">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary via-primary/80 to-secondary flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-            <span className="text-primary-foreground font-bold text-xl">T</span>
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary via-primary/80 to-secondary flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform overflow-hidden">
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={branding.siteName || 'Logo'}
+                className="h-full w-full object-contain bg-background/90"
+                loading="lazy"
+              />
+            ) : (
+              <span className="text-primary-foreground font-bold text-xl">T</span>
+            )}
           </div>
           <div className="flex flex-col">
             <span className="font-bold text-xl bg-gradient-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent leading-none">
-              TEC Portal
+              {branding.siteName || 'TEC APP'}
             </span>
-            <span className="text-xs text-muted-foreground">Innovación & Tecnología</span>
+            <span className="text-xs text-muted-foreground">
+              {branding.tagline || 'Innovación & Tecnología'}
+            </span>
           </div>
         </Link>
 
