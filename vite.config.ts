@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'icon-192x192.png', 'icon-512x512.png', 'robots.txt'],
+      includeAssets: ['logo.ico', 'icon-192x192.png', 'icon-512x512.png', 'robots.txt'],
       manifest: {
         name: 'TechApp - Gestión de Espacios Tech',
         short_name: 'TechApp',

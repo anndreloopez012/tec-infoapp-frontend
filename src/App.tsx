@@ -3,12 +3,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 
 // Context Providers  
 import { AuthProvider } from '@/context/AuthContext';
-import { GlobalProvider } from '@/context/GlobalContext';
+import { GlobalProvider, useGlobal } from '@/context/GlobalContext';
 import { PermissionsProvider } from '@/context/PermissionsContext';
 import { NotificationsProvider } from '@/context/NotificationsContext';
 
@@ -184,19 +184,26 @@ const AppRoutes = () => {
   );
 };
 
-const App = () => {
-  // Register service worker for PWA functionality
+// Register SW only after la configuración global esté lista,
+// para que el manifest dinámico y los logos ya estén aplicados.
+const PWAInitializer = () => {
+  const { config, isLoading } = useGlobal();
+
   useEffect(() => {
+    if (isLoading || !config) return;
+
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js')
-        .then((registration) => {
-          console.log('SW registered: ', registration);
-        })
-        .catch((registrationError) => {
-          console.log('SW registration failed: ', registrationError);
-        });
+        .then((registration) => console.log('SW registered: ', registration))
+        .catch((err) => console.log('SW registration failed: ', err));
     }
+  }, [config, isLoading]);
 
+  return null;
+};
+
+const App = () => {
+  useEffect(() => {
     // Setup error notifications
     setupErrorNotifications();
   }, []);
@@ -211,6 +218,7 @@ const App = () => {
       >
         <TooltipProvider>
           <GlobalProvider>
+            <PWAInitializer />
             <SplashScreen />
             <AuthProvider>
               <PermissionsProvider>

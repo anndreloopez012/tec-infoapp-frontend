@@ -2,10 +2,14 @@ import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { GlobalService } from '../services/globalService.js';
 import { toast } from '@/hooks/use-toast';
 
+// Read cached config once so we can render real branding before hitting the API
+const cachedConfig = GlobalService.getCachedGlobalConfig();
+
 // Initial state
 const initialState = {
-  config: null,
-  isLoading: true,
+  config: cachedConfig,
+  // If we already have cached config, avoid the initial loading flash
+  isLoading: !cachedConfig,
   error: null,
   isOnline: navigator.onLine,
   refreshInterval: null
@@ -86,6 +90,11 @@ export const GlobalProvider = ({ children }) => {
 
   // Initialize global config on mount
   useEffect(() => {
+    // Apply cached config immediately so branding/colors are present on first paint
+    if (cachedConfig) {
+      GlobalService.applyGlobalConfig(cachedConfig);
+    }
+
     loadGlobalConfig();
     setupOnlineStatusListener();
     
@@ -123,7 +132,8 @@ export const GlobalProvider = ({ children }) => {
   // Load global configuration
   const loadGlobalConfig = async (showToast = false) => {
     try {
-      dispatch({ type: ActionTypes.SET_LOADING, payload: true });
+      // Only show the loading state when we don't have any config yet.
+      dispatch({ type: ActionTypes.SET_LOADING, payload: !state.config });
       dispatch({ type: ActionTypes.CLEAR_ERROR });
       
       const config = await GlobalService.getGlobalConfig();

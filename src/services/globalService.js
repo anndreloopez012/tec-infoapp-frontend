@@ -287,13 +287,17 @@ class GlobalService {
       const manifestUrl = URL.createObjectURL(manifestBlob);
       
       let manifestLink = document.querySelector('link[rel="manifest"]');
-      if (manifestLink) {
-        // Revocar URL anterior si existe  
-        if (manifestLink.href.startsWith('blob:')) {
-          URL.revokeObjectURL(manifestLink.href);
-        }
-        manifestLink.href = manifestUrl;
+      if (!manifestLink) {
+        manifestLink = document.createElement('link');
+        manifestLink.rel = 'manifest';
+        document.head.appendChild(manifestLink);
       }
+      
+      // Revocar URL anterior si existe  
+      if (manifestLink.href.startsWith('blob:')) {
+        URL.revokeObjectURL(manifestLink.href);
+      }
+      manifestLink.href = manifestUrl;
 
       console.log('✅ Manifest PWA actualizado dinámicamente');
       
