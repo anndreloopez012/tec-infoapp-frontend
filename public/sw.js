@@ -11,7 +11,7 @@ const URLS_TO_CACHE = [
   '/users',
   '/profile',
   '/manifest.json',
-  '/icon-192x192.png',
+  '/logoTec.png',
   '/icon-512x512.png'
 ];
 
@@ -192,8 +192,8 @@ self.addEventListener('push', (event) => {
   let notificationData = {
     title: 'CRM Admin Panel',
     body: 'Nueva notificación del sistema',
-    icon: '/icon-192x192.png',
-    badge: '/icon-192x192.png',
+    icon: '/logoTec.png',
+    badge: '/logoTec.png',
     image: '/icon-512x512.png',
     tag: 'crm-notification',
     requireInteraction: false,
@@ -207,12 +207,12 @@ self.addEventListener('push', (event) => {
       {
         action: 'view',
         title: '👁️ Ver más',
-        icon: '/icon-192x192.png'
+        icon: '/logoTec.png'
       },
       {
         action: 'dismiss',
         title: '❌ Cerrar',
-        icon: '/icon-192x192.png'
+        icon: '/logoTec.png'
       }
     ]
   };

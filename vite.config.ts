@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['logo.ico', 'icon-192x192.png', 'icon-512x512.png', 'robots.txt'],
+      includeAssets: ['logo.ico', 'logoTec.png', 'icon-512x512.png', 'robots.txt'],
       manifest: {
         name: 'TechApp - Gestión de Espacios Tech',
         short_name: 'TechApp',
@@ -36,7 +36,7 @@ export default defineConfig(({ mode }) => ({
         start_url: '/',
         icons: [
           {
-            src: '/icon-192x192.png',
+            src: '/logoTec.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any maskable'

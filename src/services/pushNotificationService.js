@@ -118,8 +118,8 @@ class PushNotificationService {
 
       const notification = new Notification(title, {
         body,
-        icon: '/icon-192x192.png',
-        badge: '/icon-192x192.png',
+        icon: '/logoTec.png',
+        badge: '/logoTec.png',
         image: '/icon-512x512.png',
         tag: 'test-notification',
         requireInteraction: false,
@@ -203,8 +203,8 @@ class PushNotificationService {
         data: {
           title: data.title || 'CRM Admin Panel',
           body: data.body || 'Nueva notificación',
-          icon: data.icon || '/icon-192x192.png',
-          badge: data.badge || '/icon-192x192.png',
+          icon: data.icon || '/logoTec.png',
+          badge: data.badge || '/logoTec.png',
           tag: data.tag || 'admin-notification',
           data: data.data || {},
           actions: data.actions || [
