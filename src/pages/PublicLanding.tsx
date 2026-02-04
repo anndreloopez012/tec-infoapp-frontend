@@ -218,7 +218,7 @@ export default function PublicLanding() {
             {[
               {
                 icon: Building2,
-                value: "2000+",
+                value: "200+",
                 label: "Empresas",
                 description: "En nuestro ecosistema",
               },
@@ -270,7 +270,7 @@ export default function PublicLanding() {
               <span>Plataforma Integral</span>
             </div>
             <h2 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
-              Plataforma Digital del TEC
+              Plataforma TEC
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Accede a toda la información de eventos, contenido y oportunidades del ecosistema tecnológico
