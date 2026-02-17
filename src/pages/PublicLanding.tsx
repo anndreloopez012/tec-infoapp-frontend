@@ -200,15 +200,15 @@ export default function PublicLanding() {
             ].map((item, index) => (
               <div
                 key={index}
-                className="group relative overflow-hidden rounded-2xl border bg-card p-6 hover-scale transition-all duration-300"
+                className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card p-8 hover-scale transition-all duration-300 text-center"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-100 transition-opacity`} />
-                <div className="relative">
-                  <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-background/50 backdrop-blur-sm">
-                    <item.icon className={`h-6 w-6 ${item.iconColor}`} />
+                <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                <div className="relative flex flex-col items-center gap-4">
+                  <div className="inline-flex h-14 w-14 items-center justify-center rounded-xl bg-muted/50 backdrop-blur-sm group-hover:scale-110 transition-transform duration-300">
+                    <item.icon className={`h-7 w-7 ${item.iconColor}`} />
                   </div>
-                  <h3 className="text-xl font-bold mb-2">{item.title}</h3>
+                  <h3 className="text-lg font-semibold text-foreground">{item.title}</h3>
                 </div>
               </div>
             ))}
