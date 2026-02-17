@@ -93,13 +93,15 @@ export const PublicHeader = () => {
             <span className="hidden lg:inline">Calendario</span>
           </Button>
           <Button
-            variant={isActive('/public/companies') ? 'default' : 'ghost'}
+            variant="ghost"
             size="sm"
-            onClick={() => navigate('/public/companies')}
+            asChild
             className="rounded-full px-3 hover-scale whitespace-nowrap flex-shrink-0"
           >
-            <Building2 className="h-4 w-4 md:mr-2" />
-            <span className="hidden lg:inline">Empresas</span>
+            <a href="https://tec-members.wizedevs.com/" target="_blank" rel="noopener noreferrer">
+              <Building2 className="h-4 w-4 md:mr-2" />
+              <span className="hidden lg:inline">Empresas</span>
+            </a>
           </Button>
           <Button
             variant={isActive('/public/events') ? 'default' : 'ghost'}
@@ -189,16 +191,15 @@ export const PublicHeader = () => {
             Calendario
           </Button>
           <Button
-            variant={isActive('/public/companies') ? 'default' : 'ghost'}
+            variant="ghost"
             size="sm"
+            asChild
             className="w-full justify-start"
-            onClick={() => {
-              navigate('/public/companies');
-              setMobileMenuOpen(false);
-            }}
           >
-            <Building2 className="h-4 w-4 mr-2" />
-            Empresas
+            <a href="https://tec-members.wizedevs.com/" target="_blank" rel="noopener noreferrer" onClick={() => setMobileMenuOpen(false)}>
+              <Building2 className="h-4 w-4 mr-2" />
+              Empresas
+            </a>
           </Button>
           <Button
             variant={isActive('/public/events') ? 'default' : 'ghost'}
