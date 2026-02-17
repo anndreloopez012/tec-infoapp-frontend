@@ -270,7 +270,7 @@ export default function PublicEvents() {
           <div>
             <h1 className="text-4xl font-bold mb-2">Eventos</h1>
             <p className="text-muted-foreground text-lg">
-              Descubre todos los eventos organizados por el TEC
+              Descubre todos los eventos organizados por el Tec
             </p>
           </div>
 

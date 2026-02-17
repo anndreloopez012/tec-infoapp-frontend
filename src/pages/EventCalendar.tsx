@@ -180,7 +180,7 @@ const EventCalendar = () => {
 
     const icsContent = `BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//TEC//Event Calendar//ES
+PRODID:-//Tec//Event Calendar//ES
 CALSCALE:GREGORIAN
 METHOD:PUBLISH
 BEGIN:VEVENT

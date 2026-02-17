@@ -662,10 +662,10 @@ export default function TicketDetail() {
                 </div>
               )}
 
-              {/* Mostrar input de TEC Member cuando haya empresas seleccionadas (automáticas o manuales) */}
+              {/* Mostrar input de Tec Member cuando haya empresas seleccionadas (automáticas o manuales) */}
               {watch('companies')?.length > 0 && (
                 <div>
-                  <Label htmlFor="users_permissions_users">TEC Member</Label>
+                  <Label htmlFor="users_permissions_users">Tec Member</Label>
                   <Popover open={userSearchOpen} onOpenChange={setUserSearchOpen}>
                     <PopoverTrigger asChild>
                       <Button

@@ -135,7 +135,7 @@ export default function PublicCalendar() {
 
     const icsContent = `BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//TEC//Event Calendar//ES
+PRODID:-//Tec//Event Calendar//ES
 CALSCALE:GREGORIAN
 METHOD:PUBLISH
 BEGIN:VEVENT
@@ -187,7 +187,7 @@ END:VCALENDAR`;
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Calendario de Eventos</h1>
           <p className="text-muted-foreground text-lg">
-            Visualiza todos los eventos del TEC en un calendario interactivo
+            Visualiza todos los eventos del Tec en un calendario interactivo
           </p>
         </div>
 

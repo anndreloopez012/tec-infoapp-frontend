@@ -105,7 +105,7 @@ const ContentDetail: React.FC = () => {
       if (result.success && result.data && result.data.title) {
         console.log('✅ Content found via getById');
         setItem(result.data as ContentDetailItem);
-        document.title = `${result.data.title} | TEC Info`;
+        document.title = `${result.data.title} | Tec Info`;
       } else {
         console.log('⚠️ getById failed, trying getAll fallback...');
         // Fallback: try to search by documentId
@@ -122,7 +122,7 @@ const ContentDetail: React.FC = () => {
         if (searchResult.success && searchResult.data && searchResult.data.length > 0) {
           console.log('✅ Content found via getAll');
           setItem(searchResult.data[0] as ContentDetailItem);
-          document.title = `${searchResult.data[0].title} | TEC Info`;
+          document.title = `${searchResult.data[0].title} | Tec Info`;
         } else {
           console.log('❌ Content not found');
           toast.error("Contenido no encontrado");

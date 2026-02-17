@@ -89,7 +89,7 @@ export default function PublicLanding() {
           <div className="mx-auto max-w-4xl text-center space-y-8 animate-fade-in">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm text-primary animate-scale-in">
               <Sparkles className="h-4 w-4" />
-              <span>Bienvenido al Portal TEC</span>
+              <span>Bienvenido al Portal Tec</span>
             </div>
 
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight animate-fade-in">
@@ -149,7 +149,7 @@ export default function PublicLanding() {
         </div>
       </section>
 
-      {/* TEC Ecosystem Section */}
+      {/* Tec Ecosystem Section */}
       <section className="py-20 border-t relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5" />
         <div className="container relative z-10">
@@ -174,7 +174,6 @@ export default function PublicLanding() {
               {
                 icon: Network,
                 title: "Networking",
-                description: "Conecta con emprendedores y empresas tech",
                 color: "from-blue-500/20 to-cyan-500/20",
                 iconColor: "text-blue-500",
               },
@@ -270,10 +269,10 @@ export default function PublicLanding() {
               <span>Plataforma Integral</span>
             </div>
             <h2 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
-              Plataforma TEC
+              Plataforma Tec
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Accede a toda la información de eventos, contenido y oportunidades del ecosistema tecnológico
+              Explora eventos, contenidos y oportunidades que conectan innovación, tecnología y comunidad.
             </p>
           </div>
 
@@ -300,7 +299,7 @@ export default function PublicLanding() {
                 </div>
                 <CardTitle className="text-xl">Eventos y Actividades</CardTitle>
                 <CardDescription className="text-base">
-                  Descubre todos los eventos organizados por el TEC con información detallada, ubicaciones y fechas
+                  Descubre todos los eventos organizados por la Plataforma Tec con información detallada, ubicaciones y fechas
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -397,7 +396,7 @@ export default function PublicLanding() {
                   <span className="text-primary-foreground font-bold text-xl">T</span>
                 </div>
                 <span className="font-bold text-xl bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                  TEC
+                  Tec
                 </span>
               </div>
               <p className="text-sm text-muted-foreground">
@@ -435,22 +434,13 @@ export default function PublicLanding() {
                   <Code2 className="h-4 w-4 group-hover:scale-110 transition-transform" />
                   <span className="font-medium">SoftPlus - GT</span>
                 </a>
-                <a
-                  href="https://alcore-gt.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
-                >
-                  <Layers className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                  <span className="font-medium">ALCORE - GT</span>
-                </a>
               </div>
             </div>
           </div>
 
           <div className="pt-8 border-t border-border/50 text-center">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} TEC Portal. Todos los derechos reservados.
+              © {new Date().getFullYear()} Tec Portal. Todos los derechos reservados.
             </p>
           </div>
         </div>
