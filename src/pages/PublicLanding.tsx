@@ -201,7 +201,6 @@ export default function PublicLanding() {
                     <item.icon className={`h-6 w-6 ${item.iconColor}`} />
                   </div>
                   <h3 className="text-xl font-bold mb-2">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground">{item.description}</p>
                 </div>
               </div>
             ))}
