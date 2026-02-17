@@ -93,20 +93,24 @@ export default function PublicLanding() {
           <div className="mx-auto max-w-4xl text-center space-y-8 animate-fade-in">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm text-primary animate-scale-in">
               <Sparkles className="h-4 w-4" />
-              <span>Bienvenido al Portal Tec</span>
+              <span>¡Bienvenidos!</span>
             </div>
 
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight animate-fade-in">
-              <span className="bg-gradient-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent animate-gradient">
-                Conectando con Ecosistema Tec.
+              <span className="bg-gradient-to-r from-[hsl(var(--success))] via-[hsl(142,76%,46%)] to-[hsl(var(--success))] bg-clip-text text-transparent animate-gradient">
+                Fortaleciendo el{' '}
               </span>
-              </h1>
+              <br />
+              <span className="bg-gradient-to-r from-[hsl(var(--success))] via-[hsl(142,76%,46%)] to-[hsl(var(--success))] bg-clip-text text-transparent animate-gradient">
+                Ecosistema Tec
+              </span>
+            </h1>
 
             <p
               className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto animate-fade-in"
               style={{ animationDelay: "0.2s" }}
             >
-              Un lugar que impulsa la innovación, el aprendizaje y el crecimiento del ecosistema Tec.
+              Donde impulsamos la innovación, creamos oportunidades y conectamos ideas.
             </p>
 
             <div
