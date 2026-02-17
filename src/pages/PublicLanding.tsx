@@ -28,9 +28,13 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { PWAInstallButton } from "@/components/PWAInstallButton";
+import { useGlobal } from "@/context/GlobalContext";
 
 export default function PublicLanding() {
   const navigate = useNavigate();
+  const { getBranding } = useGlobal();
+  const branding = getBranding();
+  const logoUrl = branding.logo || branding.logoAlt || branding.logoMobile;
 
 
   const handleNavigation = (path: string) => {
@@ -391,11 +395,15 @@ export default function PublicLanding() {
           <div className="grid md:grid-cols-3 gap-8 mb-8">
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-xl">T</span>
+                <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center overflow-hidden">
+                  {logoUrl ? (
+                    <img src={logoUrl} alt={branding.siteName || 'Tec'} className="h-full w-full object-contain bg-background/90" loading="lazy" />
+                  ) : (
+                    <span className="text-primary-foreground font-bold text-xl">T</span>
+                  )}
                 </div>
                 <span className="font-bold text-xl bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                  Tec
+                  {branding.siteName || 'Tec'}
                 </span>
               </div>
               <p className="text-sm text-muted-foreground">
@@ -439,7 +447,7 @@ export default function PublicLanding() {
 
           <div className="pt-8 border-t border-border/50 text-center">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Tec Portal. Todos los derechos reservados.
+              © {new Date().getFullYear()} {branding.siteName || 'Tec'} Portal. Todos los derechos reservados.
             </p>
           </div>
         </div>
