@@ -4,7 +4,7 @@
 
 export const API_CONFIG = {
   // URL base del backend Strapi
-  BASE_URL: "https://tec-adm.server-softplus.plus",
+  BASE_URL: "https://api-app.tec.gt",
 
   // Prefijo para todas las APIs
   API_PREFIX: "api",
