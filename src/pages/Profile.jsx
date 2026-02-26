@@ -18,7 +18,6 @@ import {
   Edit,
   Save,
   X,
-  Check,
   UserCheck,
   Clock,
   Lock,
@@ -31,7 +30,6 @@ const Profile = () => {
   const { user, updateProfile, changePassword, isLoading } = useAuth();
   const { getRoleLabelForUser, getUserType } = useRoles();
   
-  // Estados separados para cada sección
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [isLoadingPassword, setIsLoadingPassword] = useState(false);
@@ -64,7 +62,6 @@ const Profile = () => {
     );
   }
 
-  // Función para validar email único
   const validateEmailUnique = async (email) => {
     try {
       const response = await fetch(buildApiUrl(`users?filters[email][$eq]=${encodeURIComponent(email)}`), {
@@ -72,18 +69,16 @@ const Profile = () => {
         headers: getDefaultHeaders()
       });
       const data = await response.json();
-      return data.length === 0; // true si no existe, false si ya existe
+      return data.length === 0;
     } catch (error) {
       console.error('Error validando email:', error);
-      return true; // Permitir continuar si hay error en la validación
+      return true;
     }
   };
 
-  // Función para guardar perfil (nombre y email)
   const handleSaveProfile = async () => {
     setIsLoadingProfile(true);
     try {
-      // Validar email único si cambió
       if (editData.email !== user.email) {
         const isEmailUnique = await validateEmailUnique(editData.email);
         if (!isEmailUnique) {
@@ -97,7 +92,6 @@ const Profile = () => {
         }
       }
 
-      // Llamar API para actualizar perfil
       const response = await fetch(buildApiUrl('users/me'), {
         method: 'PUT',
         headers: getDefaultHeaders(),
@@ -113,8 +107,6 @@ const Profile = () => {
       }
 
       const updatedUser = await response.json();
-      
-      // Actualizar localStorage y contexto
       localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER_DATA, JSON.stringify(updatedUser));
       
       setIsEditingProfile(false);
@@ -123,7 +115,6 @@ const Profile = () => {
         description: "Nombre de usuario y correo actualizados exitosamente",
       });
 
-      // Actualizar datos en el estado local
       Object.assign(user, updatedUser);
       
     } catch (error) {
@@ -138,7 +129,6 @@ const Profile = () => {
     }
   };
 
-  // Función para cambiar contraseña
   const handlePasswordChange = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast({
@@ -160,7 +150,6 @@ const Profile = () => {
 
     setIsLoadingPassword(true);
     try {
-      // Llamar API para cambiar contraseña
       const response = await fetch(buildApiUrl('auth/change-password'), {
         method: 'POST',
         headers: getDefaultHeaders(),
@@ -176,9 +165,8 @@ const Profile = () => {
         throw new Error(errorData.error?.message || 'Error al cambiar contraseña');
       }
 
-      const result = await response.json();
+      await response.json();
       
-      // Limpiar campos
       setPasswordData({
         currentPassword: '',
         newPassword: '',
@@ -232,42 +220,42 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-3">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-4xl font-bold text-foreground">
             Mi Perfil
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-400">
+          <p className="text-lg text-muted-foreground">
             Gestiona tu información personal y configuración de cuenta
           </p>
         </div>
 
         {/* Profile Header Card */}
-        <Card className="border border-gray-200 dark:border-gray-700 shadow-xl bg-white dark:bg-gray-800">
+        <Card className="border border-border shadow-xl bg-card">
           <CardContent className="p-8">
             <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
               {/* Avatar */}
               <div className="relative">
-                <Avatar className="h-32 w-32 border-4 border-white dark:border-gray-700 shadow-lg">
+                <Avatar className="h-32 w-32 border-4 border-primary/30 shadow-lg">
                   <AvatarImage src="" alt={user.username} />
-                  <AvatarFallback className="text-3xl font-bold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                  <AvatarFallback className="text-3xl font-bold bg-primary text-primary-foreground">
                     {getInitials(user.username)}
                   </AvatarFallback>
                 </Avatar>
               </div>
               
               {/* User Info */}
-              <div className="text-center md:text-left flex-1 space-y-3 text-gray-900 dark:text-gray-100">
+              <div className="text-center md:text-left flex-1 space-y-3">
                 <div className="flex items-center gap-3 justify-center md:justify-start">
-                  <div className="bg-green-500 h-3 w-3 rounded-full"></div>
-                  <h2 className="text-3xl font-bold">
+                  <div className="bg-success h-3 w-3 rounded-full"></div>
+                  <h2 className="text-3xl font-bold text-foreground">
                     {user.username}
                   </h2>
                 </div>
-                <p className="text-lg text-gray-700 dark:text-gray-200 flex items-center gap-2 justify-center md:justify-start">
-                  <Mail className="h-5 w-5 text-gray-500 dark:text-gray-300" />
+                <p className="text-lg text-muted-foreground flex items-center gap-2 justify-center md:justify-start">
+                  <Mail className="h-5 w-5 text-primary" />
                   {user.email}
                 </p>
               </div>
@@ -277,13 +265,13 @@ const Profile = () => {
 
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Personal Information */}
-          <Card className="shadow-lg border-0">
-            <CardHeader className="border-b border-gray-100 dark:border-gray-700">
+          <Card className="shadow-lg border border-border bg-card">
+            <CardHeader className="border-b border-border">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="flex items-center gap-3 text-xl">
-                    <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                      <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  <CardTitle className="flex items-center gap-3 text-xl text-card-foreground">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <User className="h-6 w-6 text-primary" />
                     </div>
                     Información Personal
                   </CardTitle>
@@ -307,19 +295,19 @@ const Profile = () => {
             <CardContent className="p-6 space-y-6">
               <div className="space-y-4">
                 <div>
-                  <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                  <Label className="text-sm font-semibold text-muted-foreground mb-2 block">
                     Nombre de Usuario
                   </Label>
                   {isEditingProfile ? (
                     <Input
                       value={editData.username}
                       onChange={(e) => setEditData({...editData, username: e.target.value})}
-                      className="h-12 text-base border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500"
+                      className="h-12 text-base"
                       placeholder="Ingresa tu nombre de usuario"
                     />
                   ) : (
-                    <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                      <span className="text-base font-medium text-gray-900 dark:text-white">
+                    <div className="p-4 bg-muted rounded-lg border border-border">
+                      <span className="text-base font-medium text-foreground">
                         {user.username}
                       </span>
                     </div>
@@ -327,7 +315,7 @@ const Profile = () => {
                 </div>
                 
                 <div>
-                  <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                  <Label className="text-sm font-semibold text-muted-foreground mb-2 block">
                     Correo Electrónico
                   </Label>
                   {isEditingProfile ? (
@@ -335,12 +323,12 @@ const Profile = () => {
                       type="email"
                       value={editData.email}
                       onChange={(e) => setEditData({...editData, email: e.target.value})}
-                      className="h-12 text-base border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500"
+                      className="h-12 text-base"
                       placeholder="Ingresa tu correo electrónico"
                     />
                   ) : (
-                    <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                      <span className="text-base font-medium text-gray-900 dark:text-white">
+                    <div className="p-4 bg-muted rounded-lg border border-border">
+                      <span className="text-base font-medium text-foreground">
                         {user.email}
                       </span>
                     </div>
@@ -348,14 +336,13 @@ const Profile = () => {
                 </div>
               </div>
 
-              {/* Botones de Perfil - Condicionalmente visibles */}
+              {/* Botones de Perfil */}
               {API_CONFIG.FEATURES.editPerfil && (
-                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-600">
+                <div className="flex justify-end gap-3 pt-4 border-t border-border">
                   {!isEditingProfile ? (
                     <Button
                       onClick={() => setIsEditingProfile(true)}
                       variant="default"
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground"
                     >
                       <Edit className="h-4 w-4 mr-2" />
                       Editar Perfil
@@ -365,7 +352,6 @@ const Profile = () => {
                       <Button
                         onClick={handleCancelEdit}
                         variant="secondary"
-                        className="bg-secondary hover:bg-secondary/80 text-secondary-foreground"
                       >
                         <X className="h-4 w-4 mr-2" />
                         Cancelar
@@ -374,7 +360,7 @@ const Profile = () => {
                         onClick={handleSaveProfile}
                         disabled={isLoadingProfile}
                         variant="default"
-                        className="bg-primary hover:bg-primary/90 text-primary-foreground min-w-[140px]"
+                        className="min-w-[140px]"
                       >
                         {isLoadingProfile ? (
                           <>
@@ -396,11 +382,11 @@ const Profile = () => {
           </Card>
 
           {/* Account Details */}
-          <Card className="shadow-lg border-0">
-            <CardHeader className="border-b border-gray-100 dark:border-gray-700">
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                  <Shield className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+          <Card className="shadow-lg border border-border bg-card">
+            <CardHeader className="border-b border-border">
+              <CardTitle className="flex items-center gap-3 text-xl text-card-foreground">
+                <div className="p-2 bg-secondary/10 rounded-lg">
+                  <Shield className="h-6 w-6 text-secondary" />
                 </div>
                 Detalles de la Cuenta
               </CardTitle>
@@ -409,22 +395,21 @@ const Profile = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
-              {/* Role and Type Badges */}
               <div className="space-y-4">
                 <div>
-                  <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 block">
+                  <Label className="text-sm font-semibold text-muted-foreground mb-3 block">
                     Permisos y Estado
                   </Label>
                   <div className="flex flex-wrap gap-3">
-                    <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 text-sm font-medium shadow-lg">
+                    <Badge className="bg-secondary text-secondary-foreground px-4 py-2 text-sm font-medium shadow-lg">
                       <Crown className="h-4 w-4 mr-2" />
                       {getRoleLabelForUser()}
                     </Badge>
-                    <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-4 py-2 text-sm font-medium shadow-lg">
+                    <Badge className="bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-lg">
                       <Shield className="h-4 w-4 mr-2" />
                       {getUserType()}
                     </Badge>
-                    <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 text-sm font-medium shadow-lg">
+                    <Badge className="bg-success text-success-foreground px-4 py-2 text-sm font-medium shadow-lg">
                       <UserCheck className="h-4 w-4 mr-2" />
                       Verificado
                     </Badge>
@@ -433,27 +418,26 @@ const Profile = () => {
 
                 <Separator />
 
-                {/* Dates */}
                 <div className="space-y-4">
                   <div>
-                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                    <Label className="text-sm font-semibold text-muted-foreground mb-2 block">
                       Miembro desde
                     </Label>
-                    <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                      <Calendar className="h-5 w-5 text-gray-500" />
-                      <span className="text-base font-medium text-gray-900 dark:text-white">
+                    <div className="flex items-center gap-3 p-4 bg-muted rounded-lg border border-border">
+                      <Calendar className="h-5 w-5 text-primary" />
+                      <span className="text-base font-medium text-foreground">
                         {formatDate(user.createdAt)}
                       </span>
                     </div>
                   </div>
                   
                   <div>
-                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                    <Label className="text-sm font-semibold text-muted-foreground mb-2 block">
                       Última actualización
                     </Label>
-                    <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                      <Clock className="h-5 w-5 text-gray-500" />
-                      <span className="text-base font-medium text-gray-900 dark:text-white">
+                    <div className="flex items-center gap-3 p-4 bg-muted rounded-lg border border-border">
+                      <Clock className="h-5 w-5 text-primary" />
+                      <span className="text-base font-medium text-foreground">
                         {formatDate(user.updatedAt)}
                       </span>
                     </div>
@@ -464,11 +448,11 @@ const Profile = () => {
           </Card>
 
           {/* Change Password */}
-          <Card className="shadow-lg border-0 lg:col-span-2">
-            <CardHeader className="border-b border-gray-100 dark:border-gray-700">
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-2 bg-red-100 dark:bg-red-900 rounded-lg">
-                  <Lock className="h-6 w-6 text-red-600 dark:text-red-400" />
+          <Card className="shadow-lg border border-border bg-card lg:col-span-2">
+            <CardHeader className="border-b border-border">
+              <CardTitle className="flex items-center gap-3 text-xl text-card-foreground">
+                <div className="p-2 bg-destructive/10 rounded-lg">
+                  <Lock className="h-6 w-6 text-destructive" />
                 </div>
                 Cambiar Contraseña
               </CardTitle>
@@ -480,7 +464,7 @@ const Profile = () => {
               <div className="space-y-6">
                 <div className="grid gap-6 md:grid-cols-3">
                   <div>
-                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                    <Label className="text-sm font-semibold text-muted-foreground mb-2 block">
                       Contraseña Actual
                     </Label>
                     <div className="relative">
@@ -488,25 +472,21 @@ const Profile = () => {
                         type={showPasswords.current ? 'text' : 'password'}
                         value={passwordData.currentPassword}
                         onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
-                        className="h-12 text-base border-gray-300 dark:border-gray-600 focus:border-red-500 focus:ring-red-500 pr-12"
+                        className="h-12 text-base pr-12"
                         placeholder="Contraseña actual"
                       />
                       <button
                         type="button"
                         onClick={() => togglePasswordVisibility('current')}
-                        className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
+                        className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
                       >
-                        {showPasswords.current ? (
-                          <EyeOff className="h-5 w-5" />
-                        ) : (
-                          <Eye className="h-5 w-5" />
-                        )}
+                        {showPasswords.current ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                       </button>
                     </div>
                   </div>
 
                   <div>
-                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                    <Label className="text-sm font-semibold text-muted-foreground mb-2 block">
                       Nueva Contraseña
                     </Label>
                     <div className="relative">
@@ -514,25 +494,21 @@ const Profile = () => {
                         type={showPasswords.new ? 'text' : 'password'}
                         value={passwordData.newPassword}
                         onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
-                        className="h-12 text-base border-gray-300 dark:border-gray-600 focus:border-red-500 focus:ring-red-500 pr-12"
+                        className="h-12 text-base pr-12"
                         placeholder="Nueva contraseña"
                       />
                       <button
                         type="button"
                         onClick={() => togglePasswordVisibility('new')}
-                        className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
+                        className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
                       >
-                        {showPasswords.new ? (
-                          <EyeOff className="h-5 w-5" />
-                        ) : (
-                          <Eye className="h-5 w-5" />
-                        )}
+                        {showPasswords.new ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                       </button>
                     </div>
                   </div>
 
                   <div>
-                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                    <Label className="text-sm font-semibold text-muted-foreground mb-2 block">
                       Confirmar Contraseña
                     </Label>
                     <div className="relative">
@@ -540,31 +516,26 @@ const Profile = () => {
                         type={showPasswords.confirm ? 'text' : 'password'}
                         value={passwordData.confirmPassword}
                         onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
-                        className="h-12 text-base border-gray-300 dark:border-gray-600 focus:border-red-500 focus:ring-red-500 pr-12"
+                        className="h-12 text-base pr-12"
                         placeholder="Confirmar contraseña"
                       />
                       <button
                         type="button"
                         onClick={() => togglePasswordVisibility('confirm')}
-                        className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
+                        className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
                       >
-                        {showPasswords.confirm ? (
-                          <EyeOff className="h-5 w-5" />
-                        ) : (
-                          <Eye className="h-5 w-5" />
-                        )}
+                        {showPasswords.confirm ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                       </button>
                     </div>
                   </div>
                 </div>
 
-                {/* Botón de Contraseña */}
-                <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-600">
+                <div className="flex justify-end pt-4 border-t border-border">
                   <Button
                     onClick={handlePasswordChange}
                     disabled={isLoadingPassword || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
                     variant="destructive"
-                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground min-w-[180px]"
+                    className="min-w-[180px]"
                   >
                     {isLoadingPassword ? (
                       <>

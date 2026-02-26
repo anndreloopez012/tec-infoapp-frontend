@@ -28,9 +28,13 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { PWAInstallButton } from "@/components/PWAInstallButton";
+import { useGlobal } from "@/context/GlobalContext";
 
 export default function PublicLanding() {
   const navigate = useNavigate();
+  const { getBranding } = useGlobal();
+  const branding = getBranding();
+  const logoUrl = branding.logo || branding.logoAlt || branding.logoMobile;
 
 
   const handleNavigation = (path: string) => {
@@ -89,20 +93,24 @@ export default function PublicLanding() {
           <div className="mx-auto max-w-4xl text-center space-y-8 animate-fade-in">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm text-primary animate-scale-in">
               <Sparkles className="h-4 w-4" />
-              <span>Bienvenido al Portal Tec</span>
+              <span>¡Bienvenidos!</span>
             </div>
 
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight animate-fade-in">
-              <span className="bg-gradient-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent animate-gradient">
-                Conectando con Ecosistema Tec.
+              <span className="bg-gradient-to-r from-[hsl(var(--success))] via-[hsl(142,76%,46%)] to-[hsl(var(--success))] bg-clip-text text-transparent animate-gradient">
+                Fortaleciendo el{' '}
               </span>
-              </h1>
+              <br />
+              <span className="bg-gradient-to-r from-[hsl(var(--success))] via-[hsl(142,76%,46%)] to-[hsl(var(--success))] bg-clip-text text-transparent animate-gradient">
+                Ecosistema Tec
+              </span>
+            </h1>
 
             <p
               className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto animate-fade-in"
               style={{ animationDelay: "0.2s" }}
             >
-              Un lugar que impulsa la innovación, el aprendizaje y el crecimiento del ecosistema Tec.
+              Donde impulsamos la innovación, creamos oportunidades y conectamos ideas.
             </p>
 
             <div
@@ -192,16 +200,15 @@ export default function PublicLanding() {
             ].map((item, index) => (
               <div
                 key={index}
-                className="group relative overflow-hidden rounded-2xl border bg-card p-6 hover-scale transition-all duration-300"
+                className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card p-8 hover-scale transition-all duration-300 text-center"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-100 transition-opacity`} />
-                <div className="relative">
-                  <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-background/50 backdrop-blur-sm">
-                    <item.icon className={`h-6 w-6 ${item.iconColor}`} />
+                <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                <div className="relative flex flex-col items-center gap-4">
+                  <div className="inline-flex h-14 w-14 items-center justify-center rounded-xl bg-muted/50 backdrop-blur-sm group-hover:scale-110 transition-transform duration-300">
+                    <item.icon className={`h-7 w-7 ${item.iconColor}`} />
                   </div>
-                  <h3 className="text-xl font-bold mb-2">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground">{item.description}</p>
+                  <h3 className="text-lg font-semibold text-foreground">{item.title}</h3>
                 </div>
               </div>
             ))}
@@ -392,11 +399,15 @@ export default function PublicLanding() {
           <div className="grid md:grid-cols-3 gap-8 mb-8">
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-xl">T</span>
+                <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center overflow-hidden">
+                  {logoUrl ? (
+                    <img src={logoUrl} alt={branding.siteName || 'Tec'} className="h-full w-full object-contain bg-background/90" loading="lazy" />
+                  ) : (
+                    <span className="text-primary-foreground font-bold text-xl">T</span>
+                  )}
                 </div>
                 <span className="font-bold text-xl bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                  Tec
+                  {branding.siteName || 'Tec'}
                 </span>
               </div>
               <p className="text-sm text-muted-foreground">
@@ -440,7 +451,7 @@ export default function PublicLanding() {
 
           <div className="pt-8 border-t border-border/50 text-center">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Tec Portal. Todos los derechos reservados.
+              © {new Date().getFullYear()} {branding.siteName || 'Tec'} Portal. Todos los derechos reservados.
             </p>
           </div>
         </div>

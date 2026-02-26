@@ -45,6 +45,7 @@ interface NavigationItem {
   requiredRoles?: string[];
   children?: NavigationItem[];
   color?: string;
+  external?: boolean;
 }
 
 const ModernSidebar = () => {
@@ -180,8 +181,9 @@ const ModernSidebar = () => {
       },
       {
         title: 'Empresas',
-        href: '/public/companies',
+        href: 'https://tec-members.wizedevs.com/',
         icon: Building2,
+        external: true,
       },
       {
         title: 'Configuración',
@@ -496,6 +498,21 @@ const ModernSidebar = () => {
                     </div>
                   </div>
                 </div>
+                ) : item.external ? (
+                  <a
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`
+                      group flex items-center space-x-2 sm:space-x-3 px-2 sm:px-4 py-3 sm:py-3.5 rounded-xl transition-all duration-300 relative overflow-hidden
+                      text-muted-foreground hover:text-foreground hover:bg-muted/50
+                    `}
+                  >
+                    <div className="relative z-10 flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+                      <Icon className="w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300 flex-shrink-0 group-hover:scale-105" />
+                      <span className="font-medium text-sm sm:text-base truncate">{item.title}</span>
+                    </div>
+                  </a>
                 ) : (
                   <NavLink
                     to={item.href}
