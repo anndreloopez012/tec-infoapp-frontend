@@ -2,7 +2,7 @@ import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   // ID único de la aplicación (recomendado: com.empresa.app)
-  appId: 'com.softplus.crm_gc',
+  appId: 'com.app.tec.gt',
 
   // Nombre que aparecerá en el dispositivo
   appName: 'CRM GC',
@@ -13,7 +13,7 @@ const config: CapacitorConfig = {
   // Configuración del servidor para desarrollo
   server: {
     // URL de tu frontend real para pruebas en dispositivos
-    url: 'https://crm-gc.server-softplus.plus',
+    url: 'https://app.tec.gt',
 
     // Permite conexiones HTTP no seguras (solo útil si pruebas en localhost)
     cleartext: true,

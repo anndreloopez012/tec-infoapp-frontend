@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Moon, Sun, LogIn, Menu, X, Calendar, Users, BookOpen, Search, Building2 } from 'lucide-react';
+import { Moon, Sun, LogIn, Menu, X, Calendar, Users, BookOpen, Search, Building2, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
 import { publicCategoryService } from '@/services/publicApiService';

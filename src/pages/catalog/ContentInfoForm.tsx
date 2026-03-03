@@ -446,7 +446,7 @@ const ContentInfoForm = () => {
                           className="relative group rounded-lg overflow-hidden border-2 border-border hover:border-primary transition-all duration-200"
                         >
                           <img
-                            src={`${import.meta.env.VITE_API_URL || 'https://tec-adm.server-softplus.plus'}${att.url}`}
+                            src={`${import.meta.env.VITE_API_URL || 'https://api-app.tec.gt'}${att.url}`}
                             alt={att.name}
                             className="w-full h-32 object-cover"
                           />

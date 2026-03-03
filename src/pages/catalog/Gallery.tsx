@@ -266,7 +266,7 @@ const Gallery = () => {
 
         try {
           const uploadResponse = await fetch(
-            `${import.meta.env.VITE_API_URL || 'https://tec-adm.server-softplus.plus'}/api/upload`,
+            `${import.meta.env.VITE_API_URL || 'https://api-app.tec.gt'}/api/upload`,
             {
               method: 'POST',
               headers: {
@@ -445,7 +445,7 @@ const Gallery = () => {
                 <div className="aspect-square overflow-hidden bg-muted">
                   {item.media && item.media.length > 0 ? (
                     <img
-                      src={`${import.meta.env.VITE_API_URL || 'https://tec-adm.server-softplus.plus'}${item.media[0].url}`}
+                      src={`${import.meta.env.VITE_API_URL || 'https://api-app.tec.gt'}${item.media[0].url}`}
                       alt={item.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     />
@@ -587,7 +587,7 @@ const Gallery = () => {
                     {existingMedia.map((img) => (
                       <div key={img.id} className="relative group">
                         <img
-                          src={`${import.meta.env.VITE_API_URL || 'https://tec-adm.server-softplus.plus'}${img.url}`}
+                          src={`${import.meta.env.VITE_API_URL || 'https://api-app.tec.gt'}${img.url}`}
                           alt={img.name}
                           className="w-full h-24 object-cover rounded border"
                         />
@@ -674,10 +674,10 @@ const Gallery = () => {
               {selectedGallery.media.map((img) => (
                 <div key={img.id} className="aspect-square overflow-hidden rounded-lg">
                   <img
-                    src={`${import.meta.env.VITE_API_URL || 'https://tec-adm.server-softplus.plus'}${img.url}`}
+                    src={`${import.meta.env.VITE_API_URL || 'https://api-app.tec.gt'}${img.url}`}
                     alt={img.name}
                     className="w-full h-full object-cover hover:scale-110 transition-transform duration-300 cursor-pointer"
-                    onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'https://tec-adm.server-softplus.plus'}${img.url}`, '_blank')}
+                    onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'https://api-app.tec.gt'}${img.url}`, '_blank')}
                   />
                 </div>
               ))}
@@ -716,7 +716,7 @@ const Gallery = () => {
 
           <div className="w-full h-full flex items-center justify-center p-0">
             <img
-              src={`${import.meta.env.VITE_API_URL || 'https://tec-adm.server-softplus.plus'}${selectedGallery.media[currentSlideIndex].url}`}
+              src={`${import.meta.env.VITE_API_URL || 'https://api-app.tec.gt'}${selectedGallery.media[currentSlideIndex].url}`}
               alt={selectedGallery.media[currentSlideIndex].name}
               className="max-w-full max-h-full w-auto h-auto object-contain animate-fade-in"
             />

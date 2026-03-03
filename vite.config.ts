@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
     allowedHosts: [
-      "tec.server-softplus.plus",
+      "app.tec.gt",
       ".lovableproject.com"
     ]
   },

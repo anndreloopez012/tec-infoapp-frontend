@@ -154,7 +154,7 @@ const ContentPreviewDialog: React.FC<ContentPreviewDialogProps> = ({
                 {data.attachments.map((att, index) => (
                   <img
                     key={index}
-                    src={typeof att === 'string' ? att : `${import.meta.env.VITE_API_URL || 'https://tec-adm.server-softplus.plus'}${att.url}`}
+                    src={typeof att === 'string' ? att : `${import.meta.env.VITE_API_URL || 'https://api-app.tec.gt'}${att.url}`}
                     alt={`Cover ${index + 1}`}
                     className="w-full h-48 object-cover rounded-lg"
                   />

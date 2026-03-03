@@ -434,7 +434,7 @@ export default function PublicLanding() {
             </div>
 
             <div className="space-y-4">
-              <h3 className="font-semibold text-sm uppercase tracking-wider">Desarrollado por</h3>
+              <h3 className="font-semibold text-sm uppercase tracking-wider"></h3>
               <div className="flex flex-col gap-3">
                 <a
                   href="https://softplusgt.com/"
@@ -444,6 +444,17 @@ export default function PublicLanding() {
                 >
                   <Code2 className="h-4 w-4 group-hover:scale-110 transition-transform" />
                   <span className="font-medium">SoftPlus - GT</span>
+                </a>
+              </div>
+              <div className="flex flex-col gap-3">
+                <a
+                  href="https://alcore-gt.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
+                >
+                  <Code2 className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                  <span className="font-medium">ALCORE</span>
                 </a>
               </div>
             </div>
