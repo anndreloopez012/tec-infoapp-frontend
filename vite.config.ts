@@ -13,10 +13,7 @@ export default defineConfig(({ mode }) => ({
   preview: {
     host: "::",
     port: 8080,
-    allowedHosts: [
-      "app.tec.gt",
-      ".lovableproject.com"
-    ]
+    allowedHosts: true
   },
   plugins: [
     react(), 
