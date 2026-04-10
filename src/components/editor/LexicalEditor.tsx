@@ -68,6 +68,47 @@ function onError(error: Error) {
   console.error(error);
 }
 
+function normalizeLexicalVideoNodes(rawValue: string): string {
+  try {
+    const parsed = JSON.parse(rawValue);
+
+    const normalizeNode = (node: any): any => {
+      if (!node || typeof node !== 'object') return node;
+
+      const normalizedNode = { ...node };
+
+      if (
+        normalizedNode.src &&
+        (normalizedNode.type === 'youtube' ||
+          normalizedNode.type === 'upload' ||
+          (normalizedNode.type == null && normalizedNode.videoType))
+      ) {
+        normalizedNode.videoType =
+          normalizedNode.videoType ||
+          (normalizedNode.type === 'youtube' || normalizedNode.type === 'upload'
+            ? normalizedNode.type
+            : 'upload');
+        normalizedNode.type = 'video';
+      }
+
+      if (Array.isArray(normalizedNode.children)) {
+        normalizedNode.children = normalizedNode.children.map(normalizeNode);
+      }
+
+      return normalizedNode;
+    };
+
+    if (parsed?.root) {
+      parsed.root = normalizeNode(parsed.root);
+      return JSON.stringify(parsed);
+    }
+
+    return rawValue;
+  } catch (error) {
+    return rawValue;
+  }
+}
+
 interface UpdatePluginProps {
   value: string;
   onChange: (value: string) => void;
@@ -83,9 +124,10 @@ function UpdatePlugin({ value, onChange }: UpdatePluginProps) {
     if (value && value !== initialValue.current && !isInternalUpdate.current) {
       editor.update(() => {
         try {
-          const parsedState = editor.parseEditorState(value);
+          const normalizedValue = normalizeLexicalVideoNodes(value);
+          const parsedState = editor.parseEditorState(normalizedValue);
           editor.setEditorState(parsedState);
-          initialValue.current = value;
+          initialValue.current = normalizedValue;
         } catch (e) {
           console.error('Error parsing editor state:', e);
         }

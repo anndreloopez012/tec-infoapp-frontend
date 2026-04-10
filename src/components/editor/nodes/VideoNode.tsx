@@ -24,7 +24,7 @@ export interface VideoPayload {
 export type SerializedVideoNode = Spread<
   {
     src: string;
-    type: 'youtube' | 'upload';
+    videoType: 'youtube' | 'upload';
     width?: number;
     height?: number;
   },
@@ -166,15 +166,28 @@ export class VideoNode extends DecoratorNode<JSX.Element> {
     return new VideoNode(node.__src, node.__videoType, node.__width, node.__height, node.__key);
   }
 
-  static importJSON(serializedNode: SerializedVideoNode): VideoNode {
-    const { src, type, width, height } = serializedNode;
-    return $createVideoNode({ src, type, width, height });
+  static importJSON(
+    serializedNode: SerializedVideoNode & { type?: string; videoType?: 'youtube' | 'upload' }
+  ): VideoNode {
+    const legacyVideoType =
+      serializedNode.videoType ||
+      ((serializedNode.type === 'youtube' || serializedNode.type === 'upload')
+        ? serializedNode.type
+        : undefined);
+
+    return $createVideoNode({
+      src: serializedNode.src,
+      type: legacyVideoType || 'upload',
+      width: serializedNode.width,
+      height: serializedNode.height,
+    });
   }
 
   exportJSON(): SerializedVideoNode {
     return {
       src: this.__src,
-      type: this.__videoType,
+      type: 'video',
+      videoType: this.__videoType,
       width: this.__width,
       height: this.__height,
       version: 1,

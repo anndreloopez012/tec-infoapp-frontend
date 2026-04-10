@@ -52,6 +52,47 @@ function onError(error: Error) {
   console.error('Lexical Viewer Error:', error);
 }
 
+function normalizeLexicalVideoNodes(rawValue: string): string {
+  try {
+    const parsed = JSON.parse(rawValue);
+
+    const normalizeNode = (node: any): any => {
+      if (!node || typeof node !== 'object') return node;
+
+      const normalizedNode = { ...node };
+
+      if (
+        normalizedNode.src &&
+        (normalizedNode.type === 'youtube' ||
+          normalizedNode.type === 'upload' ||
+          (normalizedNode.type == null && normalizedNode.videoType))
+      ) {
+        normalizedNode.videoType =
+          normalizedNode.videoType ||
+          (normalizedNode.type === 'youtube' || normalizedNode.type === 'upload'
+            ? normalizedNode.type
+            : 'upload');
+        normalizedNode.type = 'video';
+      }
+
+      if (Array.isArray(normalizedNode.children)) {
+        normalizedNode.children = normalizedNode.children.map(normalizeNode);
+      }
+
+      return normalizedNode;
+    };
+
+    if (parsed?.root) {
+      parsed.root = normalizeNode(parsed.root);
+      return JSON.stringify(parsed);
+    }
+
+    return rawValue;
+  } catch (error) {
+    return rawValue;
+  }
+}
+
 interface LoadContentPluginProps {
   content: string;
 }
@@ -64,7 +105,8 @@ function LoadContentPlugin({ content }: LoadContentPluginProps) {
 
     try {
       // Parse the JSON content and set editor state
-      const parsedState = editor.parseEditorState(content);
+      const normalizedContent = normalizeLexicalVideoNodes(content);
+      const parsedState = editor.parseEditorState(normalizedContent);
       editor.setEditorState(parsedState);
       
       // Make editor read-only
