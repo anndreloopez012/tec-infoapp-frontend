@@ -363,7 +363,7 @@ const ModernSidebar = () => {
               {branding.siteName || 'Tec Community'}
             </h2>
             <p className="text-xs text-muted-foreground hidden sm:block">
-              Comunidad más cercana, dinámica e informada
+              {branding.tagline || 'Comunidad más cercana, dinámica e informada'}
             </p>
           </div>
         </motion.div>
