@@ -3,6 +3,7 @@ import { PublicHeader } from '@/components/public/PublicHeader';
 import { PageTransition } from '@/components/PageTransition';
 import { useGlobal } from '@/context/GlobalContext';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import { PublicFooter } from '@/components/public/PublicFooter';
 
 export const PublicLayout = () => {
   const { isLoading, config } = useGlobal();
@@ -20,6 +21,7 @@ export const PublicLayout = () => {
           <Outlet />
         </PageTransition>
       </main>
+      <PublicFooter />
     </div>
   );
 };

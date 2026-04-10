@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useRoles } from '../hooks/useRoles';
+import { useNavigate } from 'react-router-dom';
 import { API_CONFIG, buildApiUrl, getDefaultHeaders } from '../config/api';
+import userService from '../services/userService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +11,16 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { 
   User, 
   Mail, 
@@ -22,17 +34,23 @@ import {
   Clock,
   Lock,
   Eye,
-  EyeOff
+  EyeOff,
+  AlertTriangle,
+  Trash2
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const Profile = () => {
-  const { user, updateProfile, changePassword, isLoading } = useAuth();
+  const navigate = useNavigate();
+  const { user, updateProfile, changePassword, isLoading, logout } = useAuth();
   const { getRoleLabelForUser, getUserType } = useRoles();
   
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [isLoadingPassword, setIsLoadingPassword] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
   
   const [editData, setEditData] = useState({
     username: user?.username || '',
@@ -217,6 +235,46 @@ const Profile = () => {
       ...prev,
       [field]: !prev[field]
     }));
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user?.id) return;
+
+    if (deleteConfirmation.trim().toUpperCase() !== 'ELIMINAR') {
+      toast({
+        variant: 'destructive',
+        title: 'Confirmación incompleta',
+        description: 'Escribe ELIMINAR para confirmar la eliminación definitiva de tu cuenta.',
+      });
+      return;
+    }
+
+    setIsDeletingAccount(true);
+
+    try {
+      const result = await userService.deleteUser(user.id);
+
+      if (!result.success) {
+        throw new Error(result.error || 'No se pudo eliminar la cuenta');
+      }
+
+      setDeleteDialogOpen(false);
+      logout();
+      navigate('/eliminar-cuenta');
+
+      toast({
+        title: 'Cuenta eliminada',
+        description: 'Tu cuenta fue eliminada correctamente.',
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'No se pudo eliminar la cuenta',
+        description: error.message || 'Intenta nuevamente o contacta al administrador.',
+      });
+    } finally {
+      setIsDeletingAccount(false);
+    }
   };
 
   return (
@@ -553,8 +611,88 @@ const Profile = () => {
               </div>
             </CardContent>
           </Card>
+
+          <Card className="shadow-lg border border-destructive/30 bg-card lg:col-span-2">
+            <CardHeader className="border-b border-destructive/20">
+              <CardTitle className="flex items-center gap-3 text-xl text-card-foreground">
+                <div className="p-2 bg-destructive/10 rounded-lg">
+                  <AlertTriangle className="h-6 w-6 text-destructive" />
+                </div>
+                Zona de Peligro
+              </CardTitle>
+              <CardDescription className="text-base">
+                La eliminación de cuenta es definitiva y removerá tu acceso a Tec Community.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6 space-y-5">
+              <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-5 space-y-3">
+                <p className="text-sm leading-6 text-muted-foreground">
+                  Si eliminas tu cuenta perderás el acceso a tu perfil, preferencias y recursos asociados. Parte de la
+                  información técnica o de auditoría podría conservarse temporalmente por motivos legales, de seguridad
+                  u operativos.
+                </p>
+                <Button
+                  variant="destructive"
+                  className="min-w-[220px]"
+                  onClick={() => setDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Eliminar Cuenta
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                También puedes consultar las instrucciones públicas en{' '}
+                <button
+                  type="button"
+                  className="font-medium text-primary hover:underline"
+                  onClick={() => navigate('/eliminar-cuenta')}
+                >
+                  Cómo Eliminar Mi Cuenta
+                </button>
+                .
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar cuenta de forma definitiva</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <span className="block">
+                Esta acción no se puede deshacer. Para confirmar, escribe <strong>ELIMINAR</strong> en el campo de abajo.
+              </span>
+              <Input
+                value={deleteConfirmation}
+                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                placeholder="Escribe ELIMINAR"
+                className="mt-3"
+              />
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setDeleteConfirmation('');
+                setDeleteDialogOpen(false);
+              }}
+            >
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault();
+                handleDeleteAccount();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeletingAccount ? 'Eliminando...' : 'Confirmar Eliminación'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
