@@ -20,20 +20,20 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['logo.ico', 'logoTec.png', 'icon-512x512.png', 'robots.txt'],
+      includeAssets: ['logoTec.png', 'icon-192x192.png', 'icon-512x512.png', 'robots.txt'],
       manifest: {
-        name: 'TechApp - Gestión de Espacios Tech',
-        short_name: 'TechApp',
-        description: 'Plataforma de gestión integral para edificios de oficinas tech',
+        name: 'Tec Community',
+        short_name: 'Tec Community',
+        description: 'Tec Community centraliza la información más importante para que cada Tec member viva una experiencia más cercana, dinámica e informada dentro de la comunidad.',
         theme_color: '#115811',
-        background_color: '#00ff3c',
+        background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait-primary',
         scope: '/',
         start_url: '/',
         icons: [
           {
-            src: '/logoTec.png',
+            src: '/icon-192x192.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any maskable'

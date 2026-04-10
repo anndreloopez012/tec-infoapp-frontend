@@ -233,8 +233,8 @@ export const GlobalProvider = ({ children }) => {
     if (!state.config) return {};
     
     return {
-      siteName: state.config.siteName || 'Tec',
-      tagline: state.config.tagline || 'Gestión de Espacios Tech',
+      siteName: state.config.siteName || 'Tec Community',
+      tagline: state.config.tagline || 'Comunidad más cercana, dinámica e informada',
       logo: state.config.logoMain ? getImageUrl(state.config.logoMain) : null,
       logoAlt: state.config.logoAlt ? getImageUrl(state.config.logoAlt) : null,
       logoMobile: state.config.logoMobile ? getImageUrl(state.config.logoMobile) : null,

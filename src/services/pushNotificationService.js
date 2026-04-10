@@ -209,11 +209,11 @@ class PushNotificationService {
       this.registration.active.postMessage({
         type: 'SHOW_NOTIFICATION',
         data: {
-          title: data.title || 'CRM Admin Panel',
+          title: data.title || 'Tec Community',
           body: data.body || 'Nueva notificación',
           icon: data.icon || '/logoTec.png',
           badge: data.badge || '/logoTec.png',
-          tag: data.tag || 'admin-notification',
+          tag: data.tag || 'tec-community-notification',
           data: data.data || {},
           actions: data.actions || [
             { action: 'view', title: 'Ver más' },

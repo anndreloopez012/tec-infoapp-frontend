@@ -31,7 +31,7 @@ export const SplashScreen = () => {
   if (!isVisible || !isPWA) return null;
 
   const logoUrl = branding?.logo ? getImageUrl(branding.logo) : '/icon-512x512.png';
-  const appName = branding?.name || 'Tec';
+  const appName = branding?.name || 'Tec Community';
 
   return (
     <AnimatePresence>

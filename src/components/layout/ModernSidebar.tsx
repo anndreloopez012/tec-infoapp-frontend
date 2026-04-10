@@ -360,10 +360,10 @@ const ModernSidebar = () => {
           
           <div className="flex-1 min-w-0">
             <h2 className="text-lg sm:text-xl font-bold text-foreground truncate bg-gradient-primary bg-clip-text text-transparent">
-              {branding.siteName || 'Tec'}
+              {branding.siteName || 'Tec Community'}
             </h2>
             <p className="text-xs text-muted-foreground hidden sm:block">
-              Gestión de Espacios Tech
+              Comunidad más cercana, dinámica e informada
             </p>
           </div>
         </motion.div>

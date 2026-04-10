@@ -1,7 +1,7 @@
 {
-  "name": "Tec - Gestión de Espacios Tech",
-  "short_name": "TechOffice",
-  "description": "Plataforma de gestión integral para edificios de oficinas tech - Administración de espacios, empresas y servicios",
+  "name": "Tec Community",
+  "short_name": "Tec Community",
+  "description": "Tec Community centraliza la información más importante para que cada Tec member viva una experiencia más cercana, dinámica e informada dentro de la comunidad.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#017b1c",
@@ -29,25 +29,25 @@
   ],
   "shortcuts": [
     {
-      "name": "Dashboard",
-      "short_name": "Dashboard",
-      "description": "Panel principal de gestión",
+      "name": "Inicio",
+      "short_name": "Inicio",
+      "description": "Accede a la información principal de Tec Community",
       "url": "/dashboard",
       "icons": [
         {
-          "src": "/logoTec.png",
+          "src": "/icon-192x192.png",
           "sizes": "192x192"
         }
       ]
     },
     {
-      "name": "Empresas",
-      "short_name": "Empresas", 
-      "description": "Gestionar empresas tech",
-      "url": "/catalog/company",
+      "name": "Calendario",
+      "short_name": "Calendario",
+      "description": "Consulta actividades y eventos de la comunidad",
+      "url": "/public/calendar",
       "icons": [
         {
-          "src": "/logoTec.png",
+          "src": "/icon-192x192.png",
           "sizes": "192x192"
         }
       ]
@@ -59,7 +59,7 @@
       "url": "/profile", 
       "icons": [
         {
-          "src": "/logoTec.png",
+          "src": "/icon-192x192.png",
           "sizes": "192x192"
         }
       ]
@@ -67,18 +67,18 @@
   ],
   "screenshots": [
     {
-      "src": "/logoTec.png",
+      "src": "/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Tec Desktop"
+      "label": "Tec Community Desktop"
     },
     {
-      "src": "/logoTec.png", 
+      "src": "/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Tec Mobile"
+      "label": "Tec Community Mobile"
     }
   ]
 }

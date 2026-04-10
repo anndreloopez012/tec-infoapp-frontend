@@ -231,9 +231,9 @@ class GlobalService {
     try {
       // Crear manifest dinámico
       const manifest = {
-        name: config.siteName || "Tec - Gestión de Espacios Tec",
-        short_name: config.shortName || config.siteName?.substring(0, 12) || "Tec",
-        description: config.description || "Plataforma de gestión integral para edificios de oficinas tech - Administración de espacios, empresas y servicios",
+        name: config.siteName || "Tec Community",
+        short_name: config.shortName || config.siteName || "Tec Community",
+        description: config.description || "Tec Community centraliza la información más importante para que cada Tec member viva una experiencia más cercana, dinámica e informada dentro de la comunidad.",
         start_url: "/",
         display: "standalone",
         background_color: config.colors?.primaryColor || "#076d35",
@@ -244,7 +244,7 @@ class GlobalService {
         categories: ["business", "productivity", "utilities"],
         icons: [
           {
-            src: config.logoMain ? buildImageUrl(config.logoMain.url) : "/logoTec.png",
+            src: config.logoMain ? buildImageUrl(config.logoMain.url) : "/icon-192x192.png",
             sizes: "192x192",
             type: "image/png",
             purpose: "any maskable"
@@ -258,25 +258,25 @@ class GlobalService {
         ],
         shortcuts: [
           {
-            name: "Dashboard",
-            short_name: "Dashboard",
-            description: "Panel principal de gestión",
+            name: "Inicio",
+            short_name: "Inicio",
+            description: "Accede a la información principal de Tec Community",
             url: "/dashboard",
-            icons: [{ src: config.logoMain ? buildImageUrl(config.logoMain.url) : "/logoTec.png", sizes: "192x192" }]
+            icons: [{ src: config.logoMain ? buildImageUrl(config.logoMain.url) : "/icon-192x192.png", sizes: "192x192" }]
           },
           {
-            name: "Empresas",
-            short_name: "Empresas", 
-            description: "Gestionar empresas tech",
-            url: "/companies",
-            icons: [{ src: config.logoMain ? buildImageUrl(config.logoMain.url) : "/logoTec.png", sizes: "192x192" }]
+            name: "Calendario",
+            short_name: "Calendario",
+            description: "Consulta actividades y eventos de la comunidad",
+            url: "/public/calendar",
+            icons: [{ src: config.logoMain ? buildImageUrl(config.logoMain.url) : "/icon-192x192.png", sizes: "192x192" }]
           },
           {
             name: "Mi Perfil",
             short_name: "Perfil",
             description: "Ver mi perfil",
             url: "/profile", 
-            icons: [{ src: config.logoMain ? buildImageUrl(config.logoMain.url) : "/logoTec.png", sizes: "192x192" }]
+            icons: [{ src: config.logoMain ? buildImageUrl(config.logoMain.url) : "/icon-192x192.png", sizes: "192x192" }]
           }
         ],
         prefer_related_applications: false

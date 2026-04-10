@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appId: 'com.app.tec.gt',
 
   // Nombre que aparecerá en el dispositivo
-  appName: 'CRM GC',
+  appName: 'Tec Community',
 
   // Directorio donde se genera el build de la aplicación web (dist es el default de Vite)
   webDir: 'dist',

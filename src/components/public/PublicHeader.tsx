@@ -61,10 +61,10 @@ export const PublicHeader = () => {
           </div>
           <div className="flex flex-col">
             <span className="font-bold text-xl bg-gradient-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent leading-none">
-              {branding.siteName || 'Tec APP'}
+              {branding.siteName || 'Tec Community'}
             </span>
             <span className="text-xs text-muted-foreground">
-              {branding.tagline || 'Innovación & Tecnología'}
+              {branding.tagline || 'Comunidad más cercana, dinámica e informada'}
             </span>
           </div>
         </Link>

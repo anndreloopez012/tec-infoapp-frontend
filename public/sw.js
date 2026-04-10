@@ -1,7 +1,7 @@
 // Service Worker mejorado para PWA optimizada
-const CACHE_NAME = 'crm-admin-v2';
-const API_CACHE_NAME = 'crm-api-v2';
-const STATIC_CACHE_NAME = 'crm-static-v2';
+const CACHE_NAME = 'tec-community-v1';
+const API_CACHE_NAME = 'tec-community-api-v1';
+const STATIC_CACHE_NAME = 'tec-community-static-v1';
 
 // URLs críticas para cachear
 const URLS_TO_CACHE = [
@@ -47,7 +47,7 @@ self.addEventListener('activate', (event) => {
         return Promise.all(
           cacheNames
             .filter((cacheName) => {
-              return !['crm-admin-v2', 'crm-api-v2', 'crm-static-v2'].includes(cacheName);
+              return !['tec-community-v1', 'tec-community-api-v1', 'tec-community-static-v1'].includes(cacheName);
             })
             .map((cacheName) => {
               console.log('🗑️ Service Worker: Eliminando caché antigua:', cacheName);
@@ -190,12 +190,12 @@ self.addEventListener('push', (event) => {
   console.log('🔔 Push notification recibida');
   
   let notificationData = {
-    title: 'CRM Admin Panel',
-    body: 'Nueva notificación del sistema',
+    title: 'Tec Community',
+    body: 'Tienes una nueva notificación',
     icon: '/logoTec.png',
     badge: '/logoTec.png',
     image: '/icon-512x512.png',
-    tag: 'crm-notification',
+    tag: 'tec-community-notification',
     requireInteraction: false,
     silent: false,
     vibrate: [200, 100, 200],
