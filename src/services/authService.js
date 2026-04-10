@@ -67,14 +67,37 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
+    const status = error.response?.status;
+    const url = error.config?.url || '';
+    const isLoginEndpoint = url.includes(`/${API_CONFIG.API_PREFIX}/${ENDPOINTS.AUTH.LOGIN}`);
+
     console.error('❌ Response error:', { 
-      status: error.response?.status,
+      status,
       statusText: error.response?.statusText,
-      url: error.config?.url,
+      url,
       data: error.response?.data
     });
-    handleApiError(error);
-    return Promise.reject(error);
+
+    if (isLoginEndpoint) {
+      const strapiMessage =
+        error.response?.data?.error?.message ||
+        error.response?.data?.message?.[0]?.messages?.[0]?.message ||
+        error.response?.data?.message;
+
+      const normalizedMessage =
+        status === 400 || status === 401
+          ? 'Usuario o contraseña incorrectos. Verifica tus credenciales.'
+          : strapiMessage || 'No se pudo iniciar sesión. Intenta nuevamente.';
+
+      const normalizedError = new Error(normalizedMessage);
+      normalizedError.response = error.response;
+      normalizedError.request = error.request;
+      normalizedError.status = status;
+
+      return Promise.reject(normalizedError);
+    }
+
+    return Promise.reject(handleApiError(error));
   }
 );
 
@@ -133,10 +156,11 @@ class AuthService {
     } catch (error) {
       console.error('❌ Error en login:', error);
       
-      const errorMessage = error.response?.data?.message?.[0]?.messages?.[0]?.message 
-        || error.response?.data?.error?.message
-        || error.message 
-        || 'Error de autenticación';
+      const errorMessage =
+        error.response?.data?.message?.[0]?.messages?.[0]?.message ||
+        error.response?.data?.error?.message ||
+        error.message ||
+        'Error de autenticación';
 
       // Registrar intento de login fallido
       const currentFailedAttempts = parseInt(localStorage.getItem('failed_login_attempts') || '0');
