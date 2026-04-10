@@ -1,7 +1,10 @@
 // Service para manejar Push Notifications de manera funcional
+const VAPID_PUBLIC_KEY =
+  (import.meta.env && import.meta.env.VITE_VAPID_PUBLIC_KEY) || '';
+
 class PushNotificationService {
   constructor() {
-    this.vapidKey = 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U'; // Clave pública VAPID válida
+    this.vapidKey = VAPID_PUBLIC_KEY;
     this.isSupported = 'serviceWorker' in navigator && 'PushManager' in window;
     this.registration = null;
     this.subscription = null;
@@ -46,6 +49,11 @@ class PushNotificationService {
   // Obtener o crear suscripción push
   async subscribeToPush() {
     try {
+      if (!this.vapidKey) {
+        console.warn('[WebPush] VITE_VAPID_PUBLIC_KEY no configurada, se omite la suscripción VAPID');
+        return null;
+      }
+
       // Asegurar que tenemos permisos
       await this.requestPermission();
 

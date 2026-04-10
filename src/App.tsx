@@ -77,6 +77,7 @@ import ModernLayout from '@/components/layout/ModernLayout';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { SplashScreen } from '@/components/SplashScreen';
 import { PWAUpdatePrompt } from '@/components/PWAUpdatePrompt';
+import { PushNotificationPrompt } from '@/components/pwa/PushNotificationPrompt';
 
 const queryClient = new QueryClient();
 
@@ -227,6 +228,7 @@ const App = () => {
               <PermissionsProvider>
                 <NotificationsProvider>
                   <PWAUpdatePrompt />
+                  <PushNotificationPrompt />
                   <Toaster />
                   <Sonner />
                   <BrowserRouter>

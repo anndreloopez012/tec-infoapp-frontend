@@ -9,30 +9,30 @@ import { useCapacitorNotifications } from './useCapacitorNotifications';
  */
 export const useNotificationIntegration = () => {
   const { user, isAuthenticated } = useAuth();
-  const { initializePushNotifications } = useCapacitorNotifications();
-  const hasInitializedRef = useRef(false);
+  const { initialize, unregister } = useCapacitorNotifications();
+  const loginNotificationSentRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (isAuthenticated && user && !hasInitializedRef.current) {
-      hasInitializedRef.current = true;
-      
-      // Inicializar notificaciones push cuando el usuario esté autenticado
-      initializePushNotifications();
-      
-      // Notificar login exitoso
-      if (user.id) {
+    if (isAuthenticated && user?.id) {
+      initialize().catch((error) => {
+        console.warn('[NotificationIntegration] Error al inicializar push:', error);
+      });
+
+      if (loginNotificationSentRef.current !== user.id) {
+        loginNotificationSentRef.current = user.id;
         enhancedNotificationService.notifyLoginSuccess(user.id).catch(console.error);
       }
+
+      return;
     }
-    
-    // Reset cuando el usuario se desloguee
+
     if (!isAuthenticated) {
-      hasInitializedRef.current = false;
+      loginNotificationSentRef.current = null;
+      unregister().catch(() => {});
     }
-  }, [isAuthenticated, user?.id]);
+  }, [initialize, isAuthenticated, unregister, user?.id]);
 
   return {
-    // Funciones para usar en componentes
     notifyModuleChange: enhancedNotificationService.notifyModuleChange.bind(enhancedNotificationService),
     sendAdminNotification: enhancedNotificationService.sendAdminNotification.bind(enhancedNotificationService),
     getUserNotifications: enhancedNotificationService.getUserNotifications.bind(enhancedNotificationService),

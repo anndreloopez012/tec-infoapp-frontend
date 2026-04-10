@@ -1,161 +1,167 @@
-import { useEffect, useState } from 'react';
-import { PushNotifications } from '@capacitor/push-notifications';
+import { useCallback, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { NATIVE_FEATURES } from '@/config/nativeFeatures';
 import { globalNotificationService } from '@/services/globalNotificationService';
-import { useToast } from '@/hooks/use-toast';
 import pushNotificationService from '@/services/pushNotificationService';
 
-export interface NotificationPermission {
-  receive: 'granted' | 'denied' | 'prompt' | 'prompt-with-rationale';
+export type PushPermissionStatus =
+  | 'granted'
+  | 'denied'
+  | 'prompt'
+  | 'prompt-with-rationale'
+  | 'not-supported'
+  | 'disabled';
+
+export interface UsePushNotificationsReturn {
+  permissionStatus: PushPermissionStatus;
+  isRegistered: boolean;
+  registrationToken: string;
+  initialize: () => Promise<void>;
+  unregister: () => Promise<void>;
+  initializePushNotifications: () => Promise<void>;
+  initializeWebPushNotifications: () => Promise<void>;
+  unregisterNotifications: () => Promise<void>;
+  permissions: { receive: PushPermissionStatus };
 }
 
-export const useCapacitorNotifications = () => {
-  const [permissions, setPermissions] = useState<NotificationPermission>({
-    receive: 'prompt'
-  });
-  const [registrationToken, setRegistrationToken] = useState<string>('');
-  const { toast } = useToast();
+let nativeListenersRegistered = false;
 
-  useEffect(() => {
-    // Inicializar tanto para plataformas nativas como web
-    if (Capacitor.isNativePlatform()) {
-      initializePushNotifications();
-    } else {
-      // Para web, inicializar notificaciones web push
-      initializeWebPushNotifications();
-    }
+export const useCapacitorNotifications = (): UsePushNotificationsReturn => {
+  const [permissionStatus, setPermissionStatus] = useState<PushPermissionStatus>(
+    NATIVE_FEATURES.PUSH_NOTIFICATIONS ? 'prompt' : 'disabled'
+  );
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [registrationToken, setRegistrationToken] = useState<string>('');
+  const initAttemptedRef = useRef(false);
+
+  const sendTokenToBackend = useCallback(async (token: string, platform: string) => {
+    await globalNotificationService.subscribeToPush(token, platform);
   }, []);
 
-  const initializePushNotifications = async () => {
+  const initializeNative = useCallback(async () => {
     try {
-      // Request permission
-      const permission = await PushNotifications.requestPermissions();
-      setPermissions(permission);
+      const { PushNotifications } = await import('@capacitor/push-notifications');
 
-      if (permission.receive === 'granted') {
-        // Register for push notifications
+      if (nativeListenersRegistered) {
+        console.log('[Push] Listeners ya registrados, solicitando token fresco...');
         await PushNotifications.register();
-
-        // Listen for registration token
-        PushNotifications.addListener('registration', (token) => {
-          console.log('Push registration success, token: ' + token.value);
-          setRegistrationToken(token.value);
-          // Enviar el token al backend Strapi
-          sendTokenToBackend(token.value, Capacitor.getPlatform());
-        });
-
-        // Listen for registration errors
-        PushNotifications.addListener('registrationError', (error) => {
-          console.error('Error on registration: ' + JSON.stringify(error));
-          toast({
-            title: 'Error de notificaciones',
-            description: 'No se pudieron configurar las notificaciones push',
-            variant: 'destructive'
-          });
-        });
-
-        // Listen for push notifications received
-        PushNotifications.addListener('pushNotificationReceived', (notification) => {
-          console.log('Push notification received: ', notification);
-          toast({
-            title: notification.title || 'Nueva notificación',
-            description: notification.body || 'Tienes una nueva notificación'
-          });
-        });
-
-        // Listen for push notification actions
-        PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-          console.log('Push notification action performed', notification.actionId, notification.inputValue);
-          // Aquí puedes manejar acciones específicas de las notificaciones
-        });
-      }
-    } catch (error) {
-      console.error('Error initializing push notifications:', error);
-    }
-  };
-
-  const sendTokenToBackend = async (token: string, platform: string = 'web') => {
-    try {
-      console.log('🔔 Enviando token al backend:', { token: token.substring(0, 20) + '...', platform });
-      await globalNotificationService.subscribeToPush(token, platform);
-      console.log('✅ Token guardado exitosamente');
-      toast({
-        title: 'Notificaciones activadas',
-        description: 'Se han configurado las notificaciones push correctamente'
-      });
-    } catch (error) {
-      console.error('❌ Error sending token to backend:', error);
-      toast({
-        title: 'Error de notificaciones',
-        description: 'No se pudo configurar las notificaciones push',
-        variant: 'destructive'
-      });
-    }
-  };
-
-  const initializeWebPushNotifications = async () => {
-    try {
-      console.log('🌐 Inicializando notificaciones web push...');
-      
-      // Verificar soporte
-      if (!pushNotificationService.isNotificationSupported()) {
-        console.log('⚠️ Notificaciones no soportadas en este navegador');
         return;
       }
 
-      // Reflejar estado actual de permiso en UI (default -> prompt)
-      if (typeof Notification !== 'undefined') {
-        const current = Notification.permission === 'default' ? 'prompt' : Notification.permission;
-        setPermissions({ receive: current as any });
+      const permission = await PushNotifications.requestPermissions();
+      const status = permission.receive as PushPermissionStatus;
+      setPermissionStatus(status);
+
+      if (status !== 'granted') {
+        console.log('[Push] Permiso nativo denegado:', status);
+        return;
       }
 
-      // Solicitar permisos y suscribirse
+      nativeListenersRegistered = true;
+
+      PushNotifications.addListener('registration', async (token) => {
+        console.log('[Push] Token nativo obtenido para', Capacitor.getPlatform());
+        setRegistrationToken(token.value);
+        setIsRegistered(true);
+        await sendTokenToBackend(token.value, Capacitor.getPlatform());
+      });
+
+      PushNotifications.addListener('registrationError', (error) => {
+        console.error('[Push] Error de registro:', JSON.stringify(error));
+        setIsRegistered(false);
+      });
+
+      PushNotifications.addListener('pushNotificationReceived', (notification) => {
+        console.log('[Push] Notificación en foreground recibida:', notification.title);
+      });
+
+      PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+        console.log('[Push] Acción:', action.actionId);
+        const url = action.notification?.data?.url;
+        if (url && typeof window !== 'undefined') {
+          window.location.href = String(url);
+        }
+      });
+
+      await PushNotifications.register();
+    } catch (error) {
+      console.warn('[Push] Error inicializando push nativo:', error);
+    }
+  }, [sendTokenToBackend]);
+
+  const initializeWeb = useCallback(async () => {
+    try {
+      if (typeof Notification === 'undefined' || !pushNotificationService.isNotificationSupported()) {
+        setPermissionStatus('not-supported');
+        return;
+      }
+
+      const current = Notification.permission;
+      setPermissionStatus(current === 'default' ? 'prompt' : (current as PushPermissionStatus));
+
+      if (current !== 'granted') {
+        return;
+      }
+
       const subscription = await pushNotificationService.subscribeToPush();
-      
-      // Si llegamos aquí, permisos fueron otorgados
-      setPermissions({ receive: 'granted' });
-      
       if (subscription) {
-        // Convertir la suscripción a un token identificable
-        const subscriptionJson = subscription.toJSON();
-        const webPushToken = JSON.stringify(subscriptionJson);
-        
-        console.log('🔑 Token de notificación web obtenido');
+        const webPushToken = JSON.stringify(subscription.toJSON());
         setRegistrationToken(webPushToken);
-        
-        // Enviar al backend
+        setIsRegistered(true);
         await sendTokenToBackend(webPushToken, 'web');
       }
     } catch (error) {
-      console.error('❌ Error inicializando notificaciones web:', error);
-      // Reflejar permiso actual en la UI aunque falle la suscripción
+      console.warn('[Push] Error inicializando Web Push:', error);
       if (typeof Notification !== 'undefined') {
         const current = Notification.permission === 'default' ? 'prompt' : Notification.permission;
-        setPermissions({ receive: current as any });
+        setPermissionStatus(current as PushPermissionStatus);
       }
-      toast({
-        title: 'Error de notificaciones web',
-        description: 'No se pudieron configurar las notificaciones web',
-        variant: 'destructive'
-      });
     }
-  };
+  }, [sendTokenToBackend]);
 
-  const unregisterNotifications = async () => {
-    try {
-      await PushNotifications.removeAllListeners();
-      setRegistrationToken('');
-      setPermissions({ receive: 'prompt' });
-    } catch (error) {
-      console.error('Error unregistering notifications:', error);
+  const initialize = useCallback(async () => {
+    if (!NATIVE_FEATURES.PUSH_NOTIFICATIONS) {
+      console.log('[Push] Sistema desactivado por configuración');
+      return;
     }
-  };
+
+    if (initAttemptedRef.current) return;
+    initAttemptedRef.current = true;
+
+    if (Capacitor.isNativePlatform()) {
+      await initializeNative();
+      return;
+    }
+
+    await initializeWeb();
+  }, [initializeNative, initializeWeb]);
+
+  const unregister = useCallback(async () => {
+    try {
+      if (Capacitor.isNativePlatform() && nativeListenersRegistered) {
+        const { PushNotifications } = await import('@capacitor/push-notifications');
+        await PushNotifications.removeAllListeners();
+        nativeListenersRegistered = false;
+      }
+    } catch (error) {
+      console.warn('[Push] Error al desregistrar notificaciones:', error);
+    } finally {
+      setIsRegistered(false);
+      setRegistrationToken('');
+      setPermissionStatus(NATIVE_FEATURES.PUSH_NOTIFICATIONS ? 'prompt' : 'disabled');
+      initAttemptedRef.current = false;
+    }
+  }, []);
 
   return {
-    permissions,
+    permissionStatus,
+    isRegistered,
     registrationToken,
-    initializePushNotifications,
-    initializeWebPushNotifications,
-    unregisterNotifications
+    initialize,
+    unregister,
+    initializePushNotifications: initialize,
+    initializeWebPushNotifications: initializeWeb,
+    unregisterNotifications: unregister,
+    permissions: { receive: permissionStatus }
   };
 };
