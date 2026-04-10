@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2, Search, X, Presentation, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, X, Presentation, ChevronLeft, ChevronRight, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,6 +34,21 @@ import { useAuth } from "@/context/AuthContext";
 import { galleryService, contentCategoryService, contentTagService } from "@/services/catalogServices";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  rectSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
   Pagination,
   PaginationContent,
   PaginationItem,
@@ -52,6 +67,73 @@ interface GalleryData {
   tags_content?: any[];
 }
 
+interface GalleryMediaItem {
+  id: string;
+  source: "existing" | "new";
+  previewUrl: string;
+  name: string;
+  mediaId?: number;
+  file?: File;
+}
+
+const SortableMediaCard = ({
+  item,
+  onRemove,
+  highlight = false,
+}: {
+  item: GalleryMediaItem;
+  onRemove: (id: string) => void;
+  highlight?: boolean;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`relative group rounded border bg-background ${
+        isDragging ? "z-10 opacity-70 shadow-lg" : ""
+      } ${highlight ? "border-primary" : ""}`}
+    >
+      <img
+        src={item.previewUrl}
+        alt={item.name}
+        className="w-full h-24 object-cover rounded"
+      />
+      <button
+        type="button"
+        onClick={() => onRemove(item.id)}
+        className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        <X className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        className="absolute bottom-1 left-1 bg-black/60 text-white rounded px-1.5 py-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <div className="absolute bottom-1 right-1 bg-black/60 text-white text-[10px] rounded px-1.5 py-0.5">
+        {item.source === "existing" ? "Guardada" : "Nueva"}
+      </div>
+    </div>
+  );
+};
+
 const Gallery = () => {
   const [data, setData] = useState<GalleryData[]>([]);
   const [filteredData, setFilteredData] = useState<GalleryData[]>([]);
@@ -65,13 +147,12 @@ const Gallery = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [categories, setCategories] = useState<any[]>([]);
   const [tags, setTags] = useState<any[]>([]);
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [uploadedFilePreviews, setUploadedFilePreviews] = useState<string[]>([]);
-  const [existingMedia, setExistingMedia] = useState<any[]>([]);
+  const [mediaItems, setMediaItems] = useState<GalleryMediaItem[]>([]);
   const [selectedGallery, setSelectedGallery] = useState<GalleryData | null>(null);
   const [isPresentationMode, setIsPresentationMode] = useState(false);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const pageSize = 12;
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
   const [formData, setFormData] = useState<GalleryData>({
     title: "",
@@ -93,6 +174,16 @@ const Gallery = () => {
     loadCategories();
     loadTags();
   }, [currentPage]);
+
+  useEffect(() => {
+    return () => {
+      mediaItems.forEach((item) => {
+        if (item.source === "new" && item.previewUrl.startsWith("blob:")) {
+          URL.revokeObjectURL(item.previewUrl);
+        }
+      });
+    };
+  }, [mediaItems]);
 
   useEffect(() => {
     handleSearch();
@@ -163,9 +254,7 @@ const Gallery = () => {
       category_content: "",
       tags_content: [],
     });
-    setUploadedFiles([]);
-    setUploadedFilePreviews([]);
-    setExistingMedia([]);
+    setMediaItems([]);
     setIsDialogOpen(true);
   };
 
@@ -181,9 +270,15 @@ const Gallery = () => {
       category_content: categoryId,
       tags_content: tagIds,
     });
-    setUploadedFiles([]);
-    setUploadedFilePreviews([]);
-    setExistingMedia(item.media || []);
+    setMediaItems(
+      (item.media || []).map((media) => ({
+        id: `existing-${media.id}`,
+        source: "existing" as const,
+        previewUrl: `${import.meta.env.VITE_API_URL || 'https://api-app.tec.gt'}${media.url}`,
+        name: media.name,
+        mediaId: media.id,
+      }))
+    );
     setIsDialogOpen(true);
   };
 
@@ -222,24 +317,42 @@ const Gallery = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
-      setUploadedFiles(files);
-      
-      // Crear previews de las imágenes seleccionadas
-      const previews = files.map(file => URL.createObjectURL(file));
-      setUploadedFilePreviews(previews);
+      const newItems = files.map((file, index) => ({
+        id: `new-${file.name}-${file.size}-${Date.now()}-${index}`,
+        source: "new" as const,
+        previewUrl: URL.createObjectURL(file),
+        name: file.name,
+        file,
+      }));
+
+      setMediaItems((prev) => [...prev, ...newItems]);
+      e.target.value = "";
     }
   };
 
-  const handleRemoveUploadedFile = (index: number) => {
-    // Revocar la URL del preview para liberar memoria
-    URL.revokeObjectURL(uploadedFilePreviews[index]);
-    
-    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
-    setUploadedFilePreviews(prev => prev.filter((_, i) => i !== index));
+  const handleRemoveMediaItem = (itemId: string) => {
+    setMediaItems((prev) => {
+      const itemToRemove = prev.find((item) => item.id === itemId);
+      if (itemToRemove?.source === "new" && itemToRemove.previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(itemToRemove.previewUrl);
+      }
+      return prev.filter((item) => item.id !== itemId);
+    });
   };
 
-  const handleRemoveExistingMedia = (mediaId: number) => {
-    setExistingMedia(prev => prev.filter(img => img.id !== mediaId));
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) return;
+
+    setMediaItems((items) => {
+      const oldIndex = items.findIndex((item) => item.id === active.id);
+      const newIndex = items.findIndex((item) => item.id === over.id);
+
+      if (oldIndex === -1 || newIndex === -1) return items;
+
+      return arrayMove(items, oldIndex, newIndex);
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -255,42 +368,46 @@ const Gallery = () => {
     }
 
     try {
-      let uploadedMediaIds: number[] = [];
+      const orderedMediaIds: number[] = [];
 
-      // Primero subir las imágenes nuevas si hay
-      if (uploadedFiles.length > 0) {
-        const formDataUpload = new FormData();
-        uploadedFiles.forEach(file => {
-          formDataUpload.append('files', file);
-        });
+      for (const mediaItem of mediaItems) {
+        if (mediaItem.source === "existing" && mediaItem.mediaId) {
+          orderedMediaIds.push(mediaItem.mediaId);
+          continue;
+        }
 
-        try {
-          const uploadResponse = await fetch(
-            `${import.meta.env.VITE_API_URL || 'https://api-app.tec.gt'}/api/upload`,
-            {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-              },
-              body: formDataUpload,
+        if (mediaItem.source === "new" && mediaItem.file) {
+          const formDataUpload = new FormData();
+          formDataUpload.append("files", mediaItem.file);
+
+          try {
+            const uploadResponse = await fetch(
+              `${import.meta.env.VITE_API_URL || 'https://api-app.tec.gt'}/api/upload`,
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+                body: formDataUpload,
+              }
+            );
+
+            if (!uploadResponse.ok) {
+              throw new Error("Error al subir una imagen");
             }
-          );
 
-          if (uploadResponse.ok) {
             const uploadedData = await uploadResponse.json();
-            uploadedMediaIds = uploadedData.map((img: any) => img.id);
+            if (!uploadedData?.[0]?.id) {
+              throw new Error("La respuesta de upload no incluyó el archivo");
+            }
+
+            orderedMediaIds.push(uploadedData[0].id);
+          } catch (uploadError) {
+            console.error("Error uploading file:", uploadError);
+            throw new Error("Error al subir las imágenes");
           }
-        } catch (uploadError) {
-          console.error('Error uploading files:', uploadError);
-          throw new Error('Error al subir las imágenes');
         }
       }
-
-      // Combinar IDs de medios existentes con los nuevos
-      const allMediaIds = [
-        ...existingMedia.map(img => img.id),
-        ...uploadedMediaIds
-      ];
 
       const payload: any = {
         title: formData.title,
@@ -305,9 +422,7 @@ const Gallery = () => {
         payload.tags_content = formData.tags_content;
       }
 
-      if (allMediaIds.length > 0) {
-        payload.media = allMediaIds;
-      }
+      payload.media = orderedMediaIds;
 
       const result = editingItem
         ? await galleryService.update(editingItem.documentId!, payload)
@@ -579,52 +694,37 @@ const Gallery = () => {
                 multiple
                 onChange={handleFileChange}
               />
-              
-              {existingMedia.length > 0 && (
-                <div className="space-y-2 mt-4">
-                  <Label>Imágenes guardadas:</Label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {existingMedia.map((img) => (
-                      <div key={img.id} className="relative group">
-                        <img
-                          src={`${import.meta.env.VITE_API_URL || 'https://api-app.tec.gt'}${img.url}`}
-                          alt={img.name}
-                          className="w-full h-24 object-cover rounded border"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveExistingMedia(img.id)}
-                          className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
-              {uploadedFiles.length > 0 && (
-                <div className="space-y-2 mt-4">
-                  <Label>Nuevas imágenes seleccionadas ({uploadedFiles.length}):</Label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {uploadedFilePreviews.map((preview, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={preview}
-                          alt={uploadedFiles[index].name}
-                          className="w-full h-24 object-cover rounded border border-primary"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveUploadedFile(index)}
-                          className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
+              {mediaItems.length > 0 && (
+                <div className="space-y-3 mt-4">
+                  <div className="space-y-1">
+                    <Label>Orden de imágenes</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Arrastra las imágenes para definir el orden final antes de guardar.
+                    </p>
                   </div>
+
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={mediaItems.map((item) => item.id)}
+                      strategy={rectSortingStrategy}
+                    >
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        {mediaItems.map((item) => (
+                          <SortableMediaCard
+                            key={item.id}
+                            item={item}
+                            onRemove={handleRemoveMediaItem}
+                            highlight={item.source === "new"}
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
                 </div>
               )}
             </div>
