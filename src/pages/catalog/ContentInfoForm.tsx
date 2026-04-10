@@ -19,6 +19,7 @@ import {
 import { ArrowLeft, Save, Eye } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import ContentPreviewDialog from '@/components/catalog/ContentPreviewDialog';
+import { toDateInputValue, toStableStrapiDateTime } from '@/utils/date';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -135,7 +136,7 @@ const ContentInfoForm = () => {
           content: item.content || '',
           active: item.active ?? true,
           status_content: item.status_content || 'draft',
-          publish_date: item.publish_date?.split('T')[0] || '',
+          publish_date: toDateInputValue(item.publish_date),
           category_content: categoryId,
           company: companyId,
         });
@@ -201,7 +202,7 @@ const ContentInfoForm = () => {
         // Para nuevos registros siempre active: false, para ediciones mantener el valor actual
         active: editId ? (formData.active ?? false) : false,
         status_content: formData.status_content || 'draft',
-        publish_date: formData.publish_date || null,
+        publish_date: toStableStrapiDateTime(formData.publish_date),
       };
 
       if (formData.category_content) {

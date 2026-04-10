@@ -27,6 +27,7 @@ import { API_CONFIG } from "@/config/api";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import EmptyState from "@/components/common/EmptyState";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { formatCalendarDate } from "@/utils/date";
 
 interface Attachment {
   id: number;
@@ -347,7 +348,7 @@ const ContentGlobal = () => {
                 <div className="flex flex-col gap-1 flex-1 min-w-0">
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
-                    {new Date(item.publish_date).toLocaleDateString("es-MX")}
+                    {formatCalendarDate(item.publish_date, "es-GT")}
                   </span>
                   {item.author && (
                     <span className="text-xs text-muted-foreground flex items-center gap-1 truncate">
@@ -420,7 +421,7 @@ const ContentGlobal = () => {
                       )}
                       <Badge variant="outline">
                         <Calendar className="w-3 h-3 mr-1" />
-                        {new Date(item.publish_date).toLocaleDateString("es-MX")}
+                        {formatCalendarDate(item.publish_date, "es-GT")}
                       </Badge>
                     </CardDescription>
                   </CardHeader>
@@ -542,7 +543,7 @@ const ContentGlobal = () => {
                       </Badge>
                     )}
                     <span className="text-xs text-muted-foreground">
-                      {new Date(item.publish_date).toLocaleDateString("es-MX")}
+                      {formatCalendarDate(item.publish_date, "es-GT")}
                     </span>
                   </div>
                 </div>
@@ -832,7 +833,7 @@ const ContentGlobal = () => {
                       </label>
                       <Badge variant="outline" className="transition-transform hover:scale-105">
                         <Calendar className="w-3 h-3 mr-1" />
-                        {new Date(selectedContent.publish_date).toLocaleDateString("es-MX", {
+                        {formatCalendarDate(selectedContent.publish_date, "es-GT", {
                           year: "numeric",
                           month: "long",
                           day: "numeric",

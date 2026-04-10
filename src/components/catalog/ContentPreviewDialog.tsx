@@ -8,6 +8,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import ReactMarkdown from 'react-markdown';
 import { Calendar, Building2, User } from 'lucide-react';
+import { formatCalendarDate } from '@/utils/date';
 
 interface ContentPreviewDialogProps {
   open: boolean;
@@ -130,7 +131,7 @@ const ContentPreviewDialog: React.FC<ContentPreviewDialogProps> = ({
             {data.publish_date && (
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                <span>{new Date(data.publish_date).toLocaleDateString('es-ES', {
+                <span>{formatCalendarDate(data.publish_date, 'es-GT', {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric'

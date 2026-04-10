@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ColumnDef } from '@tanstack/react-table';
 import CatalogTable from '@/components/catalog/CatalogTable';
 import { contentInfoService } from '@/services/catalogServices';
+import { formatCalendarDate } from '@/utils/date';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -164,7 +165,7 @@ const ContentInfo = () => {
       header: 'Fecha de Publicación',
       cell: ({ row }) => {
         const date = row.getValue('publish_date') as string;
-        return date ? new Date(date).toLocaleDateString('es-MX') : '-';
+        return date ? formatCalendarDate(date, 'es-GT') : '-';
       },
     },
   ];

@@ -13,8 +13,7 @@ import { API_CONFIG } from "@/config/api";
 import LexicalViewer from "@/components/editor/LexicalViewer";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import type { CarouselApi } from "@/components/ui/carousel";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { formatCalendarDate } from "@/utils/date";
 
 interface Attachment {
   id: number;
@@ -280,8 +279,10 @@ const ContentDetail: React.FC = () => {
             <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="h-4 w-4" />
               <span>
-                {format(new Date(item.publish_date || item.createdAt!), "dd 'de' MMMM, yyyy", {
-                  locale: es,
+                {formatCalendarDate(item.publish_date || item.createdAt, "es-GT", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
                 })}
               </span>
             </div>

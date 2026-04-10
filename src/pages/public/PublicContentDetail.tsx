@@ -9,12 +9,11 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { ArrowLeft, Calendar, User, Download, X } from 'lucide-react';
 import { ShareButtons } from '@/components/public/ShareButtons';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { API_CONFIG } from '@/config/api.js';
 import { toast } from 'sonner';
 import LexicalViewer from '@/components/editor/LexicalViewer';
 import type { CarouselApi } from '@/components/ui/carousel';
+import { formatCalendarDate } from '@/utils/date';
 
 interface Attachment {
   id: number;
@@ -255,8 +254,10 @@ export default function PublicContentDetail() {
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Calendar className="h-4 w-4" />
                 <span>
-                  {format(new Date(item.publish_date), "dd 'de' MMMM, yyyy", {
-                    locale: es,
+                  {formatCalendarDate(item.publish_date, "es-GT", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
                   })}
                 </span>
               </div>

@@ -45,8 +45,7 @@ import {
 } from "@/components/ui/pagination";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { formatCalendarDate, toDateInputValue, toStableStrapiDateTime } from "@/utils/date";
 
 interface EventData {
   id?: number;
@@ -192,8 +191,8 @@ const Event = () => {
     setFormData({
       title: item.title || "",
       description: item.description || "",
-      start_date: item.start_date ? item.start_date.split('T')[0] : "",
-      end_date: item.end_date ? item.end_date.split('T')[0] : "",
+      start_date: toDateInputValue(item.start_date),
+      end_date: toDateInputValue(item.end_date),
       content: item.content || "",
       type_event: item.type_event?.documentId || "",
       location: item.location?.documentId || "",
@@ -287,8 +286,8 @@ const Event = () => {
       const payload: any = {
         title: formData.title,
         description: formData.description,
-        start_date: formData.start_date,
-        end_date: formData.end_date,
+        start_date: toStableStrapiDateTime(formData.start_date),
+        end_date: toStableStrapiDateTime(formData.end_date),
         content: formData.content,
         type_event: formData.type_event || null,
         location: formData.location || null,
@@ -422,14 +421,22 @@ const Event = () => {
                     {item.start_date && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Calendar className="h-4 w-4" />
-                        Inicio: {format(new Date(item.start_date), "dd 'de' MMMM, yyyy", { locale: es })}
+                        Inicio: {formatCalendarDate(item.start_date, "es-GT", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
                       </div>
                     )}
                     
                     {item.end_date && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Calendar className="h-4 w-4" />
-                        Fin: {format(new Date(item.end_date), "dd 'de' MMMM, yyyy", { locale: es })}
+                        Fin: {formatCalendarDate(item.end_date, "es-GT", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
                       </div>
                     )}
                     

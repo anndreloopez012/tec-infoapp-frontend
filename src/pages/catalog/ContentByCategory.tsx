@@ -14,8 +14,6 @@ import {
   Loader2,
   Building2
 } from 'lucide-react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -34,6 +32,7 @@ import { contentInfoService, contentCategoryService } from '@/services/catalogSe
 import { API_CONFIG } from '@/config/api';
 import { cn } from '@/lib/utils';
 import { useRoles } from '@/hooks/useRoles';
+import { formatCalendarDate, getLocalDateString } from '@/utils/date';
 
 interface ContentData {
   id: number;
@@ -84,8 +83,7 @@ const ContentByCategory = () => {
 
   // Get today's date for publish_date filter
   const getTodayDate = () => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
+    return getLocalDateString();
   };
 
   // Get sort parameter for API
@@ -558,8 +556,10 @@ const ContentByCategory = () => {
                           <div className="flex items-center gap-1.5">
                             <Calendar className="h-3.5 w-3.5" />
                             <span>
-                              {format(new Date(item.publish_date || item.createdAt!), "dd MMM yyyy", {
-                                locale: es,
+                              {formatCalendarDate(item.publish_date || item.createdAt, "es-GT", {
+                                year: "numeric",
+                                month: "short",
+                                day: "2-digit",
                               })}
                             </span>
                           </div>
@@ -668,8 +668,10 @@ const ContentByCategory = () => {
                               <div className="flex items-center gap-1.5">
                                 <Calendar className="h-3.5 w-3.5" />
                                 <span>
-                                  {format(new Date(item.publish_date || item.createdAt!), "dd MMM yyyy", {
-                                    locale: es,
+                                  {formatCalendarDate(item.publish_date || item.createdAt, "es-GT", {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "2-digit",
                                   })}
                                 </span>
                               </div>
@@ -774,8 +776,10 @@ const ContentByCategory = () => {
                           <div className="flex items-center gap-1.5">
                             <Calendar className="h-3.5 w-3.5" />
                             <span>
-                              {format(new Date(item.publish_date || item.createdAt!), "dd MMM yyyy", {
-                                locale: es,
+                              {formatCalendarDate(item.publish_date || item.createdAt, "es-GT", {
+                                year: "numeric",
+                                month: "short",
+                                day: "2-digit",
                               })}
                             </span>
                           </div>
