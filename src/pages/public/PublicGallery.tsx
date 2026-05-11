@@ -124,6 +124,11 @@ export default function PublicGallery() {
     );
   };
 
+  const openPresentationAt = (index: number) => {
+    setCurrentSlideIndex(index);
+    setIsPresentationMode(true);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <SeoHead
@@ -222,8 +227,7 @@ export default function PublicGallery() {
               </div>
               {selectedGallery?.media?.length ? (
                 <Button variant="outline" size="sm" onClick={() => {
-                  setCurrentSlideIndex(0);
-                  setIsPresentationMode(true);
+                  openPresentationAt(0);
                 }}>
                   <Presentation className="h-4 w-4 mr-2" />
                   Presentación
@@ -234,13 +238,13 @@ export default function PublicGallery() {
 
           {selectedGallery?.media?.length ? (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {selectedGallery.media.map((media) => (
+              {selectedGallery.media.map((media, index) => (
                 <div key={media.id} className="aspect-square overflow-hidden rounded-lg">
                   <img
                     src={getImageUrl(media.url)}
                     alt={media.name || selectedGallery.title || 'Galería'}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
-                    onClick={() => window.open(getImageUrl(media.url), '_blank')}
+                    onClick={() => openPresentationAt(index)}
                   />
                 </div>
               ))}
