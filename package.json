@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "seo:generate": "node scripts/generate-seo.mjs",
-    "build": "pnpm run seo:generate && vite build",
+    "build": "node scripts/generate-seo.mjs && vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview"
