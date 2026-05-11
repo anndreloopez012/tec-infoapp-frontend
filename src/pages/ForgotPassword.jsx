@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { SeoHead } from '@/components/seo/SeoHead';
 
 const ForgotPassword = () => {
   const { forgotPassword, isLoading, error } = useAuth();
@@ -61,6 +62,12 @@ const ForgotPassword = () => {
   if (emailSent) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-primary p-4">
+        <SeoHead
+          title="Recuperar contraseña"
+          description="Flujo privado para restablecer el acceso a Tec Community."
+          path="/forgot-password"
+          noindex
+        />
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -125,6 +132,12 @@ const ForgotPassword = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-primary p-4">
+      <SeoHead
+        title="Recuperar contraseña"
+        description="Flujo privado para restablecer el acceso a Tec Community."
+        path="/forgot-password"
+        noindex
+      />
       <motion.div
         variants={containerVariants}
         initial="hidden"

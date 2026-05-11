@@ -83,17 +83,20 @@ class GlobalService {
   applyGlobalConfig(config) {
     try {
       console.log('🎨 Aplicando configuración global a la UI y PWA...');
+      const hasPageSeo = document.documentElement.dataset.pageSeo === 'true';
       
       // Aplicar título del sitio
-      if (config.siteName) {
+      if (config.siteName && !hasPageSeo) {
         this.updateMetaTag('dynamic-title', config.siteName, 'title');
         this.updateMetaTag('dynamic-app-title', config.siteName, 'content');
         this.updateMetaTag('dynamic-og-title', config.siteName, 'content');
         this.updateMetaTag('dynamic-twitter-title', config.siteName, 'content');
+      } else if (config.siteName) {
+        this.updateMetaTag('dynamic-app-title', config.siteName, 'content');
       }
       
       // Aplicar descripción
-      if (config.description) {
+      if (config.description && !hasPageSeo) {
         this.updateMetaTag('dynamic-description', config.description, 'content');
         this.updateMetaTag('dynamic-og-description', config.description, 'content');
         this.updateMetaTag('dynamic-twitter-description', config.description, 'content');
@@ -182,13 +185,16 @@ class GlobalService {
       if (!logoData || !logoData.url) return;
       
       const logoUrl = buildImageUrl(logoData.url);
+      const hasPageSeo = document.documentElement.dataset.pageSeo === 'true';
       
       // Actualizar iconos PWA
       this.updateMetaTag('dynamic-apple-touch-icon', logoUrl, 'href');
       this.updateMetaTag('dynamic-icon-192', logoUrl, 'href');
       this.updateMetaTag('dynamic-icon-512', logoUrl, 'href');
-      this.updateMetaTag('dynamic-og-image', logoUrl, 'content');
-      this.updateMetaTag('dynamic-twitter-image', logoUrl, 'content');
+      if (!hasPageSeo) {
+        this.updateMetaTag('dynamic-og-image', logoUrl, 'content');
+        this.updateMetaTag('dynamic-twitter-image', logoUrl, 'content');
+      }
       
       console.log('✅ Iconos de app actualizados:', logoUrl);
       

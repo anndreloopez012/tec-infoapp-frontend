@@ -13,6 +13,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { API_CONFIG } from '@/config/api.js';
 import { publicGalleryService } from '@/services/publicApiService';
+import { SeoHead } from '@/components/seo/SeoHead';
+import { buildSiteUrl } from '@/config/seo';
 
 interface GalleryItem {
   id: number;
@@ -124,6 +126,22 @@ export default function PublicGallery() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SeoHead
+        title="Galería pública"
+        description="Explora la galería pública de Tec Community con imágenes, actividades y momentos destacados de la comunidad."
+        path="/public/gallery"
+        keywords={['galeria Tec', 'fotos Tec Community', 'comunidad Tec imagenes']}
+        structuredData={[
+          {
+            '@context': 'https://schema.org',
+            '@type': 'CollectionPage',
+            name: 'Galería pública de Tec Community',
+            url: buildSiteUrl('/public/gallery'),
+            description:
+              'Explora la galería pública de Tec Community con imágenes, actividades y momentos destacados de la comunidad.',
+          },
+        ]}
+      />
       <div className="container py-10 space-y-8">
         <div className="space-y-3 text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">Comunidad</p>

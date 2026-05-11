@@ -10,6 +10,8 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { API_CONFIG } from '@/config/api.js';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SeoHead } from '@/components/seo/SeoHead';
+import { buildSiteUrl } from '@/config/seo';
 import {
   Select,
   SelectContent,
@@ -266,6 +268,22 @@ export default function PublicEvents() {
 
   return (
     <div className="container py-8 space-y-6 animate-fade-in">
+        <SeoHead
+          title="Eventos públicos"
+          description="Explora los eventos públicos de Tec Community y encuentra actividades, convocatorias y experiencias de la comunidad."
+          path="/public/events"
+          keywords={['eventos publicos', 'eventos Tec', 'agenda de eventos', 'Tec Community eventos']}
+          structuredData={[
+            {
+              '@context': 'https://schema.org',
+              '@type': 'CollectionPage',
+              name: 'Eventos públicos de Tec Community',
+              url: buildSiteUrl('/public/events'),
+              description:
+                'Explora los eventos públicos de Tec Community y encuentra actividades, convocatorias y experiencias de la comunidad.',
+            },
+          ]}
+        />
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-4xl font-bold mb-2">Eventos</h1>

@@ -16,6 +16,8 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { API_CONFIG } from '@/config/api.js';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import { SeoHead } from '@/components/seo/SeoHead';
+import { buildSiteUrl } from '@/config/seo';
 
 moment.locale('es');
 const localizer = momentLocalizer(moment);
@@ -184,6 +186,22 @@ END:VCALENDAR`;
 
   return (
     <div className="container py-8 animate-fade-in">
+        <SeoHead
+          title="Calendario público de eventos"
+          description="Consulta el calendario público de Tec Community con eventos, actividades y fechas relevantes de la comunidad."
+          path="/public/calendar"
+          keywords={['calendario Tec', 'eventos Tec', 'agenda Tec Community']}
+          structuredData={[
+            {
+              '@context': 'https://schema.org',
+              '@type': 'CollectionPage',
+              name: 'Calendario público de eventos',
+              url: buildSiteUrl('/public/calendar'),
+              description:
+                'Consulta el calendario público de Tec Community con eventos, actividades y fechas relevantes de la comunidad.',
+            },
+          ]}
+        />
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Calendario de Eventos</h1>
           <p className="text-muted-foreground text-lg">

@@ -9,6 +9,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { publicCompanyService } from '@/services/publicApiService';
 import { API_CONFIG } from '@/config/api.js';
+import { SeoHead } from '@/components/seo/SeoHead';
+import { buildSiteUrl } from '@/config/seo';
 
 interface Company {
   id: number;
@@ -296,6 +298,22 @@ const PublicCompanies = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+      <SeoHead
+        title="Empresas y comunidad"
+        description="Consulta empresas, organizaciones y actores vinculados a Tec Community dentro del ecosistema de innovación."
+        path="/public/companies"
+        keywords={['empresas Tec', 'ecosistema Tec', 'directorio Tec Community']}
+        structuredData={[
+          {
+            '@context': 'https://schema.org',
+            '@type': 'CollectionPage',
+            name: 'Empresas y comunidad de Tec Community',
+            url: buildSiteUrl('/public/companies'),
+            description:
+              'Consulta empresas, organizaciones y actores vinculados a Tec Community dentro del ecosistema de innovación.',
+          },
+        ]}
+      />
       {/* Hero Section */}
       <section className="relative py-16 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5" />

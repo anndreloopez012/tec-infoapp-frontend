@@ -29,12 +29,51 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { PWAInstallButton } from "@/components/PWAInstallButton";
 import { useGlobal } from "@/context/GlobalContext";
+import { SeoHead } from "@/components/seo/SeoHead";
+import { buildSiteUrl } from "@/config/seo";
 
 export default function PublicLanding() {
   const navigate = useNavigate();
-  const { getBranding } = useGlobal();
+  const { config, getBranding } = useGlobal();
   const branding = getBranding();
   const logoUrl = branding.logo || branding.logoAlt || branding.logoMobile;
+  const seoDescription =
+    config?.seo?.metaDescription ||
+    "Descubre eventos, contenido, calendario, galería y novedades de Tec Community en un solo lugar.";
+  const structuredData = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: branding.siteName || "Tec Community",
+      url: buildSiteUrl("/"),
+      logo: buildSiteUrl(logoUrl || "/icon-512x512.png"),
+      description: seoDescription,
+      sameAs: [
+        config?.socials?.facebookUrl,
+        config?.socials?.instagramUrl,
+        config?.socials?.linkedinUrl,
+        config?.socials?.youtubeUrl,
+        config?.socials?.twitterUrl,
+      ].filter(Boolean),
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: branding.siteName || "Tec Community",
+      url: buildSiteUrl("/"),
+      description: seoDescription,
+      inLanguage: "es-GT",
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "MobileApplication",
+      name: branding.siteName || "Tec Community",
+      operatingSystem: "Android, iOS, Web",
+      applicationCategory: "BusinessApplication",
+      url: buildSiteUrl("/"),
+      description: seoDescription,
+    },
+  ];
 
 
   const handleNavigation = (path: string) => {
@@ -58,6 +97,21 @@ export default function PublicLanding() {
 
   return (
     <>
+      <SeoHead
+        title="Tec Community"
+        description={seoDescription}
+        path="/"
+        image={logoUrl || "/icon-512x512.png"}
+        keywords={[
+          "Tec Community",
+          "Campus Tecnologico Tec",
+          "comunidad Tec",
+          "eventos Tec",
+          "noticias Tec",
+          "calendario Tec",
+        ]}
+        structuredData={structuredData}
+      />
       {/* Floating Tech Icons Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         {techIcons.map(({ Icon, delay }, index) => (

@@ -10,6 +10,7 @@ import { useGlobal } from '@/context/GlobalContext';
 import { SearchProvider } from '@/context/SearchContext';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import NotificationIntegration from '@/components/NotificationIntegration';
+import { SeoHead } from '@/components/seo/SeoHead';
 
 const ModernLayout = () => {
   const { isLoading: authLoading } = useAuth();
@@ -23,6 +24,11 @@ const ModernLayout = () => {
 
   return (
     <SearchProvider>
+      <SeoHead
+        title="Panel interno"
+        description="Panel privado de gestión y comunicación interna de Tec Community."
+        noindex
+      />
       <NotificationIntegration />
       <div className="pwa-safe-area min-h-screen min-h-dvh bg-gradient-to-br from-background via-background/95 to-primary/5 overflow-x-hidden">
         {/* Efectos de fondo optimizados para PWA */}

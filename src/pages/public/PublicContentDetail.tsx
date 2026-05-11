@@ -14,6 +14,8 @@ import { toast } from 'sonner';
 import LexicalViewer from '@/components/editor/LexicalViewer';
 import type { CarouselApi } from '@/components/ui/carousel';
 import { formatCalendarDate } from '@/utils/date';
+import { SeoHead } from '@/components/seo/SeoHead';
+import { buildSiteUrl } from '@/config/seo';
 
 interface Attachment {
   id: number;
@@ -189,6 +191,50 @@ export default function PublicContentDetail() {
 
   return (
     <div className="container py-8 space-y-8 max-w-5xl animate-fade-in">
+        <SeoHead
+          title={item.title}
+          description={item.subtitle || item.title}
+          path={contentId ? `/public/content/${contentId}` : '/'}
+          image={getImageUrl(item.main_image) || '/icon-512x512.png'}
+          type="article"
+          keywords={[
+            item.title,
+            item.category_content?.name || 'contenido Tec',
+            item.author_content?.name || 'Tec Community',
+          ].filter(Boolean)}
+          publishedTime={item.publish_date}
+          modifiedTime={item.publish_date}
+          structuredData={[
+            {
+              '@context': 'https://schema.org',
+              '@type': 'Article',
+              headline: item.title,
+              description: item.subtitle || item.title,
+              image: item.main_image ? [getImageUrl(item.main_image)] : undefined,
+              datePublished: item.publish_date,
+              dateModified: item.publish_date,
+              author: item.author_content?.name
+                ? {
+                    '@type': 'Person',
+                    name: item.author_content.name,
+                  }
+                : {
+                    '@type': 'Organization',
+                    name: 'Tec Community',
+                  },
+              articleSection: item.category_content?.name,
+              publisher: {
+                '@type': 'Organization',
+                name: 'Tec Community',
+                logo: {
+                  '@type': 'ImageObject',
+                  url: buildSiteUrl('/icon-512x512.png'),
+                },
+              },
+              url: buildSiteUrl(contentId ? `/public/content/${contentId}` : '/'),
+            },
+          ]}
+        />
         {/* Back Button and Share */}
         <div className="flex items-center justify-between">
           <Button

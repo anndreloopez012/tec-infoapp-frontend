@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { SeoHead } from '@/components/seo/SeoHead';
 
 const ModernLogin = () => {
   const { login, isAuthenticated, isLoading, error } = useAuth();
@@ -107,6 +108,12 @@ const ModernLogin = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
+      <SeoHead
+        title="Iniciar sesión"
+        description="Acceso privado para miembros y administradores de Tec Community."
+        path="/login"
+        noindex
+      />
       {/* Animated Background */}
       <motion.div 
         className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-secondary/20"

@@ -1,8 +1,25 @@
 import { ShieldCheck, Scale, Lock, Mail, Globe, CalendarDays } from "lucide-react";
+import { SeoHead } from "@/components/seo/SeoHead";
+import { buildSiteUrl } from "@/config/seo";
 
 export default function SecurityPolicies() {
   return (
     <section className="relative overflow-hidden py-10 md:py-16">
+      <SeoHead
+        title="Políticas de seguridad y privacidad"
+        description="Consulta las políticas de seguridad, privacidad y lineamientos legales de Tec Community."
+        path="/politicas-seguridad"
+        keywords={['politicas de privacidad', 'seguridad Tec Community', 'legal Tec Community']}
+        structuredData={[
+          {
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            name: "Políticas de seguridad y privacidad",
+            url: buildSiteUrl('/politicas-seguridad'),
+            description: "Consulta las políticas de seguridad, privacidad y lineamientos legales de Tec Community.",
+          },
+        ]}
+      />
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-secondary/10" />
       <div className="container relative z-10 max-w-5xl space-y-8">
         <header className="space-y-4 text-center">

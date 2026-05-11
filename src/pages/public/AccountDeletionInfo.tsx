@@ -1,4 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { SeoHead } from '@/components/seo/SeoHead';
+import { buildSiteUrl } from '@/config/seo';
 
 const retentionItems = [
   'Datos de autenticación y perfil asociados a la cuenta.',
@@ -15,6 +17,37 @@ const retainedItems = [
 export default function AccountDeletionInfo() {
   return (
     <div className="min-h-screen bg-background">
+      <SeoHead
+        title="Cómo eliminar mi cuenta"
+        description="Conoce el proceso oficial para eliminar una cuenta de Tec Community y qué ocurre con la información asociada."
+        path="/eliminar-cuenta"
+        keywords={['eliminar cuenta', 'borrar cuenta Tec Community', 'account deletion Tec']}
+        structuredData={[
+          {
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            url: buildSiteUrl('/eliminar-cuenta'),
+            mainEntity: [
+              {
+                '@type': 'Question',
+                name: '¿Cómo elimino mi cuenta de Tec Community?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Inicia sesión, entra a Mi Perfil, ubica la Zona de peligro y confirma la eliminación definitiva de tu cuenta.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: '¿La eliminación de cuenta es irreversible?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Sí. La eliminación de cuenta es irreversible y puede conservar únicamente información mínima por razones legales, técnicas o de seguridad.',
+                },
+              },
+            ],
+          },
+        ]}
+      />
       <div className="container max-w-5xl py-12 space-y-8">
         <div className="space-y-4 text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">Cuenta</p>

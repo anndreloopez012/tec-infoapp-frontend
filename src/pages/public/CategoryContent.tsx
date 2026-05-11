@@ -19,6 +19,8 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { formatCalendarDate, getLocalDateString } from '@/utils/date';
+import { SeoHead } from '@/components/seo/SeoHead';
+import { buildSiteUrl } from '@/config/seo';
 
 interface ContentData {
   id: number;
@@ -295,6 +297,26 @@ export default function CategoryContent() {
 
   return (
     <div className="container py-8 space-y-8 animate-fade-in">
+      <SeoHead
+        title={category?.name ? `${category.name} | Contenido público` : 'Contenido público por categoría'}
+        description={
+          category?.description ||
+          `Explora contenido público de ${category?.name || 'Tec Community'} con publicaciones, novedades y recursos de la comunidad.`
+        }
+        path={categoryId ? `/public/category/${categoryId}` : '/'}
+        keywords={[category?.name || 'contenido Tec', 'noticias Tec', 'contenido publico']}
+        structuredData={[
+          {
+            '@context': 'https://schema.org',
+            '@type': 'CollectionPage',
+            name: category?.name || 'Contenido público por categoría',
+            url: buildSiteUrl(categoryId ? `/public/category/${categoryId}` : '/'),
+            description:
+              category?.description ||
+              `Explora contenido público de ${category?.name || 'Tec Community'} con publicaciones, novedades y recursos de la comunidad.`,
+          },
+        ]}
+      />
       <div>
         <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
           <BookOpen className="h-10 w-10 text-primary" />

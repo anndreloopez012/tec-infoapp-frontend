@@ -1,4 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { SeoHead } from '@/components/seo/SeoHead';
+import { buildSiteUrl } from '@/config/seo';
 
 const sections = [
   {
@@ -71,6 +73,22 @@ const sections = [
 export default function TermsAndConditions() {
   return (
     <div className="min-h-screen bg-background">
+      <SeoHead
+        title="Términos y condiciones"
+        description="Revisa los términos y condiciones de uso aplicables a Tec Community y a sus servicios digitales."
+        path="/terminos-y-condiciones"
+        keywords={['terminos Tec Community', 'condiciones de uso', 'legal app Tec']}
+        structuredData={[
+          {
+            '@context': 'https://schema.org',
+            '@type': 'WebPage',
+            name: 'Términos y condiciones',
+            url: buildSiteUrl('/terminos-y-condiciones'),
+            description:
+              'Revisa los términos y condiciones de uso aplicables a Tec Community y a sus servicios digitales.',
+          },
+        ]}
+      />
       <div className="container max-w-5xl py-12 space-y-8">
         <div className="space-y-4 text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">Legal</p>

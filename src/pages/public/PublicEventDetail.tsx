@@ -12,6 +12,8 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import LexicalViewer from '@/components/editor/LexicalViewer';
 import { ShareButtons } from '@/components/public/ShareButtons';
+import { SeoHead } from '@/components/seo/SeoHead';
+import { buildSiteUrl } from '@/config/seo';
 
 interface EventData {
   id?: number;
@@ -146,6 +148,50 @@ export default function PublicEventDetail() {
 
   return (
     <div className="container mx-auto py-6 space-y-6 max-w-4xl animate-fade-in">
+        <SeoHead
+          title={event.title || 'Detalle de evento'}
+          description={event.description || 'Detalle de un evento público de Tec Community.'}
+          path={eventId ? `/public/events/${eventId}` : '/public/events'}
+          image={getImageUrl(event.main_image) || '/icon-512x512.png'}
+          type="article"
+          keywords={[
+            event.title || 'evento Tec',
+            event.type_event?.name || 'evento',
+            event.location?.name || 'Guatemala',
+          ]}
+          publishedTime={event.start_date}
+          modifiedTime={event.end_date || event.start_date}
+          structuredData={[
+            {
+              '@context': 'https://schema.org',
+              '@type': 'Event',
+              name: event.title,
+              description: event.description,
+              startDate: event.start_date,
+              endDate: event.end_date || event.start_date,
+              eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+              eventStatus: 'https://schema.org/EventScheduled',
+              image: event.main_image ? [getImageUrl(event.main_image)] : undefined,
+              location: event.location?.name
+                ? {
+                    '@type': 'Place',
+                    name: event.location.name,
+                    address: event.location.name,
+                  }
+                : undefined,
+              organizer: event.organizers_company?.name
+                ? {
+                    '@type': 'Organization',
+                    name: event.organizers_company.name,
+                  }
+                : {
+                    '@type': 'Organization',
+                    name: 'Tec Community',
+                  },
+              url: buildSiteUrl(eventId ? `/public/events/${eventId}` : '/public/events'),
+            },
+          ]}
+        />
         <Button variant="ghost" onClick={() => navigate('/public/events')} className="mb-4">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Volver a eventos
