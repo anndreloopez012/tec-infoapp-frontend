@@ -83,3 +83,4 @@ export const publicEventService = new PublicApiService('events');
 export const publicContentService = new PublicApiService('content-infos');
 export const publicCategoryService = new PublicApiService('content-categories');
 export const publicCompanyService = new PublicApiService('companies');
+export const publicGalleryService = new PublicApiService('galleries');

@@ -98,19 +98,24 @@ export default function CategoryContent() {
   useEffect(() => {
     if (categoryId) {
       loadCategory();
-      loadAuthors();
     }
   }, [categoryId]);
 
+  useEffect(() => {
+    if (categoryId && category?.documentId) {
+      loadAuthors();
+    }
+  }, [categoryId, category?.documentId]);
+
   // Reset and reload when filters change
   useEffect(() => {
-    if (categoryId) {
+    if (categoryId && category?.documentId) {
       setContent([]);
       setPage(1);
       setHasMore(true);
       loadContent(1, true);
     }
-  }, [categoryId, searchQuery, sortBy, selectedAuthor]);
+  }, [categoryId, category?.documentId, searchQuery, sortBy, selectedAuthor]);
 
   // Infinite scroll observer
   useEffect(() => {
@@ -140,13 +145,20 @@ export default function CategoryContent() {
 
   const loadCategory = async () => {
     if (!categoryId) return;
-    const result = await publicCategoryService.getById(categoryId);
+    const result = await publicCategoryService.getAll({
+      pageSize: 1,
+      additionalFilters: {
+        'filters[documentId][$eq]': categoryId,
+        'filters[show_in_public_menu][$eq]': 'true',
+      },
+    });
     if (result.success) {
-      setCategory(result.data);
+      setCategory(result.data[0] || null);
     }
   };
 
   const loadAuthors = async () => {
+    if (!categoryId || !category) return;
     const today = getTodayDate();
     // Load all content once to extract unique authors
     const result = await publicContentService.getAll({
@@ -173,6 +185,13 @@ export default function CategoryContent() {
   };
 
   const loadContent = async (pageNum: number, isReset: boolean) => {
+    if (!category) {
+      setContent([]);
+      setLoading(false);
+      setLoadingMore(false);
+      return;
+    }
+
     if (isReset) {
       setLoading(true);
     } else {

@@ -33,6 +33,7 @@ import PublicLanding from '@/pages/PublicLanding';
 import PublicCalendar from '@/pages/public/PublicCalendar';
 import PublicEvents from '@/pages/public/PublicEvents';
 import PublicEventDetail from '@/pages/public/PublicEventDetail';
+import PublicGallery from '@/pages/public/PublicGallery';
 import CategoryContent from '@/pages/public/CategoryContent';
 import PublicContentDetail from '@/pages/public/PublicContentDetail';
 import PublicCompanies from '@/pages/public/PublicCompanies';
@@ -92,6 +93,7 @@ const AppRoutes = () => {
       <Route element={<PublicLayout />}>
         <Route path="/" element={<PublicLanding />} />
         <Route path="/public/calendar" element={<PublicCalendar />} />
+        <Route path="/public/gallery" element={<PublicGallery />} />
         <Route path="/public/events" element={<PublicEvents />} />
         <Route path="/public/events/:eventId" element={<PublicEventDetail />} />
         <Route path="/public/category/:categoryId" element={<CategoryContent />} />

@@ -117,6 +117,18 @@ export const ContentCategory: React.FC = () => {
         },
       },
       {
+        accessorKey: 'attributes.show_in_public_menu',
+        header: 'Menú Público',
+        cell: ({ row }) => {
+          const enabled = row.original.attributes?.show_in_public_menu !== false;
+          return (
+            <Badge variant={enabled ? 'default' : 'secondary'}>
+              {enabled ? 'Visible' : 'Oculta'}
+            </Badge>
+          );
+        },
+      },
+      {
         accessorKey: 'attributes.createdAt',
         header: 'Fecha de Creación',
         cell: ({ row }) => {
@@ -151,6 +163,13 @@ export const ContentCategory: React.FC = () => {
       type: 'textarea' as const,
       required: false,
       placeholder: 'Descripción de la categoría',
+    },
+    {
+      name: 'show_in_public_menu',
+      label: 'Mostrar en menú público',
+      type: 'switch' as const,
+      required: false,
+      placeholder: 'Disponible en la vista pública',
     },
   ];
 
@@ -241,7 +260,7 @@ export const ContentCategory: React.FC = () => {
         title={editingItem ? 'Editar Categoría' : 'Nueva Categoría'}
         description={editingItem ? 'Modifica los datos de la categoría' : 'Completa el formulario para crear una nueva categoría'}
         fields={formFields}
-        defaultValues={editingItem ? editingItem.attributes : {}}
+        defaultValues={editingItem ? editingItem.attributes : { show_in_public_menu: true }}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

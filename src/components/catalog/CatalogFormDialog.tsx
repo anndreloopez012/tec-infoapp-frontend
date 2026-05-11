@@ -26,13 +26,14 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { Loader2, Upload, X, Image as ImageIcon } from 'lucide-react';
 import { API_CONFIG } from '@/config/api.js';
 
 interface FormFieldConfig {
   name: string;
   label: string;
-  type: 'text' | 'textarea' | 'number' | 'email' | 'date' | 'color' | 'image';
+  type: 'text' | 'textarea' | 'number' | 'email' | 'date' | 'color' | 'image' | 'switch';
   placeholder?: string;
   description?: string;
   required?: boolean;
@@ -84,6 +85,9 @@ export const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
         case 'image':
           fieldValidator = z.any();
           break;
+        case 'switch':
+          fieldValidator = z.boolean();
+          break;
         default:
           fieldValidator = z.string();
       }
@@ -92,6 +96,10 @@ export const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
         fieldValidator = fieldValidator.min(1, `${field.label} es requerido`);
       } else {
         fieldValidator = fieldValidator.optional();
+      }
+
+      if (field.type === 'switch') {
+        fieldValidator = z.boolean().optional();
       }
       
       if (field.validation) {
@@ -265,6 +273,17 @@ export const CatalogFormDialog: React.FC<CatalogFormDialogProps> = ({
                   {...formField}
                   disabled={isLoading}
                 />
+              ) : field.type === 'switch' ? (
+                <div className="flex items-center gap-3 rounded-lg border p-3">
+                  <Switch
+                    checked={Boolean(formField.value)}
+                    onCheckedChange={formField.onChange}
+                    disabled={isLoading}
+                  />
+                  <span className="text-sm text-foreground">
+                    {field.placeholder || field.label}
+                  </span>
+                </div>
               ) : (
                 <Input
                   type={field.type}

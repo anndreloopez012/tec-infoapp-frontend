@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Moon, Sun, LogIn, Menu, X, Calendar, Users, BookOpen, Search, Building2, ShieldCheck } from 'lucide-react';
+import { Moon, Sun, LogIn, Menu, X, Calendar, Users, BookOpen, Search, Building2, Images } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
 import { publicCategoryService } from '@/services/publicApiService';
@@ -34,6 +34,9 @@ export const PublicHeader = () => {
     const result = await publicCategoryService.getAll({
       pageSize: 100,
       sort: 'name:asc',
+      additionalFilters: {
+        'filters[show_in_public_menu][$eq]': 'true',
+      },
     });
 
     if (result.success) {
@@ -91,6 +94,15 @@ export const PublicHeader = () => {
           >
             <Calendar className="h-4 w-4 md:mr-2" />
             <span className="hidden lg:inline">Calendario</span>
+          </Button>
+          <Button
+            variant={isActive('/public/gallery') ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => navigate('/public/gallery')}
+            className="rounded-full px-3 hover-scale whitespace-nowrap flex-shrink-0"
+          >
+            <Images className="h-4 w-4 md:mr-2" />
+            <span className="hidden lg:inline">Galería</span>
           </Button>
           <Button
             variant="ghost"
@@ -189,6 +201,18 @@ export const PublicHeader = () => {
           >
             <Calendar className="h-4 w-4 mr-2" />
             Calendario
+          </Button>
+          <Button
+            variant={isActive('/public/gallery') ? 'default' : 'ghost'}
+            size="sm"
+            className="w-full justify-start"
+            onClick={() => {
+              navigate('/public/gallery');
+              setMobileMenuOpen(false);
+            }}
+          >
+            <Images className="h-4 w-4 mr-2" />
+            Galería
           </Button>
           <Button
             variant="ghost"

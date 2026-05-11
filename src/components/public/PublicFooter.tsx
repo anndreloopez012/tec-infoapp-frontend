@@ -43,6 +43,9 @@ export const PublicFooter = () => {
               <Link to="/public/calendar" className="text-muted-foreground transition-colors hover:text-primary">
                 Calendario
               </Link>
+              <Link to="/public/gallery" className="text-muted-foreground transition-colors hover:text-primary">
+                Galería
+              </Link>
               <Link to="/public/events" className="text-muted-foreground transition-colors hover:text-primary">
                 Eventos
               </Link>
