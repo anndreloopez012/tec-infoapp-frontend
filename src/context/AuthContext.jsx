@@ -224,6 +224,9 @@ export const AuthProvider = ({ children }) => {
       dispatch({ type: ActionTypes.CLEAR_ERROR });
       
       const result = await AuthService.forgotPassword(email);
+      if (!result.success) {
+        throw new Error(result.error || 'No se pudo enviar el correo de recuperación');
+      }
       
       dispatch({ type: ActionTypes.SET_LOADING, payload: false });
       
@@ -252,19 +255,19 @@ export const AuthProvider = ({ children }) => {
       dispatch({ type: ActionTypes.SET_LOADING, payload: true });
       dispatch({ type: ActionTypes.CLEAR_ERROR });
       
-      const { user, token } = await AuthService.resetPassword(code, password, passwordConfirmation);
+      const result = await AuthService.resetPassword(code, password, passwordConfirmation);
+      if (!result.success) {
+        throw new Error(result.error || 'No se pudo actualizar la contraseña');
+      }
       
-      dispatch({
-        type: ActionTypes.SET_USER,
-        payload: { user, token }
-      });
+      dispatch({ type: ActionTypes.SET_LOADING, payload: false });
       
       toast({
         title: "Contraseña actualizada",
         description: "Tu contraseña ha sido actualizada exitosamente",
       });
       
-      return { success: true, user, token };
+      return { success: true };
     } catch (error) {
       dispatch({ type: ActionTypes.SET_ERROR, payload: error.message });
       

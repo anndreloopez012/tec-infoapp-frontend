@@ -21,6 +21,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 // Pages
 import ModernLogin from '@/pages/ModernLogin';
 import ForgotPassword from '@/pages/ForgotPassword';
+import ResetPassword from '@/pages/ResetPassword';
 import ModernDashboard from '@/pages/ModernDashboard.tsx';
 import Users from '@/pages/admin/Users';
 import Profile from '@/pages/Profile';
@@ -110,6 +111,7 @@ const AppRoutes = () => {
         {/* Auth Routes */}
         <Route path="/login" element={<ModernLogin />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         
         {/* Protected Routes with Modern Layout */}
         <Route element={

@@ -297,19 +297,10 @@ class AuthService {
         }
       );
 
-      const { jwt, user } = response.data;
-      
-      if (jwt && user) {
-        localStorage.setItem(API_CONFIG.STORAGE_KEYS.AUTH_TOKEN, jwt);
-        localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER_DATA, JSON.stringify(user));
-      }
-
       console.log('✅ Contraseña restablecida exitosamente');
       
       return {
         success: true,
-        user,
-        token: jwt,
         message: 'Contraseña restablecida exitosamente'
       };
       
