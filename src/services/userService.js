@@ -34,6 +34,14 @@ apiClient.interceptors.response.use(
 );
 
 class UserService {
+  generateTemporaryPassword(length = 14) {
+    const charset = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
+    const randomBytes = window.crypto?.getRandomValues
+      ? window.crypto.getRandomValues(new Uint32Array(length))
+      : Array.from({ length }, () => Math.floor(Math.random() * charset.length));
+
+    return Array.from(randomBytes, (value) => charset[value % charset.length]).join('');
+  }
 
   // ===============================================
   // OBTENER TODOS LOS USUARIOS
@@ -144,10 +152,13 @@ class UserService {
   async createUser(userData) {
     try {
       console.log('➕ Creando usuario...', { email: userData.email });
+
+      const normalizedEmail = userData.email?.trim().toLowerCase();
+      const normalizedUsername = (userData.username || normalizedEmail || '').trim().toLowerCase();
       
       const payload = {
-        username: userData.username,
-        email: userData.email,
+        username: normalizedUsername,
+        email: normalizedEmail,
         password: userData.password,
         confirmed: userData.confirmed !== undefined ? userData.confirmed : true,
         blocked: userData.blocked || false,
@@ -158,6 +169,10 @@ class UserService {
       if (userData.firstName) payload.firstName = userData.firstName;
       if (userData.lastName) payload.lastName = userData.lastName;
       if (userData.phone) payload.phone = userData.phone;
+      if (userData.tower) payload.tower = userData.tower;
+      if (userData.office) payload.office = userData.office;
+      if (userData.type_user) payload.type_user = userData.type_user;
+      if (userData.company) payload.company = userData.company;
       
       const response = await apiClient.post(
         `/${API_CONFIG.API_PREFIX}/${ENDPOINTS.USERS.BASE}`,
@@ -210,6 +225,16 @@ class UserService {
       console.log('✏️ Actualizando usuario:', id);
       
       const payload = { ...userData };
+
+      if (payload.email) {
+        payload.email = payload.email.trim().toLowerCase();
+      }
+
+      if (payload.username) {
+        payload.username = payload.username.trim().toLowerCase();
+      } else if (payload.email) {
+        payload.username = payload.email;
+      }
       
       // Remover campos que no se deben enviar
       delete payload.id;
@@ -539,6 +564,55 @@ class UserService {
         data: []
       };
     }
+  }
+
+  async importUsersFromCsv(rows, options = {}) {
+    const role = options.role ? parseInt(options.role, 10) : null;
+    const isActive = options.isActive !== false;
+    const results = {
+      success: 0,
+      failed: 0,
+      errors: [],
+    };
+
+    for (let index = 0; index < rows.length; index += 1) {
+      const row = rows[index];
+      const payload = {
+        email: row.email,
+        username: row.email,
+        password: this.generateTemporaryPassword(),
+        firstName: row.firstName,
+        lastName: row.lastName,
+        phone: row.phone || '',
+        tower: row.tower || '',
+        office: row.office || '',
+        role,
+        confirmed: true,
+        blocked: !isActive,
+      };
+
+      const response = await this.createUser(payload);
+
+      if (response.success) {
+        results.success += 1;
+      } else {
+        results.failed += 1;
+        results.errors.push({
+          row: index + 2,
+          email: row.email,
+          message: response.error || 'Error desconocido',
+        });
+      }
+    }
+
+    return {
+      success: results.failed === 0,
+      data: results,
+      message:
+        results.failed === 0
+          ? `${results.success} usuario(s) importado(s) correctamente`
+          : `${results.success} usuario(s) importado(s) y ${results.failed} con error`,
+    };
   }
 }
 

@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Plus, 
+  Upload,
+  Download,
   Search, 
   Filter, 
   MoreHorizontal,
@@ -19,9 +21,7 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  Building2,
-  Check,
-  ChevronsUpDown
+  FileSpreadsheet
 } from 'lucide-react';
 
 import {
@@ -49,26 +49,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 import { UserService } from '@/services/userService.js';
 import { RoleService } from '@/services/roleService.js';
 import { UserTypeService } from '@/services/userTypeService.js';
-import { companyService } from '@/services/catalogServices';
 import { useAuth } from '@/context/AuthContext';
 
 const columnHelper = createColumnHelper();
@@ -79,7 +65,6 @@ const Users = () => {
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
   const [userTypes, setUserTypes] = useState([]);
-  const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState('');
   const [sorting, setSorting] = useState([]);
@@ -88,23 +73,36 @@ const Users = () => {
   // Dialog states
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [dialogLoading, setDialogLoading] = useState(false);
-  const [companyPopoverOpen, setCompanyPopoverOpen] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
   
   // Form data
   const [formData, setFormData] = useState({
-    username: '',
+    firstName: '',
+    lastName: '',
     email: '',
+    phone: '',
+    tower: '',
+    office: '',
     password: '',
     role: '',
     type_user: '',
-    company: ''
+    isActive: 'true'
   });
+
+  const [importFormData, setImportFormData] = useState({
+    role: '',
+    isActive: 'true',
+    fileName: ''
+  });
+  const [importRows, setImportRows] = useState([]);
 
   // Form validation errors
   const [formErrors, setFormErrors] = useState({
-    username: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     role: ''
@@ -130,16 +128,14 @@ const Users = () => {
     try {
       setLoading(true);
       
-      // Load roles, user types and companies in parallel
-      const [rolesResult, userTypesResult, companiesResult] = await Promise.all([
+      // Load roles and user types in parallel
+      const [rolesResult, userTypesResult] = await Promise.all([
         RoleService.getRoles(),
-        UserTypeService.getUserTypes(),
-        companyService.getAll({ pageSize: 1000 })
+        UserTypeService.getUserTypes()
       ]);
       
       console.log('🔧 Roles result:', rolesResult);
       console.log('🔧 UserTypes result:', userTypesResult);
-      console.log('🔧 Companies result:', companiesResult);
       
       if (rolesResult.success) {
         console.log('🔧 Setting roles:', rolesResult.data);
@@ -149,11 +145,6 @@ const Users = () => {
       if (userTypesResult.success) {
         console.log('🔧 Setting userTypes:', userTypesResult.data);
         setUserTypes(userTypesResult.data);
-      }
-
-      if (companiesResult.data) {
-        console.log('🔧 Setting companies:', companiesResult.data);
-        setCompanies(companiesResult.data);
       }
       
       // Load users after roles and types are loaded
@@ -263,7 +254,8 @@ const Users = () => {
   // Clear form errors
   const clearFormErrors = () => {
     setFormErrors({
-      username: '',
+      firstName: '',
+      lastName: '',
       email: '',
       password: '',
       role: ''
@@ -273,19 +265,27 @@ const Users = () => {
   // Validate form fields
   const validateForm = (isCreate = false) => {
     const errors = {
-      username: '',
+      firstName: '',
+      lastName: '',
       email: '',
       password: '',
       role: ''
     };
     let isValid = true;
 
-    // Username validation
-    if (!formData.username.trim()) {
-      errors.username = 'El nombre de usuario es requerido';
+    if (!formData.firstName.trim()) {
+      errors.firstName = 'El nombre es requerido';
       isValid = false;
-    } else if (formData.username.trim().length < 3) {
-      errors.username = 'El usuario debe tener al menos 3 caracteres';
+    } else if (formData.firstName.trim().length < 2) {
+      errors.firstName = 'El nombre debe tener al menos 2 caracteres';
+      isValid = false;
+    }
+
+    if (!formData.lastName.trim()) {
+      errors.lastName = 'El apellido es requerido';
+      isValid = false;
+    } else if (formData.lastName.trim().length < 2) {
+      errors.lastName = 'El apellido debe tener al menos 2 caracteres';
       isValid = false;
     }
 
@@ -322,30 +322,36 @@ const Users = () => {
   // Dialog handlers
   const handleCreateUser = () => {
     setFormData({
-      username: '',
+      firstName: '',
+      lastName: '',
       email: '',
+      phone: '',
+      tower: '',
+      office: '',
       password: '',
       role: '',
       type_user: '',
-      company: ''
+      isActive: 'true'
     });
     clearFormErrors();
-    setCompanyPopoverOpen(false);
     setIsCreateOpen(true);
   };
 
   const handleEditUser = (user) => {
     setSelectedUser(user);
     setFormData({
-      username: user.username || '',
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
       email: user.email || '',
+      phone: user.phone || '',
+      tower: user.tower || '',
+      office: user.office || '',
       password: '', // Don't pre-fill password
       role: user.role?.id?.toString() || '',
       type_user: user.type_user?.id?.toString() || '',
-      company: user.company?.id?.toString() || user.company?.documentId || ''
+      isActive: user.blocked ? 'false' : 'true'
     });
     clearFormErrors();
-    setCompanyPopoverOpen(false);
     setIsEditOpen(true);
   };
 
@@ -364,11 +370,17 @@ const Users = () => {
       setDialogLoading(true);
 
       const userData = {
-        username: formData.username.trim(),
+        username: formData.email.trim().toLowerCase(),
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
         email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        tower: formData.tower.trim(),
+        office: formData.office.trim(),
         role: formData.role ? parseInt(formData.role) : null,
         type_user: formData.type_user ? parseInt(formData.type_user) : null,
-        company: formData.company || null
+        blocked: formData.isActive !== 'true',
+        confirmed: true
       };
 
       if (formData.password) {
@@ -409,7 +421,224 @@ const Users = () => {
     }
   };
 
+  const CSV_TEMPLATE = `nombre,apellido,telefono,correo,torre,oficina
+Ana,Perez,5555-1234,ana.perez@ejemplo.com,Torre 1,Oficina 101
+Luis,Gomez,5555-5678,luis.gomez@ejemplo.com,Torre 2,Oficina 205`;
+
+  const normalizeCsvValue = (value = '') =>
+    value
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+  const parseCsvText = (text) => {
+    const rows = [];
+    let current = '';
+    let row = [];
+    let inQuotes = false;
+
+    for (let i = 0; i < text.length; i += 1) {
+      const char = text[i];
+      const nextChar = text[i + 1];
+
+      if (char === '"') {
+        if (inQuotes && nextChar === '"') {
+          current += '"';
+          i += 1;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        row.push(current);
+        current = '';
+      } else if ((char === '\n' || char === '\r') && !inQuotes) {
+        if (char === '\r' && nextChar === '\n') i += 1;
+        row.push(current);
+        if (row.some((cell) => cell.trim() !== '')) {
+          rows.push(row.map((cell) => cell.trim()));
+        }
+        row = [];
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+
+    if (current.length > 0 || row.length > 0) {
+      row.push(current);
+      if (row.some((cell) => cell.trim() !== '')) {
+        rows.push(row.map((cell) => cell.trim()));
+      }
+    }
+
+    return rows;
+  };
+
+  const mapCsvRowsToUsers = (csvRows) => {
+    if (!csvRows.length) {
+      throw new Error('El archivo CSV está vacío');
+    }
+
+    const headers = csvRows[0].map(normalizeCsvValue);
+    const headerMap = {
+      nombre: ['nombre', 'nombres', 'first_name', 'firstname'],
+      apellido: ['apellido', 'apellidos', 'last_name', 'lastname'],
+      telefono: ['telefono', 'tel', 'phone', 'celular'],
+      correo: ['correo', 'email', 'e-mail'],
+      torre: ['torre', 'tower'],
+      oficina: ['oficina', 'office'],
+    };
+
+    const resolveHeaderIndex = (variants) =>
+      headers.findIndex((header) => variants.includes(header));
+
+    const indexes = {
+      firstName: resolveHeaderIndex(headerMap.nombre),
+      lastName: resolveHeaderIndex(headerMap.apellido),
+      phone: resolveHeaderIndex(headerMap.telefono),
+      email: resolveHeaderIndex(headerMap.correo),
+      tower: resolveHeaderIndex(headerMap.torre),
+      office: resolveHeaderIndex(headerMap.oficina),
+    };
+
+    if ([indexes.firstName, indexes.lastName, indexes.phone, indexes.email, indexes.tower, indexes.office].some((index) => index < 0)) {
+      throw new Error('El CSV debe incluir las columnas: nombre, apellido, telefono, correo, torre, oficina');
+    }
+
+    return csvRows
+      .slice(1)
+      .filter((row) => row.some((cell) => cell?.trim()))
+      .map((row, index) => ({
+        line: index + 2,
+        firstName: row[indexes.firstName]?.trim() || '',
+        lastName: row[indexes.lastName]?.trim() || '',
+        phone: row[indexes.phone]?.trim() || '',
+        email: row[indexes.email]?.trim().toLowerCase() || '',
+        tower: row[indexes.tower]?.trim() || '',
+        office: row[indexes.office]?.trim() || '',
+      }))
+      .map((row) => {
+        if (!row.firstName || !row.lastName || !row.email) {
+          throw new Error(`La fila ${row.line} no tiene nombre, apellido o correo completos`);
+        }
+        return row;
+      });
+  };
+
+  const downloadCsvTemplate = () => {
+    const blob = new Blob([CSV_TEMPLATE], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'usuarios-ejemplo-tec-community.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleOpenImportDialog = () => {
+    setImportFormData({
+      role: '',
+      isActive: 'true',
+      fileName: ''
+    });
+    setImportRows([]);
+    setIsImportOpen(true);
+  };
+
+  const handleImportFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const parsedRows = mapCsvRowsToUsers(parseCsvText(text));
+      setImportRows(parsedRows);
+      setImportFormData((current) => ({ ...current, fileName: file.name }));
+      toast({
+        title: 'CSV cargado',
+        description: `${parsedRows.length} usuario(s) listos para importar`,
+      });
+    } catch (error) {
+      setImportRows([]);
+      setImportFormData((current) => ({ ...current, fileName: '' }));
+      toast({
+        variant: "destructive",
+        title: "CSV inválido",
+        description: error.message || 'No se pudo procesar el archivo CSV',
+      });
+    } finally {
+      event.target.value = '';
+    }
+  };
+
+  const handleImportUsers = async () => {
+    if (!importFormData.role) {
+      toast({
+        variant: "destructive",
+        title: "Rol requerido",
+        description: "Selecciona el rol que tendrán los usuarios importados",
+      });
+      return;
+    }
+
+    if (!importRows.length) {
+      toast({
+        variant: "destructive",
+        title: "CSV requerido",
+        description: "Carga un archivo CSV válido antes de importar",
+      });
+      return;
+    }
+
+    try {
+      setImportLoading(true);
+      const response = await UserService.importUsersFromCsv(importRows, {
+        role: importFormData.role,
+        isActive: importFormData.isActive === 'true',
+      });
+
+      if (!response.data) {
+        throw new Error(response.error || 'No se pudo importar el archivo');
+      }
+
+      const result = response.data;
+      toast({
+        title: result.failed ? 'Importación parcial' : 'Importación completada',
+        description: response.message,
+      });
+
+      if (result.failed) {
+        console.error('Errores en importación CSV:', result.errors);
+      }
+
+      setIsImportOpen(false);
+      setImportRows([]);
+      await loadUsers();
+    } catch (error) {
+      console.error('Error importing users:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || 'No se pudo importar el CSV',
+      });
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
   const getUserInitials = (user) => {
+    const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+    if (fullName) {
+      return fullName
+        .split(' ')
+        .slice(0, 2)
+        .map((part) => part[0])
+        .join('')
+        .toUpperCase();
+    }
     const name = user.username || user.email || 'U';
     return name.substring(0, 2).toUpperCase();
   };
@@ -451,17 +680,44 @@ const Users = () => {
               </Avatar>
               <div>
                 <p className="font-medium text-foreground">
-                  {user.username || 'Sin nombre'}
+                  {`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username || 'Sin nombre'}
                 </p>
-                {user.firstName && user.lastName && (
+                <div className="space-y-0.5">
                   <p className="text-sm text-muted-foreground">
-                    {user.firstName} {user.lastName}
+                    {user.username || user.email}
                   </p>
-                )}
+                  {(user.tower || user.office) && (
+                    <p className="text-xs text-muted-foreground">
+                      {[user.tower, user.office].filter(Boolean).join(' · ')}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           );
         },
+      }),
+      columnHelper.accessor('phone', {
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              className="h-auto p-0 font-semibold"
+            >
+              Tel.
+              {column.getIsSorted() === "asc" && <ArrowUp className="ml-2 h-4 w-4" />}
+              {column.getIsSorted() === "desc" && <ArrowDown className="ml-2 h-4 w-4" />}
+              {!column.getIsSorted() && <ArrowUpDown className="ml-2 h-4 w-4" />}
+            </Button>
+          )
+        },
+        cell: (info) => (
+          <div className="flex items-center space-x-2">
+            <Phone className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm">{info.getValue() || 'N/A'}</span>
+          </div>
+        ),
       }),
       columnHelper.accessor('email', {
         header: ({ column }) => {
@@ -665,13 +921,23 @@ const Users = () => {
           <h1 className="text-3xl font-bold text-foreground">Usuarios</h1>
           
           {hasPermission('api::user.user.create') && (
-            <Button 
-              onClick={handleCreateUser}
-              className="bg-primary hover:bg-primary/90 fixed right-4 top-20 z-10 shadow-lg"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Nuevo Usuario
-            </Button>
+            <div className="fixed right-4 top-20 z-10 flex gap-2">
+              <Button 
+                variant="outline"
+                onClick={handleOpenImportDialog}
+                className="shadow-lg"
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Importar CSV
+              </Button>
+              <Button 
+                onClick={handleCreateUser}
+                className="bg-primary hover:bg-primary/90 shadow-lg"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Nuevo Usuario
+              </Button>
+            </div>
           )}
         </div>
       </motion.div>
@@ -756,12 +1022,13 @@ const Users = () => {
                                 className="whitespace-nowrap"
                                 data-label={
                                   index === 0 ? "Usuario" :
-                                  index === 1 ? "Email" :
-                                  index === 2 ? "Rol" :
-                                  index === 3 ? "Tipo" :
-                                  index === 4 ? "Estado" :
-                                  index === 5 ? "Fecha Registro" :
-                                  index === 6 ? "Acciones" : ""
+                                  index === 1 ? "Tel." :
+                                  index === 2 ? "Email" :
+                                  index === 3 ? "Rol" :
+                                  index === 4 ? "Tipo" :
+                                  index === 5 ? "Estado" :
+                                  index === 6 ? "Fecha Registro" :
+                                  index === 7 ? "Acciones" : ""
                                 }
                               >
                                 {flexRender(
@@ -880,32 +1147,65 @@ const Users = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
-            {/* Usuario */}
             <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
-              <Label htmlFor="username" className={cn("sm:text-right font-medium", formErrors.username && "text-destructive")}>
-                Usuario <span className="text-destructive">*</span>
+              <Label htmlFor="firstName" className={cn("sm:text-right font-medium", formErrors.firstName && "text-destructive")}>
+                Nombre <span className="text-destructive">*</span>
               </Label>
               <div className="sm:col-span-3 space-y-1">
                 <Input
-                  id="username"
-                  value={formData.username}
+                  id="firstName"
+                  value={formData.firstName}
                   onChange={(e) => {
-                    setFormData({ ...formData, username: e.target.value });
-                    if (formErrors.username) setFormErrors({ ...formErrors, username: '' });
+                    setFormData({ ...formData, firstName: e.target.value });
+                    if (formErrors.firstName) setFormErrors({ ...formErrors, firstName: '' });
                   }}
-                  className={cn(formErrors.username && "border-destructive focus-visible:ring-destructive")}
-                  placeholder="Nombre de usuario"
+                  className={cn(formErrors.firstName && "border-destructive focus-visible:ring-destructive")}
+                  placeholder="Nombre"
                 />
-                {formErrors.username && (
-                  <p className="text-sm text-destructive">{formErrors.username}</p>
+                {formErrors.firstName && (
+                  <p className="text-sm text-destructive">{formErrors.firstName}</p>
                 )}
               </div>
             </div>
 
-            {/* Email */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
+              <Label htmlFor="lastName" className={cn("sm:text-right font-medium", formErrors.lastName && "text-destructive")}>
+                Apellido <span className="text-destructive">*</span>
+              </Label>
+              <div className="sm:col-span-3 space-y-1">
+                <Input
+                  id="lastName"
+                  value={formData.lastName}
+                  onChange={(e) => {
+                    setFormData({ ...formData, lastName: e.target.value });
+                    if (formErrors.lastName) setFormErrors({ ...formErrors, lastName: '' });
+                  }}
+                  className={cn(formErrors.lastName && "border-destructive focus-visible:ring-destructive")}
+                  placeholder="Apellido"
+                />
+                {formErrors.lastName && (
+                  <p className="text-sm text-destructive">{formErrors.lastName}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
+              <Label htmlFor="phone" className="sm:text-right font-medium">
+                Tel.
+              </Label>
+              <div className="sm:col-span-3">
+                <Input
+                  id="phone"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="5555-1234"
+                />
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
               <Label htmlFor="email" className={cn("sm:text-right font-medium", formErrors.email && "text-destructive")}>
-                Email <span className="text-destructive">*</span>
+                Correo <span className="text-destructive">*</span>
               </Label>
               <div className="sm:col-span-3 space-y-1">
                 <Input
@@ -925,7 +1225,34 @@ const Users = () => {
               </div>
             </div>
 
-            {/* Contraseña */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
+              <Label htmlFor="tower" className="sm:text-right font-medium">
+                Torre
+              </Label>
+              <div className="sm:col-span-3">
+                <Input
+                  id="tower"
+                  value={formData.tower}
+                  onChange={(e) => setFormData({ ...formData, tower: e.target.value })}
+                  placeholder="Torre 1"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
+              <Label htmlFor="office" className="sm:text-right font-medium">
+                Oficina
+              </Label>
+              <div className="sm:col-span-3">
+                <Input
+                  id="office"
+                  value={formData.office}
+                  onChange={(e) => setFormData({ ...formData, office: e.target.value })}
+                  placeholder="Oficina 101"
+                />
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
               <Label htmlFor="password" className={cn("sm:text-right font-medium", formErrors.password && "text-destructive")}>
                 Contraseña <span className="text-destructive">*</span>
@@ -948,7 +1275,6 @@ const Users = () => {
               </div>
             </div>
 
-            {/* Rol */}
             <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
               <Label htmlFor="role" className={cn("sm:text-right font-medium", formErrors.role && "text-destructive")}>
                 Rol <span className="text-destructive">*</span>
@@ -978,7 +1304,6 @@ const Users = () => {
               </div>
             </div>
 
-            {/* Tipo */}
             <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
               <Label htmlFor="type_user" className="sm:text-right font-medium">
                 Tipo
@@ -1000,73 +1325,22 @@ const Users = () => {
               </Select>
             </div>
 
-            {/* Empresa con filtro */}
             <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
-              <Label htmlFor="company" className="sm:text-right font-medium">
-                Empresa
+              <Label htmlFor="isActive" className="sm:text-right font-medium">
+                Activo
               </Label>
-              <Popover open={companyPopoverOpen} onOpenChange={setCompanyPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={companyPopoverOpen}
-                    className="sm:col-span-3 justify-between font-normal"
-                  >
-                    <span className="truncate">
-                      {formData.company
-                        ? companies.find((c) => (c.documentId || c.id?.toString()) === formData.company)?.name || 'Seleccionar empresa'
-                        : 'Seleccionar empresa'}
-                    </span>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[300px] p-0 bg-popover z-50" align="start">
-                  <Command>
-                    <CommandInput placeholder="Buscar empresa..." />
-                    <CommandList>
-                      <CommandEmpty>No se encontró empresa.</CommandEmpty>
-                      <CommandGroup>
-                        <CommandItem
-                          value=""
-                          onSelect={() => {
-                            setFormData({ ...formData, company: '' });
-                            setCompanyPopoverOpen(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              !formData.company ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          Sin empresa
-                        </CommandItem>
-                        {companies.map((company) => (
-                          <CommandItem
-                            key={company.documentId || company.id}
-                            value={company.name}
-                            onSelect={() => {
-                              setFormData({ ...formData, company: company.documentId || company.id?.toString() });
-                              setCompanyPopoverOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                formData.company === (company.documentId || company.id?.toString()) ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
-                            {company.name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+              <Select
+                value={formData.isActive}
+                onValueChange={(value) => setFormData({ ...formData, isActive: value })}
+              >
+                <SelectTrigger className="sm:col-span-3">
+                  <SelectValue placeholder="Seleccionar estado" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50">
+                  <SelectItem value="true">Sí</SelectItem>
+                  <SelectItem value="false">No</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
@@ -1101,32 +1375,65 @@ const Users = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
-            {/* Usuario */}
             <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
-              <Label htmlFor="edit-username" className={cn("sm:text-right font-medium", formErrors.username && "text-destructive")}>
-                Usuario <span className="text-destructive">*</span>
+              <Label htmlFor="edit-firstName" className={cn("sm:text-right font-medium", formErrors.firstName && "text-destructive")}>
+                Nombre <span className="text-destructive">*</span>
               </Label>
               <div className="sm:col-span-3 space-y-1">
                 <Input
-                  id="edit-username"
-                  value={formData.username}
+                  id="edit-firstName"
+                  value={formData.firstName}
                   onChange={(e) => {
-                    setFormData({ ...formData, username: e.target.value });
-                    if (formErrors.username) setFormErrors({ ...formErrors, username: '' });
+                    setFormData({ ...formData, firstName: e.target.value });
+                    if (formErrors.firstName) setFormErrors({ ...formErrors, firstName: '' });
                   }}
-                  className={cn(formErrors.username && "border-destructive focus-visible:ring-destructive")}
-                  placeholder="Nombre de usuario"
+                  className={cn(formErrors.firstName && "border-destructive focus-visible:ring-destructive")}
+                  placeholder="Nombre"
                 />
-                {formErrors.username && (
-                  <p className="text-sm text-destructive">{formErrors.username}</p>
+                {formErrors.firstName && (
+                  <p className="text-sm text-destructive">{formErrors.firstName}</p>
                 )}
               </div>
             </div>
 
-            {/* Email */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
+              <Label htmlFor="edit-lastName" className={cn("sm:text-right font-medium", formErrors.lastName && "text-destructive")}>
+                Apellido <span className="text-destructive">*</span>
+              </Label>
+              <div className="sm:col-span-3 space-y-1">
+                <Input
+                  id="edit-lastName"
+                  value={formData.lastName}
+                  onChange={(e) => {
+                    setFormData({ ...formData, lastName: e.target.value });
+                    if (formErrors.lastName) setFormErrors({ ...formErrors, lastName: '' });
+                  }}
+                  className={cn(formErrors.lastName && "border-destructive focus-visible:ring-destructive")}
+                  placeholder="Apellido"
+                />
+                {formErrors.lastName && (
+                  <p className="text-sm text-destructive">{formErrors.lastName}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
+              <Label htmlFor="edit-phone" className="sm:text-right font-medium">
+                Tel.
+              </Label>
+              <div className="sm:col-span-3">
+                <Input
+                  id="edit-phone"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="5555-1234"
+                />
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
               <Label htmlFor="edit-email" className={cn("sm:text-right font-medium", formErrors.email && "text-destructive")}>
-                Email <span className="text-destructive">*</span>
+                Correo <span className="text-destructive">*</span>
               </Label>
               <div className="sm:col-span-3 space-y-1">
                 <Input
@@ -1146,7 +1453,34 @@ const Users = () => {
               </div>
             </div>
 
-            {/* Nueva Contraseña */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
+              <Label htmlFor="edit-tower" className="sm:text-right font-medium">
+                Torre
+              </Label>
+              <div className="sm:col-span-3">
+                <Input
+                  id="edit-tower"
+                  value={formData.tower}
+                  onChange={(e) => setFormData({ ...formData, tower: e.target.value })}
+                  placeholder="Torre 1"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
+              <Label htmlFor="edit-office" className="sm:text-right font-medium">
+                Oficina
+              </Label>
+              <div className="sm:col-span-3">
+                <Input
+                  id="edit-office"
+                  value={formData.office}
+                  onChange={(e) => setFormData({ ...formData, office: e.target.value })}
+                  placeholder="Oficina 101"
+                />
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
               <Label htmlFor="edit-password" className="sm:text-right font-medium">
                 Nueva Contraseña
@@ -1163,7 +1497,6 @@ const Users = () => {
               </div>
             </div>
 
-            {/* Rol */}
             <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
               <Label htmlFor="edit-role" className={cn("sm:text-right font-medium", formErrors.role && "text-destructive")}>
                 Rol <span className="text-destructive">*</span>
@@ -1193,7 +1526,6 @@ const Users = () => {
               </div>
             </div>
 
-            {/* Tipo */}
             <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
               <Label htmlFor="edit-type_user" className="sm:text-right font-medium">
                 Tipo
@@ -1215,73 +1547,22 @@ const Users = () => {
               </Select>
             </div>
 
-            {/* Empresa con filtro */}
             <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
-              <Label htmlFor="edit-company" className="sm:text-right font-medium">
-                Empresa
+              <Label htmlFor="edit-isActive" className="sm:text-right font-medium">
+                Activo
               </Label>
-              <Popover open={companyPopoverOpen} onOpenChange={setCompanyPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={companyPopoverOpen}
-                    className="sm:col-span-3 justify-between font-normal"
-                  >
-                    <span className="truncate">
-                      {formData.company
-                        ? companies.find((c) => (c.documentId || c.id?.toString()) === formData.company)?.name || 'Seleccionar empresa'
-                        : 'Seleccionar empresa'}
-                    </span>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[300px] p-0 bg-popover z-50" align="start">
-                  <Command>
-                    <CommandInput placeholder="Buscar empresa..." />
-                    <CommandList>
-                      <CommandEmpty>No se encontró empresa.</CommandEmpty>
-                      <CommandGroup>
-                        <CommandItem
-                          value=""
-                          onSelect={() => {
-                            setFormData({ ...formData, company: '' });
-                            setCompanyPopoverOpen(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              !formData.company ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          Sin empresa
-                        </CommandItem>
-                        {companies.map((company) => (
-                          <CommandItem
-                            key={company.documentId || company.id}
-                            value={company.name}
-                            onSelect={() => {
-                              setFormData({ ...formData, company: company.documentId || company.id?.toString() });
-                              setCompanyPopoverOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                formData.company === (company.documentId || company.id?.toString()) ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
-                            {company.name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+              <Select
+                value={formData.isActive}
+                onValueChange={(value) => setFormData({ ...formData, isActive: value })}
+              >
+                <SelectTrigger className="sm:col-span-3">
+                  <SelectValue placeholder="Seleccionar estado" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50">
+                  <SelectItem value="true">Sí</SelectItem>
+                  <SelectItem value="false">No</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
@@ -1301,6 +1582,122 @@ const Users = () => {
               className="w-full sm:w-auto"
             >
               {dialogLoading ? 'Guardando...' : 'Actualizar Usuario'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
+        <DialogContent className="w-[95vw] max-w-lg sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Importar Usuarios por CSV</DialogTitle>
+            <DialogDescription>
+              Carga un archivo CSV con nombre, apellido, teléfono, correo, torre y oficina. La empresa se asignará después.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <Card className="border-dashed">
+              <CardContent className="flex flex-col gap-3 p-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <FileSpreadsheet className="h-4 w-4" />
+                  Plantilla de ejemplo para carga masiva
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button type="button" variant="outline" onClick={downloadCsvTemplate}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Descargar ejemplo CSV
+                  </Button>
+                  <Label
+                    htmlFor="users-import-file"
+                    className="inline-flex cursor-pointer items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    Cargar archivo CSV
+                  </Label>
+                  <Input
+                    id="users-import-file"
+                    type="file"
+                    accept=".csv,text/csv"
+                    className="hidden"
+                    onChange={handleImportFileChange}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {importFormData.fileName
+                    ? `Archivo cargado: ${importFormData.fileName}`
+                    : 'Aún no has cargado un archivo CSV'}
+                </p>
+              </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Rol para todos los usuarios</Label>
+                <Select
+                  value={importFormData.role}
+                  onValueChange={(value) => setImportFormData((current) => ({ ...current, role: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar rol" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50">
+                    {roles.map((role) => (
+                      <SelectItem key={role.id} value={role.id.toString()}>
+                        {role.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>¿Entrarán activos?</Label>
+                <Select
+                  value={importFormData.isActive}
+                  onValueChange={(value) => setImportFormData((current) => ({ ...current, isActive: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar estado" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50">
+                    <SelectItem value="true">Sí, activos</SelectItem>
+                    <SelectItem value="false">No, inactivos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">Usuarios listos para importar</span>
+                  <Badge variant="secondary">{importRows.length}</Badge>
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Los usuarios importados se crearán sin empresa y con contraseña temporal interna. Luego podrán completar su información restante.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsImportOpen(false)}
+              disabled={importLoading}
+              className="w-full sm:w-auto"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={handleImportUsers}
+              disabled={importLoading}
+              className="w-full sm:w-auto"
+            >
+              {importLoading ? 'Importando...' : 'Importar usuarios'}
             </Button>
           </DialogFooter>
         </DialogContent>
