@@ -1,3 +1,5 @@
+import { NATIVE_FEATURES } from '@/config/nativeFeatures';
+
 // Service para manejar Push Notifications de manera funcional
 const VAPID_PUBLIC_KEY =
   (import.meta.env && import.meta.env.VITE_VAPID_PUBLIC_KEY) || '';
@@ -5,7 +7,11 @@ const VAPID_PUBLIC_KEY =
 class PushNotificationService {
   constructor() {
     this.vapidKey = VAPID_PUBLIC_KEY;
-    this.isSupported = 'serviceWorker' in navigator && 'PushManager' in window;
+    this.isSupported =
+      typeof window !== 'undefined' &&
+      'serviceWorker' in navigator &&
+      'PushManager' in window &&
+      'Notification' in window;
     this.registration = null;
     this.subscription = null;
   }
@@ -49,6 +55,10 @@ class PushNotificationService {
   // Obtener o crear suscripción push
   async subscribeToPush() {
     try {
+      if (!NATIVE_FEATURES.PUSH_NOTIFICATIONS || !this.isNotificationSupported()) {
+        return null;
+      }
+
       if (!this.vapidKey) {
         console.warn('[WebPush] VITE_VAPID_PUBLIC_KEY no configurada, se omite la suscripción VAPID');
         return null;
@@ -105,7 +115,7 @@ class PushNotificationService {
   // Obtener suscripción actual
   async getCurrentSubscription() {
     try {
-      if (!this.isNotificationSupported()) {
+      if (!NATIVE_FEATURES.PUSH_NOTIFICATIONS || !this.isNotificationSupported()) {
         return null;
       }
 

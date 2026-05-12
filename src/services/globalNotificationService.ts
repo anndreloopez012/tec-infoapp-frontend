@@ -161,99 +161,127 @@ class GlobalNotificationService {
   // Suscribir usuario a notificaciones push
   async subscribeToPush(pushToken: string, deviceType: string): Promise<boolean> {
     try {
-      // 1) Resolver ID de usuario de forma confiable
+      // 1) Resolver ID de usuario
       let userId: number | null = null;
       try {
         const raw = localStorage.getItem(API_CONFIG.STORAGE_KEYS.USER_DATA);
         if (raw) userId = JSON.parse(raw)?.id ?? null;
-      } catch (_) {}
+      } catch (_) {
+        // ignore user cache parsing errors
+      }
 
       if (!userId) {
-        // Intentar obtener el usuario actual desde la API (requiere JWT válido)
-        const meRes = await fetch(buildApiUrl('/users/me'), {
-          method: 'GET',
-          headers: getDefaultHeaders()
-        });
-        if (meRes.ok) {
-          const me = await meRes.json();
-          userId = me?.id ?? null;
-          if (userId) {
-            // Cachear para futuros usos
-            const cachedUser = localStorage.getItem(API_CONFIG.STORAGE_KEYS.USER_DATA);
-            try {
-              const parsed = cachedUser ? JSON.parse(cachedUser) : {};
-              localStorage.setItem(
-                API_CONFIG.STORAGE_KEYS.USER_DATA,
-                JSON.stringify({ ...parsed, id: userId })
-              );
-            } catch (_) {}
+        try {
+          const meRes = await fetch(buildApiUrl('/users/me'), {
+            method: 'GET',
+            headers: getDefaultHeaders()
+          });
+          if (meRes.ok) {
+            const me = await meRes.json();
+            userId = me?.id ?? null;
+            if (userId) {
+              try {
+                const cached = localStorage.getItem(API_CONFIG.STORAGE_KEYS.USER_DATA);
+                const parsed = cached ? JSON.parse(cached) : {};
+                localStorage.setItem(
+                  API_CONFIG.STORAGE_KEYS.USER_DATA,
+                  JSON.stringify({ ...parsed, id: userId })
+                );
+              } catch (_) {
+                // ignore user cache update errors
+              }
+            }
           }
+        } catch (_) {
+          // ignore /users/me lookup failures
         }
       }
 
       if (!userId) {
-        console.warn('subscribeToPush: No se pudo determinar el ID de usuario. Abortando registro de push-token.');
+        console.warn('[PushToken] No se pudo determinar userId. Registro omitido.');
         return false;
       }
 
-      // 2) Buscar si ya existe un token para este usuario+dispositivo
-      const findRes = await fetch(
-        buildApiUrl(
-          `/push-tokens?filters[user][id][$eq]=${userId}&filters[device_type][$eq]=${encodeURIComponent(
-            deviceType
-          )}`
-        ),
-        { method: 'GET', headers: getDefaultHeaders() }
-      );
+      // Token completo sin truncar:
+      // - Web: JSON de PushSubscription (endpoint + llaves)
+      // - Android/iOS: FCM token
+      const safeToken = pushToken;
 
       let existing: any | null = null;
-      if (findRes.ok) {
-        const found = await findRes.json();
-        const list = found?.data || [];
-        existing = Array.isArray(list) && list.length > 0 ? list[0] : null;
+      try {
+        const findRes = await fetch(
+          buildApiUrl(
+            `/push-tokens?filters[user][id][$eq]=${userId}&filters[device_type][$eq]=${encodeURIComponent(
+              deviceType
+            )}`
+          ),
+          { method: 'GET', headers: getDefaultHeaders() }
+        );
+        if (findRes.ok) {
+          const found = await findRes.json();
+          const list = found?.data || [];
+          existing = Array.isArray(list) && list.length > 0 ? list[0] : null;
+        }
+      } catch (_) {
+        // ignore push-token lookup errors
       }
 
-      // 3) Actualizar si existe, crear si no
-      if (existing?.id) {
+      // 3a) Actualizar si existe - solo campos escalares
+      if (existing?.documentId || existing?.id) {
         const identifier = existing.documentId || existing.id;
-        const updateRes = await fetch(buildApiUrl(`/push-tokens/${identifier}`), {
-          method: 'PUT',
+        try {
+          const updateRes = await fetch(buildApiUrl(`/push-tokens/${identifier}`), {
+            method: 'PUT',
+            headers: getDefaultHeaders(),
+            body: JSON.stringify({
+              data: {
+                token: safeToken,
+                is_active: true
+              }
+            })
+          });
+          if (updateRes.ok) {
+            console.log('[PushToken] Token actualizado:', identifier);
+            return true;
+          }
+          const errBody = await updateRes.text().catch(() => '');
+          console.warn(`[PushToken] PUT fallo (${updateRes.status}): ${errBody}. Token no actualizado.`);
+        } catch (_) {
+          // ignore push-token update failures
+        }
+        // Si falla la actualización no rompemos el flujo del usuario
+        return true;
+      }
+
+      // 3b) Crear nuevo registro
+      try {
+        const createRes = await fetch(buildApiUrl('/push-tokens'), {
+          method: 'POST',
           headers: getDefaultHeaders(),
           body: JSON.stringify({
             data: {
-              token: pushToken,
+              token: safeToken,
               device_type: deviceType,
               user: userId,
               is_active: true
             }
           })
         });
-        if (!updateRes.ok) {
-          throw new Error(`HTTP error! status: ${updateRes.status}`);
+        if (createRes.ok) {
+          console.log('[PushToken] Token creado:', deviceType);
+          return true;
         }
-        return true;
+
+        const errBody = await createRes.text().catch(() => '');
+        console.warn(`[PushToken] POST fallo (${createRes.status}): ${errBody}.`);
+      } catch (_) {
+        // ignore push-token create failures
       }
 
-      // Crear nuevo registro
-      const createRes = await fetch(buildApiUrl('/push-tokens'), {
-        method: 'POST',
-        headers: getDefaultHeaders(),
-        body: JSON.stringify({
-          data: {
-            token: pushToken,
-            device_type: deviceType,
-            user: userId,
-            is_active: true
-          }
-        })
-      });
-      if (!createRes.ok) {
-        throw new Error(`HTTP error! status: ${createRes.status}`);
-      }
-      return true;
+      return false;
     } catch (error) {
-      handleApiError(error);
-      throw error;
+      console.warn('[PushToken] Error registrando push-token:', error);
+      return false;
     }
   }
 

@@ -90,32 +90,30 @@ export const useCapacitorNotifications = (): UsePushNotificationsReturn => {
   }, [sendTokenToBackend]);
 
   const initializeWeb = useCallback(async () => {
+    if (typeof Notification === 'undefined' || !pushNotificationService.isNotificationSupported()) {
+      setPermissionStatus('not-supported');
+      return;
+    }
+
+    const current = Notification.permission;
+    setPermissionStatus(current === 'default' ? 'prompt' : (current as PushPermissionStatus));
+
+    if (current !== 'granted') {
+      return;
+    }
+
+    setIsRegistered(true);
+
     try {
-      if (typeof Notification === 'undefined' || !pushNotificationService.isNotificationSupported()) {
-        setPermissionStatus('not-supported');
-        return;
-      }
-
-      const current = Notification.permission;
-      setPermissionStatus(current === 'default' ? 'prompt' : (current as PushPermissionStatus));
-
-      if (current !== 'granted') {
-        return;
-      }
-
       const subscription = await pushNotificationService.subscribeToPush();
       if (subscription) {
-        const webPushToken = JSON.stringify(subscription.toJSON());
+        const webPushToken = JSON.stringify(subscription);
         setRegistrationToken(webPushToken);
-        setIsRegistered(true);
         await sendTokenToBackend(webPushToken, 'web');
+        console.log('[Push] Suscripción Web Push registrada en backend');
       }
     } catch (error) {
-      console.warn('[Push] Error inicializando Web Push:', error);
-      if (typeof Notification !== 'undefined') {
-        const current = Notification.permission === 'default' ? 'prompt' : Notification.permission;
-        setPermissionStatus(current as PushPermissionStatus);
-      }
+      console.warn('[Push] No se pudo registrar suscripción Web Push:', error);
     }
   }, [sendTokenToBackend]);
 
